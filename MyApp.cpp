@@ -273,15 +273,6 @@ void MyApp::BuildBoxGeometry()
 		Vertex({ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) })
 	};*/
 
-	std::array<Vertex, 5> vertices =
-	{
-		Vertex({ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) }),
-		Vertex({ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Black) }),
-		Vertex({ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) }),
-		Vertex({ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Green) }),
-		Vertex({ XMFLOAT3(0.0f, 0.0f, +1.0f), XMFLOAT4(Colors::Blue) }),
-	};
-
 
 	//std::array<std::uint16_t, 36> indices =
 	//{
@@ -310,27 +301,24 @@ void MyApp::BuildBoxGeometry()
 	//	4, 3, 7
 	//};
 
+	std::array<Vertex,5> vertices =
+	{
+		Vertex({ XMFLOAT3(-1.0f, 0.0f, +1.0f), XMFLOAT4(Colors::Red) }),
+		Vertex({ XMFLOAT3(+1.0f, 0.0f, +1.0f), XMFLOAT4(Colors::Green) }),
+		Vertex({ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT4(Colors::Blue) }),
+
+		Vertex({ XMFLOAT3(-1.0f, 0.0f, -1.0f), XMFLOAT4(Colors::Pink) }),
+		Vertex({ XMFLOAT3(1.0f, 0.0f, -1.0f), XMFLOAT4(Colors::Chocolate) })
+	};
+
 	std::array<std::uint16_t, 18> indices =
 	{
-		// front face
-		1, 2, 5,
-
-
-		// back face
-		4,3,5,
-
-		// left face
-		3,1,5,
-
-		// right face
-		2,4,5,
-
-		// top face
-
-
-		// bottom face
-		1,2,3,
-		2,3,4
+		0,1,2,
+		4,3,2,
+		3,0,2,
+		1,4,2,
+		3,4,0,
+		0,4,1
 	};
 
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
@@ -384,6 +372,7 @@ void MyApp::BuildPSO()
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.RasterizerState.FrontCounterClockwise = false;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
