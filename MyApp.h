@@ -8,10 +8,40 @@ using namespace DirectX;
 using namespace DirectX::PackedVector;
 
 
+
+struct Vectex 
+{
+	float x;
+	float y;
+	float z;
+};
+
+struct FVertexInfo
+{
+	int NumVertices;
+	int NumTriangles;
+	int NumIndices;
+	std::vector<int> Index;
+	std::vector<Vectex> VertexInfo;
+};
+
+
+struct FStaticMeshInfo
+{
+	std::string MeshName;
+	int NumLod;
+	FVertexInfo InfoVertex;
+};
+
+
 struct Vertex
 {
 	XMFLOAT3 Pos;
-	XMFLOAT4 Color;
+	XMFLOAT4 Color = XMFLOAT4(Colors::Red);
+	void Setpos(const Vectex& v)
+	{
+		Pos = XMFLOAT3(v.x,v.y,v.z);
+	}
 };
 
 struct ObjectConstants
@@ -46,6 +76,8 @@ private:
 	void BuildBoxGeometry();
 	void BuildPSO();
 
+	void Readdat();
+
 private:
 
 	ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
@@ -66,9 +98,12 @@ private:
 	XMFLOAT4X4 mView = MathHelper::Identity4x4();
 	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
+
+	FStaticMeshInfo StaticMeshInfo;
+
 	float mTheta = 1.5f * XM_PI;
 	float mPhi = XM_PIDIV4;
-	float mRadius = 5.0f;
+	float mRadius = 500.0f;
 
 	POINT mLastMousePos;
 };

@@ -1,5 +1,6 @@
 #include "MyApp.h"
 
+
 MyApp::MyApp(HINSTANCE hInstance):d3dApp(hInstance)
 {
 
@@ -41,20 +42,20 @@ void MyApp::OnResize()
 	d3dApp::OnResize();
 
 	// The window resized, so update the aspect ratio and recompute the projection matrix.
-	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 10000.0f);
 	XMStoreFloat4x4(&mProj, P);
 }
 
 void MyApp::Update(const GameTimer& gt)
 {
-	// Convert Spherical to Cartesian coordinates.
+	// 将球面坐标转换为笛卡尔坐标
 	float x = mRadius * sinf(mPhi) * cosf(mTheta);
 	float z = mRadius * sinf(mPhi) * sinf(mTheta);
 	float y = mRadius * cosf(mPhi);
 
-	// Build the view matrix.
-	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
-	XMVECTOR target = XMVectorZero();
+	// 创建视图矩阵
+	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);      //使用4个浮点值构造一个向量
+	XMVECTOR target = XMVectorZero();               //创建零向量
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
@@ -148,8 +149,8 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 	if ((btnState & MK_LBUTTON) != 0)
 	{
 		// Make each pixel correspond to a quarter of a degree.
-		float dx = XMConvertToRadians(0.25f * static_cast<float>(x - mLastMousePos.x));
-		float dy = XMConvertToRadians(0.25f * static_cast<float>(y - mLastMousePos.y));
+		float dx = XMConvertToRadians(-0.25f * static_cast<float>(x - mLastMousePos.x));
+		float dy = XMConvertToRadians(-0.25f * static_cast<float>(y - mLastMousePos.y));
 
 		// Update angles based on input to orbit camera around box.
 		mTheta += dx;
@@ -157,18 +158,19 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 
 		// Restrict the angle mPhi.
 		mPhi = MathHelper::Clamp(mPhi, 0.1f, MathHelper::Pi - 0.1f);
+
 	}
 	else if ((btnState & MK_RBUTTON) != 0)
 	{
 		// Make each pixel correspond to 0.005 unit in the scene.
-		float dx = 0.005f * static_cast<float>(x - mLastMousePos.x);
-		float dy = 0.005f * static_cast<float>(y - mLastMousePos.y);
+		float dx = 0.5f * static_cast<float>(x - mLastMousePos.x);
+		float dy = 0.5f * static_cast<float>(y - mLastMousePos.y);
 
 		// Update the camera radius based on input.
 		mRadius += dx - dy;
 
 		// Restrict the radius.
-		mRadius = MathHelper::Clamp(mRadius, 3.0f, 15.0f);
+		
 	}
 
 	mLastMousePos.x = x;
@@ -261,71 +263,24 @@ void MyApp::BuildShadersAndInputLayout()
 
 void MyApp::BuildBoxGeometry()
 {
-	/*std::array<Vertex, 8> vertices =
-	{
-		Vertex({ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::White) }),
-		Vertex({ XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Black) }),
-		Vertex({ XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT4(Colors::Red) }),
-		Vertex({ XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT4(Colors::Green) }),
-		Vertex({ XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Blue) }),
-		Vertex({ XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Yellow) }),
-		Vertex({ XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT4(Colors::Cyan) }),
-		Vertex({ XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT4(Colors::Magenta) })
-	};*/
+	Readdat();
 
+	std::vector<Vertex> vertices;
+	for (int i = 0; i < StaticMeshInfo.InfoVertex.NumVertices; i++) {
+		Vertex vertex;
+		vertex.Setpos(StaticMeshInfo.InfoVertex.VertexInfo[i]);
+		vertices.push_back(vertex);
+	}
 
-	//std::array<std::uint16_t, 36> indices =
-	//{
-	//	// front face
-	//	0, 1, 2,
-	//	0, 2, 3,
+	std::vector<int> indices;
+	indices = StaticMeshInfo.InfoVertex.Index;
 
-	//	// back face
-	//	4, 6, 5,
-	//	4, 7, 6,
-
-	//	// left face
-	//	4, 5, 1,
-	//	4, 1, 0,
-
-	//	// right face
-	//	3, 2, 6,
-	//	3, 6, 7,
-
-	//	// top face
-	//	1, 5, 6,
-	//	1, 6, 2,
-
-	//	// bottom face
-	//	4, 0, 3,
-	//	4, 3, 7
-	//};
-
-	std::array<Vertex,5> vertices =
-	{
-		Vertex({ XMFLOAT3(-1.0f, 0.0f, +1.0f), XMFLOAT4(Colors::Red) }),
-		Vertex({ XMFLOAT3(+1.0f, 0.0f, +1.0f), XMFLOAT4(Colors::Green) }),
-		Vertex({ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT4(Colors::Blue) }),
-
-		Vertex({ XMFLOAT3(-1.0f, 0.0f, -1.0f), XMFLOAT4(Colors::Pink) }),
-		Vertex({ XMFLOAT3(1.0f, 0.0f, -1.0f), XMFLOAT4(Colors::Chocolate) })
-	};
-
-	std::array<std::uint16_t, 18> indices =
-	{
-		0,1,2,
-		4,3,2,
-		3,0,2,
-		1,4,2,
-		3,4,0,
-		0,4,1
-	};
 
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+	const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
 
 	mBoxGeo = std::make_unique<MeshGeometry>();
-	mBoxGeo->Name = "boxGeo";
+	mBoxGeo->Name = "MyMesh";
 
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->VertexBufferCPU));
 	CopyMemory(mBoxGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
@@ -341,7 +296,7 @@ void MyApp::BuildBoxGeometry()
 
 	mBoxGeo->VertexByteStride = sizeof(Vertex);
 	mBoxGeo->VertexBufferByteSize = vbByteSize;
-	mBoxGeo->IndexFormat = DXGI_FORMAT_R16_UINT;
+	mBoxGeo->IndexFormat = DXGI_FORMAT_R32_UINT;
 	mBoxGeo->IndexBufferByteSize = ibByteSize;
 
 	SubmeshGeometry submesh;
@@ -369,10 +324,11 @@ void MyApp::BuildPSO()
 		mpsByteCode->GetBufferSize()
 	};
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.RasterizerState.FrontCounterClockwise = false;
+	psoDesc.RasterizerState.FrontCounterClockwise = true;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
@@ -380,5 +336,36 @@ void MyApp::BuildPSO()
 	psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
+}
+
+
+
+void MyApp::Readdat()
+{
+	std::ifstream fin("Data/SM_MatPreviewMesh_02.dat", std::ios::binary);
+
+	
+	INT32 Num;
+
+	fin.read((char*)&Num, sizeof(int));
+	StaticMeshInfo.MeshName.resize(Num);
+	fin.read((char*)StaticMeshInfo.MeshName.data(), Num);
+	fin.read((char*)&StaticMeshInfo.NumLod, sizeof(int));
+
+	
+	fin.read((char*)&StaticMeshInfo.InfoVertex.NumVertices, sizeof(int));
+	fin.read((char*)&StaticMeshInfo.InfoVertex.NumTriangles, sizeof(int));
+	fin.read((char*)&StaticMeshInfo.InfoVertex.NumIndices, sizeof(int));
+
+
+	fin.read((char*)&Num, sizeof(int));
+	StaticMeshInfo.InfoVertex.VertexInfo.resize(Num);
+	fin.read((char*)StaticMeshInfo.InfoVertex.VertexInfo.data(), sizeof(Vectex) * Num);
+	
+	fin.read((char*)&Num, sizeof(int));
+	StaticMeshInfo.InfoVertex.Index.resize(Num);
+	fin.read((char*)StaticMeshInfo.InfoVertex.Index.data(), sizeof(int) * Num);
+	
+	fin.close();
 }
 

@@ -263,7 +263,7 @@ void d3dApp::CreateRtvAndDsvDescriptorHeap()
 
 }
 
-void d3dApp::OnResize()
+void d3dApp::OnResize ()    //清空所有缓存区  
 {
 	assert(md3dDevice);
 	assert(mSwapChain);
@@ -271,31 +271,32 @@ void d3dApp::OnResize()
 
 	FlushCommandQueue();        //刷新队列
 
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));   //初始化 CommandList
 
 	//释放之前的资源，创建新的资源
 	for (int i = 0; i < SwapChainBufferCount; i++)
 	{
-		mSwapChainBuffer[i].Reset();
+		mSwapChainBuffer[i].Reset();              //comptr 的reset函数会释放实例 并将指针设为 nullptr
 	}
 
 	mDepthStencilBuffer.Reset();
 
 	//调整交换链大小
-	ThrowIfFailed(mSwapChain->ResizeBuffers(
+	ThrowIfFailed(mSwapChain->ResizeBuffers(      //resizeBuffers 方法更改后缓冲区的 大小格式和数量 （在app调整窗口大小时调用）
 		SwapChainBufferCount,
 		mClientWidth, mClientHeight,
 		mBackBufferFormat,
 		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
 
-	mCurrentBackBuffer = 0;
+	mCurrentBackBuffer = 0;      //后缓存区重置为 0
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());     //获取表示堆开始的 cpu描述符句柄
+
 	for (UINT i = 0; i < SwapChainBufferCount; i++)
 	{
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i])));
 		md3dDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
-		rtvHeapHandle.Offset(1, mRtvDescriptorSize);
+		rtvHeapHandle.Offset(1, mRtvDescriptorSize);               //根据指定的描述符数量以及每个描述符的增量设置偏移量。
 	}
 
 	D3D12_RESOURCE_DESC depthStencilDesc;
@@ -313,11 +314,12 @@ void d3dApp::OnResize()
 	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-	D3D12_CLEAR_VALUE optClear;
+	D3D12_CLEAR_VALUE optClear;                 //清除操作最优化的值
 	optClear.Format = mDepthStencilFormat;
-	optClear.DepthStencil.Depth = 1.0f;
+	optClear.DepthStencil.Depth = 1.0f;         //距离设置为最远
 	optClear.DepthStencil.Stencil = 0;
-	ThrowIfFailed(md3dDevice->CreateCommittedResource(
+
+	ThrowIfFailed(md3dDevice->CreateCommittedResource(          //同时创建一个资源和一个隐式堆，使得堆足够大以包含整个资源，并且资源被映射到堆。
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
 		&depthStencilDesc,
@@ -325,12 +327,14 @@ void d3dApp::OnResize()
 		&optClear,
 		IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())));
 
-	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;     //描述可以从深度模板视图访问的资源
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Format = mDepthStencilFormat;
 	dsvDesc.Texture2D.MipSlice = 0;
-	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
+
+	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());   //创建用于资源访问的深度模板视图
 
 	//改变资源状态类型？
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
@@ -338,8 +342,9 @@ void d3dApp::OnResize()
 
 	//执行调整大小命令
 	ThrowIfFailed(mCommandList->Close());
+
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);   //提交一组命令到队列
 
 	FlushCommandQueue();
 
@@ -388,6 +393,7 @@ bool d3dApp::InitMainWindow()
 	}
 
 	ShowWindow(mhMainWnd, SW_SHOW);
+
 	UpdateWindow(mhMainWnd);
 
 	return true;
@@ -487,8 +493,11 @@ void d3dApp::CreateSwapChain()
 	sd.BufferDesc.Format = mBackBufferFormat;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-	sd.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+
+	sd.SampleDesc.Count = m4xMsaaState ? 4 : 1;                                 //填写采样模式
 	sd.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	
+
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = SwapChainBufferCount;
 	sd.OutputWindow = mhMainWnd;
@@ -508,14 +517,14 @@ void d3dApp::FlushCommandQueue()
 	//调整 fence值 将命令调整到 新的fence点
 	mCurrentFence++;
 
-	//添加 设置fence命令到命令队列，在GPU时间线中，在完成signal（）之前的所有命令之前
+	//添加 设置fence命令 到命令队列，在GPU时间线中，在完成signal（）之前的所有命令之前
 	//不会设置新的fence 
 
 	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mCurrentFence));
 
 	//等待GPU到达Fence点
 
-	if (mFence->GetCompletedValue() < mCurrentFence)
+	if (mFence->GetCompletedValue() < mCurrentFence) //未到fence点时执行
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
 
@@ -569,7 +578,7 @@ void d3dApp::CalculateFrameState()
 			L"    fps: " + fpsStr +
 			L"   mspf: " + mspfStr;
 
-		SetWindowText(mhMainWnd, windowText.c_str());
+		SetWindowText(mhMainWnd, windowText.c_str());  //将计算结果输出到窗口标题栏
 
 		// reset
 		frameCnt = 0;
