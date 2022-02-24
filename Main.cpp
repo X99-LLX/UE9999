@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "MyApp.h"
 #include <DirectXColors.h>
 

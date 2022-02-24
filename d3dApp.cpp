@@ -1,5 +1,7 @@
-#include "d3dApp.h"
+#include "stdafx.h"
 #include <WindowsX.h>
+#include "d3dApp.h"
+
 
 using Microsoft::WRL::ComPtr;
 using namespace std;
@@ -353,10 +355,12 @@ void d3dApp::OnResize ()    //清空所有缓存区
 	mScreenViewport.TopLeftY = 0;
 	mScreenViewport.Width = static_cast<float>(mClientWidth);
 	mScreenViewport.Height = static_cast<float>(mClientHeight);
+	/*mScreenViewport.Width = 100;
+	mScreenViewport.Height = 100;*/
 	mScreenViewport.MinDepth = 0.0f;
 	mScreenViewport.MaxDepth = 1.0f;
 
-	mScissorRect = { 0,0,mClientWidth,mClientHeight };
+	mScissorRect = { 0,0,mClientWidth,mClientWidth };
 }
 
 bool d3dApp::InitMainWindow()

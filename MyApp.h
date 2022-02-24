@@ -9,7 +9,7 @@ using namespace DirectX::PackedVector;
 
 
 
-struct Vectex 
+struct Vectex
 {
 	float x;
 	float y;
@@ -37,10 +37,10 @@ struct FStaticMeshInfo
 struct Vertex
 {
 	XMFLOAT3 Pos;
-	XMFLOAT4 Color = XMFLOAT4(Colors::Red);
+	XMFLOAT4 Color = XMFLOAT4(Colors::Pink);
 	void Setpos(const Vectex& v)
 	{
-		Pos = XMFLOAT3(v.x,v.y,v.z);
+		Pos = XMFLOAT3(v.x, v.y, v.z);
 	}
 };
 
@@ -76,7 +76,7 @@ private:
 	void BuildBoxGeometry();
 	void BuildPSO();
 
-	void Readdat();
+	void Readdat(const std::string filename);
 
 private:
 
@@ -104,6 +104,11 @@ private:
 	float mTheta = 1.5f * XM_PI;
 	float mPhi = XM_PIDIV4;
 	float mRadius = 500.0f;
+
+	//test
+	float px = 0;
+	float py = 0;
+	float pz = 0;
 
 	POINT mLastMousePos;
 };

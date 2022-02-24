@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "MyApp.h"
 
 
@@ -43,6 +44,7 @@ void MyApp::OnResize()
 
 	// The window resized, so update the aspect ratio and recompute the projection matrix.
 	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 10000.0f);
+	//XMMATRIX P = XMMatrixPerspectiveFovLH(1, AspectRatio(), 1.0f, 10000.0f);
 	XMStoreFloat4x4(&mProj, P);
 }
 
@@ -54,8 +56,9 @@ void MyApp::Update(const GameTimer& gt)
 	float y = mRadius * cosf(mPhi);
 
 	// 创建视图矩阵
-	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);      //使用4个浮点值构造一个向量
-	XMVECTOR target = XMVectorZero();               //创建零向量
+	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);            //使用4个浮点值构造一个向量
+	XMVECTOR target = XMVectorZero();                     //创建零向量
+	//XMVECTOR target = XMVectorSet(1.0f,0.0f,0.0f,0.0f);
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
@@ -67,7 +70,7 @@ void MyApp::Update(const GameTimer& gt)
 
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants objConstants;
-	XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));
+	XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));   //XMMatrixTranspose 转置矩阵
 	mObjectCB->CopyData(0, objConstants);
 }
 
@@ -103,6 +106,8 @@ void MyApp::Draw(const GameTimer& gt)
 	mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
 	mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	//mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 	mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 
@@ -152,9 +157,15 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 		float dx = XMConvertToRadians(-0.25f * static_cast<float>(x - mLastMousePos.x));
 		float dy = XMConvertToRadians(-0.25f * static_cast<float>(y - mLastMousePos.y));
 
+
+		/*float dx = 10 * static_cast<float>(x - mLastMousePos.x);
+		float dy = 10 * static_cast<float>(y - mLastMousePos.y);*/
 		// Update angles based on input to orbit camera around box.
 		mTheta += dx;
 		mPhi += dy;
+
+		/*px += dx;
+		py += dy;*/
 
 		// Restrict the angle mPhi.
 		mPhi = MathHelper::Clamp(mPhi, 0.1f, MathHelper::Pi - 0.1f);
@@ -162,14 +173,16 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 	}
 	else if ((btnState & MK_RBUTTON) != 0)
 	{
-		// Make each pixel correspond to 0.005 unit in the scene.
+		//// Make each pixel correspond to 0.005 unit in the scene.
 		float dx = 0.5f * static_cast<float>(x - mLastMousePos.x);
 		float dy = 0.5f * static_cast<float>(y - mLastMousePos.y);
 
-		// Update the camera radius based on input.
+		//// Update the camera radius based on input.
 		mRadius += dx - dy;
 
-		// Restrict the radius.
+		//// Restrict the radius.
+
+		pz += 10 * static_cast<float>(x - mLastMousePos.x);
 		
 	}
 
@@ -263,7 +276,7 @@ void MyApp::BuildShadersAndInputLayout()
 
 void MyApp::BuildBoxGeometry()
 {
-	Readdat();
+	Readdat("SM_MatPreviewMesh_02.dat");
 
 	std::vector<Vertex> vertices;
 	for (int i = 0; i < StaticMeshInfo.InfoVertex.NumVertices; i++) {
@@ -338,11 +351,10 @@ void MyApp::BuildPSO()
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
 }
 
-
-
-void MyApp::Readdat()
+void MyApp::Readdat(const std::string filename)
 {
-	std::ifstream fin("Data/SM_MatPreviewMesh_02.dat", std::ios::binary);
+	std::string FilePath = "Data/" + filename;
+	std::ifstream fin(FilePath, std::ios::binary);
 
 	
 	INT32 Num;
