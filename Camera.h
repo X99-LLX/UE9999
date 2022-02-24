@@ -19,8 +19,8 @@ public:
 	XMFLOAT3 GetRight3f()const;
 	XMVECTOR GetUp()const;
 	XMFLOAT3 GetUp3f()const;
-	XMVECTOR GetLook()const;
-	XMFLOAT3 GetLook3f()const;
+	XMVECTOR GetTarget()const;
+	XMFLOAT3 GetTarget3f()const;
 
 	float GetNearZ()const;
 	float GetFarZ()const;
@@ -45,7 +45,7 @@ public:
 	DirectX::XMMATRIX GetView()const;
 	DirectX::XMMATRIX GetProj()const;
 
-	DirectX::XMFLOAT4X4 GetView4x4f()const;
+	DirectX::XMFLOAT4X4 GetView4x4f()const; 
 	DirectX::XMFLOAT4X4 GetProj4x4f()const;
 
 	
@@ -59,7 +59,7 @@ public:
 	
 	void UpdateViewMatrix();
 
-private:
+public:
 	XMFLOAT3 mPosition = { 0.0f,0.0f,0.0f };
 	XMFLOAT3 mUp = { 0.0f,1.0f,0.0f };
 	XMFLOAT3 mTarget = { 0.0f,0.0f,1.0f };

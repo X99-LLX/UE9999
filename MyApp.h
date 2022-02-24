@@ -1,6 +1,7 @@
 #pragma once
 #include "d3dApp.h"
 #include "UpLoadBuffer.h"
+#include "Camera.h"
 #include "MathHelper.h"
 
 using Microsoft::WRL::ComPtr;
@@ -76,6 +77,8 @@ private:
 	void BuildBoxGeometry();
 	void BuildPSO();
 
+	void OnKeyboardInput(const GameTimer& gt);
+
 	void Readdat(const std::string filename);
 
 private:
@@ -105,10 +108,7 @@ private:
 	float mPhi = XM_PIDIV4;
 	float mRadius = 500.0f;
 
-	//test
-	float px = 0;
-	float py = 0;
-	float pz = 0;
+	Camera mCamera;
 
 	POINT mLastMousePos;
 };

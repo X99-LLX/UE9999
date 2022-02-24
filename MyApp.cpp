@@ -20,6 +20,8 @@ bool MyApp::Initialize()
 	// Reset the command list to prep for initialization commands.
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
+	mCamera.SetCameraPos(0.0f, 0.0f, 0.0f);
+
 	BuildDescriptorHeaps();
 	BuildConstantBuffers();
 	BuildRootSignature();
@@ -43,35 +45,39 @@ void MyApp::OnResize()
 	d3dApp::OnResize();
 
 	// The window resized, so update the aspect ratio and recompute the projection matrix.
-	XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 10000.0f);
-	//XMMATRIX P = XMMatrixPerspectiveFovLH(1, AspectRatio(), 1.0f, 10000.0f);
-	XMStoreFloat4x4(&mProj, P);
+	//XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 10000.0f);
+	//XMStoreFloat4x4(&mProj, P);
+	mCamera.SetLens(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 10000.0f);
 }
 
 void MyApp::Update(const GameTimer& gt)
 {
+	OnKeyboardInput(gt);
+
+
 	// 将球面坐标转换为笛卡尔坐标
-	float x = mRadius * sinf(mPhi) * cosf(mTheta);
+	/*float x = mRadius * sinf(mPhi) * cosf(mTheta);
 	float z = mRadius * sinf(mPhi) * sinf(mTheta);
-	float y = mRadius * cosf(mPhi);
+	float y = mRadius * cosf(mPhi);*/
 
 	// 创建视图矩阵
-	XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);            //使用4个浮点值构造一个向量
-	XMVECTOR target = XMVectorZero();                     //创建零向量
+	//XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);            //使用4个浮点值构造一个向量
+	//XMVECTOR target = XMVectorZero();                     //创建零向量
 	//XMVECTOR target = XMVectorSet(1.0f,0.0f,0.0f,0.0f);
-	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	//XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
-	XMStoreFloat4x4(&mView, view);
+	//XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+	//XMStoreFloat4x4(&mView, view);
 
 	XMMATRIX world = XMLoadFloat4x4(&mWorld);
-	XMMATRIX proj = XMLoadFloat4x4(&mProj);
-	XMMATRIX worldViewProj = world * view * proj;
+	/*XMMATRIX proj = XMLoadFloat4x4(&mProj);*/
+	XMMATRIX worldViewProj = world * mCamera.GetView() * mCamera.GetProj();
 
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants objConstants;
 	XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));   //XMMatrixTranspose 转置矩阵
 	mObjectCB->CopyData(0, objConstants);
+	 
 }
 
 void MyApp::Draw(const GameTimer& gt)
@@ -154,35 +160,29 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 	if ((btnState & MK_LBUTTON) != 0)
 	{
 		// Make each pixel correspond to a quarter of a degree.
-		float dx = XMConvertToRadians(-0.25f * static_cast<float>(x - mLastMousePos.x));
-		float dy = XMConvertToRadians(-0.25f * static_cast<float>(y - mLastMousePos.y));
+		float dx = XMConvertToRadians(0.25f * static_cast<float>(x - mLastMousePos.x));
+		float dy = XMConvertToRadians(0.25f * static_cast<float>(y - mLastMousePos.y));
+
+		/*mTheta += dx;
+		mPhi += dy;*/
 
 
-		/*float dx = 10 * static_cast<float>(x - mLastMousePos.x);
-		float dy = 10 * static_cast<float>(y - mLastMousePos.y);*/
-		// Update angles based on input to orbit camera around box.
-		mTheta += dx;
-		mPhi += dy;
-
-		/*px += dx;
-		py += dy;*/
-
-		// Restrict the angle mPhi.
-		mPhi = MathHelper::Clamp(mPhi, 0.1f, MathHelper::Pi - 0.1f);
+		mCamera.Pitch(dy);
+		mCamera.RotateY(dx);
+		//// Restrict the angle mPhi.
+		//mPhi = MathHelper::Clamp(mPhi, 0.1f, MathHelper::Pi - 0.1f);
 
 	}
 	else if ((btnState & MK_RBUTTON) != 0)
 	{
-		//// Make each pixel correspond to 0.005 unit in the scene.
-		float dx = 0.5f * static_cast<float>(x - mLastMousePos.x);
-		float dy = 0.5f * static_cast<float>(y - mLastMousePos.y);
+		////// Make each pixel correspond to 0.005 unit in the scene.
+		//float dx = 0.5f * static_cast<float>(x - mLastMousePos.x);
+		//float dy = 0.5f * static_cast<float>(y - mLastMousePos.y);
 
-		//// Update the camera radius based on input.
-		mRadius += dx - dy;
+		////// Update the camera radius based on input.
+		//mRadius += dx - dy;
 
-		//// Restrict the radius.
-
-		pz += 10 * static_cast<float>(x - mLastMousePos.x);
+		////// Restrict the radius.
 		
 	}
 
@@ -349,6 +349,25 @@ void MyApp::BuildPSO()
 	psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
+}
+
+void MyApp::OnKeyboardInput(const GameTimer& gt)
+{
+	const float dt = gt.DeltaTime();
+
+	if (GetAsyncKeyState('W') & 0x8000)
+		mCamera.Walk(10.0f * dt);
+
+	if (GetAsyncKeyState('S') & 0x8000)
+		mCamera.Walk(-10.0f * dt);
+
+	if (GetAsyncKeyState('A') & 0x8000)
+		mCamera.Strafe(-10.0f * dt);
+
+	if (GetAsyncKeyState('D') & 0x8000)
+		mCamera.Strafe(10.0f * dt);
+
+	mCamera.UpdateViewMatrix();
 }
 
 void MyApp::Readdat(const std::string filename)
