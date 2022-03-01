@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MyApp.h"
-
+#include <set>
+#include <unordered_map>
 
 MyApp::MyApp(HINSTANCE hInstance):d3dApp(hInstance)
 {
@@ -26,7 +27,7 @@ bool MyApp::Initialize()
 	BuildConstantBuffers();
 	BuildRootSignature();
 	BuildShadersAndInputLayout();
-	BuildBoxGeometry();
+	BuildGeometry();
 	BuildPSO();
 
 	// Execute the initialization commands.
@@ -43,41 +44,15 @@ bool MyApp::Initialize()
 void MyApp::OnResize()
 {
 	d3dApp::OnResize();
-
-	// The window resized, so update the aspect ratio and recompute the projection matrix.
-	//XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 10000.0f);
-	//XMStoreFloat4x4(&mProj, P);
-	mCamera.SetLens(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 10000.0f);
+	mCamera.SetLens(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 100000.0f);
 }
 
 void MyApp::Update(const GameTimer& gt)
 {
 	OnKeyboardInput(gt);
 
-
-	// 将球面坐标转换为笛卡尔坐标
-	/*float x = mRadius * sinf(mPhi) * cosf(mTheta);
-	float z = mRadius * sinf(mPhi) * sinf(mTheta);
-	float y = mRadius * cosf(mPhi);*/
-
-	// 创建视图矩阵
-	//XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);            //使用4个浮点值构造一个向量
-	//XMVECTOR target = XMVectorZero();                     //创建零向量
-	//XMVECTOR target = XMVectorSet(1.0f,0.0f,0.0f,0.0f);
-	//XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-	//XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
-	//XMStoreFloat4x4(&mView, view);
-
-	XMMATRIX world = XMLoadFloat4x4(&mWorld);
-	/*XMMATRIX proj = XMLoadFloat4x4(&mProj);*/
-	XMMATRIX worldViewProj = world * mCamera.GetView() * mCamera.GetProj();
-
-	// Update the constant buffer with the latest worldViewProj matrix.
-	ObjectConstants objConstants;
-	XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));   //XMMatrixTranspose 转置矩阵
-	mObjectCB->CopyData(0, objConstants);
-	 
+	
+	
 }
 
 void MyApp::Draw(const GameTimer& gt)
@@ -109,17 +84,26 @@ void MyApp::Draw(const GameTimer& gt)
 
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
-	mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
-	mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
-	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-	//mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	for (auto mesh:mMeshGeo)
+	{
+		mCommandList->IASetVertexBuffers(0, 1, &mesh.VertexBufferView());
+		mCommandList->IASetIndexBuffer(&mesh.IndexBufferView());
+		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 
-	mCommandList->DrawIndexedInstanced(
-		mBoxGeo->DrawArgs["box"].IndexCount,
-		1, 0, 0, 0);
+		XMMATRIX world = XMLoadFloat4x4(&mWorld);
+		XMMATRIX worldViewProj = world * mCamera.GetView() * mCamera.GetProj();
+		ObjectConstants objConstants;
+		XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));   
+		mObjectCB->CopyData(0, objConstants);
+
+
+		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+		mCommandList->DrawIndexedInstanced(
+			mesh.IndexCount,
+			1, 0, 0, 0);
+	}
+	
 
 	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
@@ -159,30 +143,15 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 {
 	if ((btnState & MK_LBUTTON) != 0)
 	{
-		// Make each pixel correspond to a quarter of a degree.
 		float dx = XMConvertToRadians(0.25f * static_cast<float>(x - mLastMousePos.x));
 		float dy = XMConvertToRadians(0.25f * static_cast<float>(y - mLastMousePos.y));
 
-		/*mTheta += dx;
-		mPhi += dy;*/
-
-
 		mCamera.Pitch(dy);
 		mCamera.RotateY(dx);
-		//// Restrict the angle mPhi.
-		//mPhi = MathHelper::Clamp(mPhi, 0.1f, MathHelper::Pi - 0.1f);
-
+	
 	}
 	else if ((btnState & MK_RBUTTON) != 0)
 	{
-		////// Make each pixel correspond to 0.005 unit in the scene.
-		//float dx = 0.5f * static_cast<float>(x - mLastMousePos.x);
-		//float dy = 0.5f * static_cast<float>(y - mLastMousePos.y);
-
-		////// Update the camera radius based on input.
-		//mRadius += dx - dy;
-
-		////// Restrict the radius.
 		
 	}
 
@@ -274,50 +243,73 @@ void MyApp::BuildShadersAndInputLayout()
 	};
 }
 
-void MyApp::BuildBoxGeometry()
+void MyApp::BuildGeometry()
 {
-	Readdat("SM_MatPreviewMesh_02.dat");
 
-	std::vector<Vertex> vertices;
-	for (int i = 0; i < StaticMeshInfo.InfoVertex.NumVertices; i++) {
-		Vertex vertex;
-		vertex.Setpos(StaticMeshInfo.InfoVertex.VertexInfo[i]);
-		vertices.push_back(vertex);
+	AllActor allactor;
+	ReadAllMeshdat("mapactor",allactor);
+
+	std::set<std::string> AllAssetPath;
+	for (int i = 0; i < allactor.Actors.size(); i++)
+	{
+		AllAssetPath.insert(allactor.Actors[i].AssetName);
 	}
 
+
+	std::unordered_map<std::string, FStaticMeshInfo> AssetIndex;
+
+	for (auto actorname :AllAssetPath)
+	{
+		FStaticMeshInfo StaticMeshInfo;
+		if (ReadMeshdat(actorname, StaticMeshInfo)) 
+		{
+			AssetIndex.insert({ actorname, StaticMeshInfo });
+		}
+	}
+
+
 	std::vector<int> indices;
-	indices = StaticMeshInfo.InfoVertex.Index;
+	std::vector<Vertex> vertices;
 
+	int IndexOffSet = 0;
+	for (auto actor:allactor.Actors)
+	{
+		FStaticMeshInfo TempMeshInfo = AssetIndex[actor.AssetName];
+		
+		vertices.resize(TempMeshInfo.InfoVertex.VertexInfo.size());
+		for (int i = 0; i < TempMeshInfo.InfoVertex.VertexInfo.size(); i++)
+		{
+			TempMeshInfo.InfoVertex.VertexInfo[i].TransWorld(actor.transform.Translation);
+			vertices[i].Setpos(TempMeshInfo.InfoVertex.VertexInfo[i]);
+		}
 
-	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-	const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
+		indices.resize(TempMeshInfo.InfoVertex.Index.size());
+		indices = TempMeshInfo.InfoVertex.Index;
 
-	mBoxGeo = std::make_unique<MeshGeometry>();
-	mBoxGeo->Name = "MyMesh";
+		const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+		const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
 
-	ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->VertexBufferCPU));
-	CopyMemory(mBoxGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+		MeshGeometry mBoxGeo ;
+		mBoxGeo.Name = actor.AssetName;
 
-	ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo->IndexBufferCPU));
-	CopyMemory(mBoxGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+		ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo.VertexBufferCPU));
+		CopyMemory(mBoxGeo.VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
 
-	mBoxGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), vertices.data(), vbByteSize, mBoxGeo->VertexBufferUploader);
+		ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo.IndexBufferCPU));
+		CopyMemory(mBoxGeo.IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
 
-	mBoxGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), indices.data(), ibByteSize, mBoxGeo->IndexBufferUploader);
+		mBoxGeo.VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+			mCommandList.Get(), vertices.data(), vbByteSize, mBoxGeo.VertexBufferUploader);
 
-	mBoxGeo->VertexByteStride = sizeof(Vertex);
-	mBoxGeo->VertexBufferByteSize = vbByteSize;
-	mBoxGeo->IndexFormat = DXGI_FORMAT_R32_UINT;
-	mBoxGeo->IndexBufferByteSize = ibByteSize;
-
-	SubmeshGeometry submesh;
-	submesh.IndexCount = (UINT)indices.size();
-	submesh.StartIndexLocation = 0;
-	submesh.BaseVertexLocation = 0;
-
-	mBoxGeo->DrawArgs["box"] = submesh;
+		mBoxGeo.IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+			mCommandList.Get(), indices.data(), ibByteSize, mBoxGeo.IndexBufferUploader);
+		mBoxGeo.VertexByteStride = sizeof(Vertex);
+		mBoxGeo.VertexBufferByteSize = vbByteSize;
+		mBoxGeo.IndexFormat = DXGI_FORMAT_R32_UINT;
+		mBoxGeo.IndexBufferByteSize = ibByteSize;
+		mBoxGeo.IndexCount = (UINT)indices.size();
+		mMeshGeo.push_back(mBoxGeo);
+	}
 }
 
 void MyApp::BuildPSO()
@@ -337,11 +329,11 @@ void MyApp::BuildPSO()
 		mpsByteCode->GetBufferSize()
 	};
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
+	psoDesc.RasterizerState.FrontCounterClockwise = true;
+	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.RasterizerState.FrontCounterClockwise = true;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = mBackBufferFormat;
@@ -367,36 +359,72 @@ void MyApp::OnKeyboardInput(const GameTimer& gt)
 	if (GetAsyncKeyState('D') & 0x8000)
 		mCamera.Strafe(10.0f * dt);
 
+	if (GetAsyncKeyState('Q') & 0x8000)
+		mCamera.RotateZ(-10.0f * dt);
+
+	if (GetAsyncKeyState('E') & 0x8000)
+		mCamera.RotateZ(10.0f * dt);
+
 	mCamera.UpdateViewMatrix();
 }
 
-void MyApp::Readdat(const std::string filename)
+bool MyApp::ReadMeshdat(std::string filename,FStaticMeshInfo& meshinfo)
 {
-	std::string FilePath = "Data/" + filename;
+	filename = filename.erase(filename.length() - 1, 1);
+	std::string FilePath = "Data/" + filename + ".dat";
 	std::ifstream fin(FilePath, std::ios::binary);
-
+	if (!fin.is_open())
+	{
+		return false;
+	}
 	
 	INT32 Num;
 
-	fin.read((char*)&Num, sizeof(int));
-	StaticMeshInfo.MeshName.resize(Num);
-	fin.read((char*)StaticMeshInfo.MeshName.data(), Num);
-	fin.read((char*)&StaticMeshInfo.NumLod, sizeof(int));
-
-	
-	fin.read((char*)&StaticMeshInfo.InfoVertex.NumVertices, sizeof(int));
-	fin.read((char*)&StaticMeshInfo.InfoVertex.NumTriangles, sizeof(int));
-	fin.read((char*)&StaticMeshInfo.InfoVertex.NumIndices, sizeof(int));
-
 
 	fin.read((char*)&Num, sizeof(int));
-	StaticMeshInfo.InfoVertex.VertexInfo.resize(Num);
-	fin.read((char*)StaticMeshInfo.InfoVertex.VertexInfo.data(), sizeof(Vectex) * Num);
-	
+	meshinfo.MeshName.resize(Num);
+	fin.read((char*)meshinfo.MeshName.data(), Num);
+
+	fin.read((char*)&meshinfo.NumLod, sizeof(int));
+
+
+	fin.read((char*)&meshinfo.InfoVertex.NumVertices, sizeof(int));
+	fin.read((char*)&meshinfo.InfoVertex.NumTriangles, sizeof(int));
+	fin.read((char*)&meshinfo.InfoVertex.NumIndices, sizeof(int));
+
+
 	fin.read((char*)&Num, sizeof(int));
-	StaticMeshInfo.InfoVertex.Index.resize(Num);
-	fin.read((char*)StaticMeshInfo.InfoVertex.Index.data(), sizeof(int) * Num);
+	meshinfo.InfoVertex.Index.resize(Num);
+	fin.read((char*)meshinfo.InfoVertex.Index.data(), sizeof(int) * Num);
+
+	fin.read((char*)&Num, sizeof(int));
+	meshinfo.InfoVertex.VertexInfo.resize(Num);
+	fin.read((char*)meshinfo.InfoVertex.VertexInfo.data(), sizeof(Vectex) * Num);
+
+	fin.close();
+}
+
+void MyApp::ReadAllMeshdat(const std::string filename, AllActor& meshinfo)
+{
 	
+	std::string FilePath = "Data/" + filename + ".dat";
+	std::ifstream fin(FilePath, std::ios::binary);
+
+
+	INT32 Num;
+	fin.read((char*)&Num,sizeof(int));
+
+	for (int i = 0; i < Num; i++)
+	{
+		ActorInfo actorinfo;
+		INT32 TempNum;
+		fin.read((char*)&actorinfo.transform, sizeof(int) * 10);
+		fin.read((char*)&TempNum, sizeof(int));
+		actorinfo.AssetName.resize(TempNum);
+		fin.read((char*)actorinfo.AssetName.data(), TempNum);
+		meshinfo.Actors.push_back(actorinfo);
+	}
+ 
 	fin.close();
 }
 

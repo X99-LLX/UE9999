@@ -8,6 +8,25 @@ using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
+struct ActorTransform
+{
+	XMFLOAT4 Rotation;
+	XMFLOAT3 Translation;
+	XMFLOAT3 Scale3D;
+};
+
+struct ActorInfo
+{
+	ActorTransform transform;
+	std::string AssetName;
+
+};
+
+struct AllActor
+{
+	std::vector<ActorInfo> Actors;
+};
+
 
 
 struct Vectex
@@ -15,6 +34,12 @@ struct Vectex
 	float x;
 	float y;
 	float z;
+	void TransWorld(XMFLOAT3 trans)
+	{
+		x = x + trans.x;
+		y = y + trans.y;
+		z = z + trans.z;
+	}
 };
 
 struct FVertexInfo
@@ -74,12 +99,13 @@ private:
 	void BuildConstantBuffers();
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
-	void BuildBoxGeometry();
+	void BuildGeometry();
 	void BuildPSO();
 
 	void OnKeyboardInput(const GameTimer& gt);
 
-	void Readdat(const std::string filename);
+	bool ReadMeshdat(const std::string filename,FStaticMeshInfo& meshinfo);
+	void ReadAllMeshdat(const std::string filename, AllActor& meshinfo);
 
 private:
 
@@ -88,7 +114,7 @@ private:
 
 	std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
 
-	std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
+	std::vector <MeshGeometry> mMeshGeo ;
 
 	ComPtr<ID3DBlob> mvsByteCode = nullptr;
 	ComPtr<ID3DBlob> mpsByteCode = nullptr;
@@ -101,12 +127,6 @@ private:
 	XMFLOAT4X4 mView = MathHelper::Identity4x4();
 	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
-
-	FStaticMeshInfo StaticMeshInfo;
-
-	float mTheta = 1.5f * XM_PI;
-	float mPhi = XM_PIDIV4;
-	float mRadius = 500.0f;
 
 	Camera mCamera;
 

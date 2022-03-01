@@ -178,7 +178,7 @@ DirectX::XMFLOAT4X4 Camera::GetProj4x4f() const
 void Camera::Strafe(float d)
 {
 	// mPosition += d*mRight
-	XMVECTOR s = XMVectorReplicate(100*d);
+	XMVECTOR s = XMVectorReplicate(100 * d);
 	XMVECTOR r = XMLoadFloat3(&mRight);
 	XMVECTOR p = XMLoadFloat3(&mPosition);
 	XMStoreFloat3(&mPosition, XMVectorMultiplyAdd(s, r, p));
@@ -189,7 +189,7 @@ void Camera::Strafe(float d)
 void Camera::Walk(float d)
 {
 	// mPosition += d*mLook
-	XMVECTOR s = XMVectorReplicate(100*d);
+	XMVECTOR s = XMVectorReplicate(100 * d);
 	XMVECTOR l = XMLoadFloat3(&mTarget);
 	XMVECTOR p = XMLoadFloat3(&mPosition);
 	XMStoreFloat3(&mPosition, XMVectorMultiplyAdd(s, l, p));
@@ -221,6 +221,21 @@ void Camera::RotateY(float angle)
 
 	mInitView = true;
 }
+
+void Camera::RotateZ(float angle)
+{
+	// Rotate the basis vectors about the world y-axis.
+
+	XMMATRIX R = XMMatrixRotationY(angle);
+
+	XMStoreFloat3(&mUp, XMVector3TransformNormal(XMLoadFloat3(&mUp), R));
+	XMStoreFloat3(&mRight, XMVector3TransformNormal(XMLoadFloat3(&mRight), R));
+	/*XMStoreFloat3(&mTarget, XMVector3TransformNormal(XMLoadFloat3(&mTarget), R));*/
+
+	mInitView = true;
+}
+
+
 
 void Camera::UpdateViewMatrix()
 {
