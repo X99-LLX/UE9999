@@ -23,8 +23,9 @@ bool MyApp::Initialize()
 
 	mCamera.SetCameraPos(0.0f, 0.0f, 0.0f);
 
-	BuildDescriptorHeaps();
-	BuildConstantBuffers();
+	/*BuildDescriptorHeaps();
+	BuildConstantBuffers();*/
+
 	BuildRootSignature();
 	BuildShadersAndInputLayout();
 	BuildGeometry();
@@ -73,35 +74,39 @@ void MyApp::Draw(const GameTimer& gt)
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	// Clear the back buffer and depth buffer.
-	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightPink, 0, nullptr);
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	// Specify the buffers we are going to render to.
 	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvHeap.Get() };
-	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+	
 
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
+	int index = 0;
 	for (auto mesh:mMeshGeo)
 	{
+		ID3D12DescriptorHeap* descriptorHeaps[] = { mCbvHeap[index].Get() };
+		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
 		mCommandList->IASetVertexBuffers(0, 1, &mesh.VertexBufferView());
 		mCommandList->IASetIndexBuffer(&mesh.IndexBufferView());
 		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
-		XMMATRIX world = XMLoadFloat4x4(&mWorld);
-		XMMATRIX worldViewProj = world * mCamera.GetView() * mCamera.GetProj();
-		ObjectConstants objConstants;
-		XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));   
-		mObjectCB->CopyData(0, objConstants);
-
-
-		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap->GetGPUDescriptorHandleForHeapStart());
+		XMMATRIX worldViewProj = mesh.mWorld * mCamera.GetView() * mCamera.GetProj();
+		ObjectTransform objConstants;
+		XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));
+		XMStoreFloat4x4(&objConstants.Scale3D, mesh.mScale3D);
+		XMStoreFloat4x4(&objConstants.Rotate, mesh.mRotate);
+		mObjectCB[index]->CopyData(0, objConstants);
+		
+		mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap[index]->GetGPUDescriptorHandleForHeapStart());
 		mCommandList->DrawIndexedInstanced(
 			mesh.IndexCount,
 			1, 0, 0, 0);
+		index++;
 	}
 	
 
@@ -124,6 +129,7 @@ void MyApp::Draw(const GameTimer& gt)
 	// done for simplicity.  Later we will show how to organize our rendering code
 	// so we do not have to wait per frame.
 	FlushCommandQueue();
+
 }
 
 void MyApp::OnMouseDown(WPARAM btnState, int x, int y)
@@ -159,7 +165,7 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 	mLastMousePos.y = y;
 }
 
-void MyApp::BuildDescriptorHeaps()
+void MyApp::BuildDescriptorHeaps(int index)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = 1;
@@ -167,28 +173,24 @@ void MyApp::BuildDescriptorHeaps()
 	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	cbvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc,
-		IID_PPV_ARGS(&mCbvHeap)));
+		IID_PPV_ARGS(&mCbvHeap[index])));
 }
 
-void MyApp::BuildConstantBuffers()
+void MyApp::BuildConstantBuffers(int index)
 {
-	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
-
-	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
-
-	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
-	// Offset to the ith object constant buffer in the buffer.
-	int boxCBufIndex = 0;
-	cbAddress += boxCBufIndex * objCBByteSize;
+	mObjectCB[index] = std::make_unique<UploadBuffer<ObjectTransform>>(md3dDevice.Get(), 1, true);
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB[index]->Resource()->GetGPUVirtualAddress();
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
 	cbvDesc.BufferLocation = cbAddress;
-	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
+	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectTransform));
 
 	md3dDevice->CreateConstantBufferView(
 		&cbvDesc,
-		mCbvHeap->GetCPUDescriptorHandleForHeapStart());
+		mCbvHeap[index]->GetCPUDescriptorHandleForHeapStart());
 }
+
+
 
 void MyApp::BuildRootSignature()
 {
@@ -271,16 +273,23 @@ void MyApp::BuildGeometry()
 	std::vector<int> indices;
 	std::vector<Vertex> vertices;
 
-	int IndexOffSet = 0;
+	int Index = 0;
 	for (auto actor:allactor.Actors)
 	{
+		mCbvHeap.resize(allactor.Actors.size());
+		mObjectCB.resize(allactor.Actors.size());
+		BuildDescriptorHeaps(Index);
+		BuildConstantBuffers(Index);
+		Index++;
 		FStaticMeshInfo TempMeshInfo = AssetIndex[actor.AssetName];
 		
 		vertices.resize(TempMeshInfo.InfoVertex.VertexInfo.size());
 		for (int i = 0; i < TempMeshInfo.InfoVertex.VertexInfo.size(); i++)
 		{
-			TempMeshInfo.InfoVertex.VertexInfo[i].TransWorld(actor.transform.Translation);
-			vertices[i].Setpos(TempMeshInfo.InfoVertex.VertexInfo[i]);
+			//TempMeshInfo.InfoVertex.VertexInfo[i].Scale3D(actor.transform.Scale3D);
+			float j = (rand() % 10 ) / 10.0f;
+			XMFLOAT4 color = { 2*j,j - 0.05f,j ,1 };
+			vertices[i].Setpos(TempMeshInfo.InfoVertex.VertexInfo[i], TempMeshInfo.InfoVertex.Normal[i]);
 		}
 
 		indices.resize(TempMeshInfo.InfoVertex.Index.size());
@@ -291,6 +300,12 @@ void MyApp::BuildGeometry()
 
 		MeshGeometry mBoxGeo ;
 		mBoxGeo.Name = actor.AssetName;
+
+		mBoxGeo.mWorld = XMMatrixTranslation(actor.transform.Translation.x, actor.transform.Translation.y, actor.transform.Translation.z);
+
+		mBoxGeo.mScale3D = XMMatrixScaling(actor.transform.Scale3D.x, actor.transform.Scale3D.y, actor.transform.Scale3D.z);
+
+		mBoxGeo.mRotate = XMMatrixRotationRollPitchYaw(actor.transform.Rotation.x, actor.transform.Rotation.y, actor.transform.Rotation.z);
 
 		ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo.VertexBufferCPU));
 		CopyMemory(mBoxGeo.VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
@@ -303,8 +318,10 @@ void MyApp::BuildGeometry()
 
 		mBoxGeo.IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
 			mCommandList.Get(), indices.data(), ibByteSize, mBoxGeo.IndexBufferUploader);
+
+
 		mBoxGeo.VertexByteStride = sizeof(Vertex);
-		mBoxGeo.VertexBufferByteSize = vbByteSize;
+		mBoxGeo.VertexBufferByteSize = vbByteSize;  
 		mBoxGeo.IndexFormat = DXGI_FORMAT_R32_UINT;
 		mBoxGeo.IndexBufferByteSize = ibByteSize;
 		mBoxGeo.IndexCount = (UINT)indices.size();
@@ -360,10 +377,10 @@ void MyApp::OnKeyboardInput(const GameTimer& gt)
 		mCamera.Strafe(10.0f * dt);
 
 	if (GetAsyncKeyState('Q') & 0x8000)
-		mCamera.RotateZ(-10.0f * dt);
+		mCamera.RotateZ(2.0f * dt);
 
 	if (GetAsyncKeyState('E') & 0x8000)
-		mCamera.RotateZ(10.0f * dt);
+		mCamera.RotateZ(-2.0f * dt);
 
 	mCamera.UpdateViewMatrix();
 }
@@ -392,7 +409,6 @@ bool MyApp::ReadMeshdat(std::string filename,FStaticMeshInfo& meshinfo)
 	fin.read((char*)&meshinfo.InfoVertex.NumTriangles, sizeof(int));
 	fin.read((char*)&meshinfo.InfoVertex.NumIndices, sizeof(int));
 
-
 	fin.read((char*)&Num, sizeof(int));
 	meshinfo.InfoVertex.Index.resize(Num);
 	fin.read((char*)meshinfo.InfoVertex.Index.data(), sizeof(int) * Num);
@@ -400,6 +416,10 @@ bool MyApp::ReadMeshdat(std::string filename,FStaticMeshInfo& meshinfo)
 	fin.read((char*)&Num, sizeof(int));
 	meshinfo.InfoVertex.VertexInfo.resize(Num);
 	fin.read((char*)meshinfo.InfoVertex.VertexInfo.data(), sizeof(Vectex) * Num);
+
+	fin.read((char*)&Num, sizeof(int));
+	meshinfo.InfoVertex.Normal.resize(Num);
+	fin.read((char*)meshinfo.InfoVertex.Normal.data(), sizeof(MyNormal) * Num);
 
 	fin.close();
 }

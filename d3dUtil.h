@@ -162,8 +162,13 @@ struct MeshGeometry
     // Give it a name so we can look it up by name.
     std::string Name;
 
+    DirectX::XMMATRIX mWorld;
+    DirectX::XMMATRIX mScale3D;
+    DirectX::XMMATRIX mRotate;
+
     // System memory copies.  Use Blobs because the vertex/index format can be generic.
     // It is up to the client to cast appropriately.  
+
     Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU = nullptr;
 
@@ -172,6 +177,8 @@ struct MeshGeometry
 
     Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
+
+   
 
     // Data about the buffers.
     UINT VertexByteStride = 0;
