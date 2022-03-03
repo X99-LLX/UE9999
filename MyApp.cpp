@@ -58,29 +58,19 @@ void MyApp::Update(const GameTimer& gt)
 
 void MyApp::Draw(const GameTimer& gt)
 {
-	// Reuse the memory associated with command recording.
-	// We can only reset when the associated command lists have finished execution on the GPU.
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
-
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
 
 	mCommandList->RSSetViewports(1, &mScreenViewport);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	// Clear the back buffer and depth buffer.
 	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightPink, 0, nullptr);
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	// Specify the buffers we are going to render to.
 	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-
-	
 
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
@@ -191,7 +181,6 @@ void MyApp::BuildConstantBuffers(int index)
 }
 
 
-
 void MyApp::BuildRootSignature()
 {
 	// Shader programs typically require resources as input (constant buffers,
@@ -241,7 +230,8 @@ void MyApp::BuildShadersAndInputLayout()
 	mInputLayout =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }
 
@@ -286,10 +276,10 @@ void MyApp::BuildGeometry()
 		vertices.resize(TempMeshInfo.InfoVertex.VertexInfo.size());
 		for (int i = 0; i < TempMeshInfo.InfoVertex.VertexInfo.size(); i++)
 		{
-			//TempMeshInfo.InfoVertex.VertexInfo[i].Scale3D(actor.transform.Scale3D);
-			float j = (rand() % 10 ) / 10.0f;
-			XMFLOAT4 color = { 2*j,j - 0.05f,j ,1 };
-			vertices[i].Setpos(TempMeshInfo.InfoVertex.VertexInfo[i], TempMeshInfo.InfoVertex.Normal[i]);
+			
+			XMFLOAT4 color = { 0.1f,0.2f,0.3f,1.0f };
+			vertices[i].Setpos(TempMeshInfo.InfoVertex.VertexInfo[i], color, TempMeshInfo.InfoVertex.Normal[i]);
+
 		}
 
 		indices.resize(TempMeshInfo.InfoVertex.Index.size());
@@ -301,11 +291,12 @@ void MyApp::BuildGeometry()
 		MeshGeometry mBoxGeo ;
 		mBoxGeo.Name = actor.AssetName;
 
-		mBoxGeo.mWorld = XMMatrixTranslation(actor.transform.Translation.x, actor.transform.Translation.y, actor.transform.Translation.z);
+		mBoxGeo.mWorld = DirectX::XMMatrixTranslation(actor.transform.Translation.x, actor.transform.Translation.y, actor.transform.Translation.z);
 
-		mBoxGeo.mScale3D = XMMatrixScaling(actor.transform.Scale3D.x, actor.transform.Scale3D.y, actor.transform.Scale3D.z);
-
-		mBoxGeo.mRotate = XMMatrixRotationRollPitchYaw(actor.transform.Rotation.x, actor.transform.Rotation.y, actor.transform.Rotation.z);
+		mBoxGeo.mScale3D = DirectX::XMMatrixScaling(actor.transform.Scale3D.x, actor.transform.Scale3D.y, actor.transform.Scale3D.z);
+		
+		FXMVECTOR VRotate = DirectX::XMVectorSet(actor.transform.Rotation.x, actor.transform.Rotation.y, actor.transform.Rotation.z, actor.transform.Rotation.w) ;
+		mBoxGeo.mRotate  = DirectX::XMMatrixRotationQuaternion(VRotate);
 
 		ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo.VertexBufferCPU));
 		CopyMemory(mBoxGeo.VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);

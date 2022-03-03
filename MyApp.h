@@ -83,18 +83,20 @@ struct Vertex
 {
 	XMFLOAT3 Pos;
 	XMFLOAT4 Color = XMFLOAT4(Colors::Pink);
+	XMFLOAT4 Normal;
 	void Setpos(const Vectex& v, XMFLOAT4 c)
 	{
 		Pos = XMFLOAT3(v.x, v.y, v.z);
 		Color = c;
 	}
-	void Setpos(const Vectex& v, MyNormal c)
+	void Setpos(const Vectex& v, XMFLOAT4 c,MyNormal n)
 	{
 		Pos = XMFLOAT3(v.x, v.y, v.z);
-		Color.x = c.x * 0.5f + 0.5f;
-		Color.y = c.y * 0.5f + 0.5f;
-		Color.z = c.z * 0.5f + 0.5f;
-		Color.w = c.w * 0.5f + 0.5f;
+		Color = c;
+		Normal.x = n.x * 0.5f + 0.5f;
+		Normal.y = n.y * 0.5f + 0.5f;
+		Normal.z = n.z * 0.5f + 0.5f;
+		Normal.w = n.w * 0.5f + 0.5f;
 	}
 };
 
@@ -154,10 +156,6 @@ private:
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 
 	ComPtr<ID3D12PipelineState> mPSO = nullptr;
-
-	XMFLOAT4X4 mWorld = MathHelper::Identity4x4();
-	XMFLOAT4X4 mView = MathHelper::Identity4x4();
-	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 
 
 	Camera mCamera;
