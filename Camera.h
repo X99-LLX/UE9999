@@ -1,26 +1,20 @@
 #pragma once
-#include "MathHelper.h"
-
-using namespace DirectX;
 
 
- 
+
 class Camera
 {
 public:
 	Camera();
 	~Camera();
-	XMVECTOR GetCameraPos()const;
-	XMFLOAT3 GetCameraPos3f()const;
-	void SetCameraPos(float x, float y, float z);
-	void SetCameraPos(const XMFLOAT3& v);
+	glm::vec3 GetCameraPos()const;
+	void SetCameraPos(glm::vec3 Pos);
 
-	XMVECTOR GetRight()const;
-	XMFLOAT3 GetRight3f()const;
-	XMVECTOR GetUp()const;
-	XMFLOAT3 GetUp3f()const;
-	XMVECTOR GetTarget()const;
-	XMFLOAT3 GetTarget3f()const;
+
+	glm::vec3 GetRight()const;
+	glm::vec3 GetUp()const;
+	glm::vec3 GetTarget()const;
+
 
 	float GetNearZ()const;
 	float GetFarZ()const;
@@ -28,42 +22,35 @@ public:
 	float GetFovY()const;
 	float GetFovX()const;
 
-	
+
 	float GetNearWindowWidth()const;
 	float GetNearWindowHeight()const;
 	float GetFarWindowWidth()const;
 	float GetFarWindowHeight()const;
 
-	
-	void SetLens(float fovY, float aspect, float zn, float zf);
 
 	
-	void LookAt(DirectX::FXMVECTOR pos, DirectX::FXMVECTOR target, DirectX::FXMVECTOR worldUp);
-	void LookAt(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
+	void LookAt(glm::vec3 pos, glm::vec3 target, glm::vec3 worldUp);
 
-	
-	DirectX::XMMATRIX GetView()const;
-	DirectX::XMMATRIX GetProj()const;
 
-	DirectX::XMFLOAT4X4 GetView4x4f()const; 
-	DirectX::XMFLOAT4X4 GetProj4x4f()const;
+	glm::mat4x4 GetView()const;
+	glm::mat4x4 GetProj()const;
 
-	
-	void Strafe(float d);
-	void Walk(float d);
+	void Walk(glm::vec3 Trans);
 
-	
 	void Pitch(float angle);
-	void RotateY(float angle);
-	void RotateZ(float angle);
-	
+	void Yaw(float angle);
+	void Roll(float angle);
+
+
+	void UpdateProjMatrix(float fovY, float aspect, float zn, float zf);
 	void UpdateViewMatrix();
 
-public:
-	XMFLOAT3 mPosition = { 0.0f,0.0f,0.0f };
-	XMFLOAT3 mUp = { 0.0f,1.0f,0.0f };
-	XMFLOAT3 mTarget = { 0.0f,0.0f,1.0f };
-	XMFLOAT3 mRight = { 1.0f,0.0f,0.0f };
+private:
+	glm::vec3 mPosition = { 0.0f,0.0f,0.0f };
+	glm::vec3 mUp = { 0.0f,1.0f,0.0f };
+	glm::vec3 mTarget = { 0.0f,0.0f,1.0f };
+	glm::vec3 mRight = { 1.0f,0.0f,0.0f };
 
 	float mNearZ = 0.0f;
 	float mFarZ = 0.0f;
@@ -71,10 +58,11 @@ public:
 	float mFovY = 0.0f;
 	float mNearWindowsHeight = 0.0f;
 	float mFarWindowsHeight = 0.0f;
-	
+
 	bool mInitView = true;
 
-	XMFLOAT4X4 mView = MathHelper::Identity4x4();
-	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
+	glm::mat4x4 mView = glm::mat4(1.0f);
+	glm::mat4x4 mProj = glm::mat4(1.0f);
+
 };
 
