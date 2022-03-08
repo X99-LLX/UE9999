@@ -123,14 +123,13 @@ void DX12Render::Draw(const GameTimer& gt)
 		mCommandList->IASetIndexBuffer(&actor->Asset->IndexBufferView());
 		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		glm::mat4 worldViewProj = actor->WorldTrans * mScene->mCamera.GetView() * mScene->mCamera.GetProj();
+		glm::mat4 worldViewProj = mScene->mCamera.GetProj() * mScene->mCamera.GetView() * glm::transpose(actor->WorldTrans);
 
 		ConstantBuffer objConstants;
 
-		objConstants.MVP = worldViewProj;
+		objConstants.MVP = glm::transpose(worldViewProj);
 		objConstants.Scale3D = actor->Scale3DTrans;
 		objConstants.Rotate = actor->RotateTrans;
-
 
 		objConstants.Offset = gt.TotalTime();
 		actor->CB->CopyData(0, objConstants);

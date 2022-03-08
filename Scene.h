@@ -7,11 +7,16 @@
 class Scene
 {
 public:
-	std::vector<std::shared_ptr<Actor>> Actors;
-	std::unordered_map<std::string, std::shared_ptr<StaticMesh>> AssetIndex;
 
+	bool Init();
+
+
+
+	std::vector<std::shared_ptr<Actor>> Actors;
 	Camera mCamera;
 
+
+	std::unordered_map<std::string, std::shared_ptr<StaticMesh>> AssetIndex;
 	void ReadScenceDat(const std::string filename);
 	bool ReadStaticMeshDat(std::string filename, StaticMesh& mesh);
 };

@@ -3,7 +3,7 @@
 
 Engine::Engine()
 {
-	
+	mEngine = this;
 }
 
 Engine::~Engine()
@@ -19,6 +19,14 @@ bool Engine::Init(HINSTANCE ins)
 		return false;
 	}
 	if (!mRender.InitRender(&mWindow,&mScene))
+	{
+		return false;
+	}
+	if (!mScene.Init()) 
+	{
+		return false;
+	}
+	if (!mAssetMgr.Init()) 
 	{
 		return false;
 	}
@@ -53,4 +61,19 @@ void Engine::Run()
 void Engine::Destery()
 {
 
+}
+
+Engine* Engine::GetEngine()
+{
+	return mEngine;
+}
+
+ResourceManage* Engine::GetAssetMgr()
+{
+	return &mAssetMgr;
+}
+
+Scene* Engine::GetScene()
+{
+	return &mScene;
 }

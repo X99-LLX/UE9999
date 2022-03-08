@@ -162,8 +162,21 @@ void Camera::UpdateViewMatrix()
 {
 	if (mInitView)
 	{
-		mView = glm::lookAtLH(mPosition, mPosition + mTarget, mUp);
-		
+		glm::vec3 R = mRight;
+		glm::vec3 U = mUp;
+		glm::vec3 L = mTarget;
+		glm::vec3 P = mPosition;
+
+		L = glm::normalize(L);
+		U = glm::normalize(glm::cross(L, R));
+		R = glm::cross(U, L);
+
+		mRight = R;
+		mUp = U;
+		mTarget = L;
+
+		mView = glm::lookAtLH(mPosition, mTarget, mUp);
+
 		mInitView = false;
 	}
 }

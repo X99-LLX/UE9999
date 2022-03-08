@@ -1,108 +1,139 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="资源文件">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="源文件\Main">
-      <UniqueIdentifier>{cc90983d-9718-46ba-a502-50141572449f}</UniqueIdentifier>
+    <Filter Include="Game">
+      <UniqueIdentifier>{45dea33a-aef0-4921-a003-0f7dcb1dd2dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{e5dcae88-014a-46fe-a956-a389dc7d876f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other">
+      <UniqueIdentifier>{8195e466-02c5-4e0d-b388-6ca26908ff05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Scene">
+      <UniqueIdentifier>{1e07dd1b-f9ce-4f7a-a80e-39367f561270}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Window">
+      <UniqueIdentifier>{ae9309f9-7998-4555-a613-f6d1896fc633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{c77ec068-59cc-425c-8468-b2d9f0bc29ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\DX12Render">
+      <UniqueIdentifier>{ae4faf6e-aeed-44c0-b2db-35202d6023e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\IputSystem">
+      <UniqueIdentifier>{6e9a72f7-f55b-47a9-b2a7-8cdae7bdaae7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="Win32Window.h">
+      <Filter>Engine\Window</Filter>
     </ClInclude>
     <ClInclude Include="Window.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Win32Window.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dx12.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="GameTimer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dUtil.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Actor.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="StaticMesh.h">
-      <Filter>头文件</Filter>
+      <Filter>Engine\Window</Filter>
     </ClInclude>
     <ClInclude Include="UpLoadBuffer.h">
-      <Filter>头文件</Filter>
+      <Filter>Other</Filter>
     </ClInclude>
-    <ClInclude Include="DX12Render.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="stdafx.h">
+      <Filter>Other</Filter>
     </ClInclude>
-    <ClInclude Include="Engine.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="d3dx12.h">
+      <Filter>Other</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dUtil.h">
+      <Filter>Other</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.h">
+      <Filter>Engine\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMesh.h">
+      <Filter>Engine\Scene</Filter>
     </ClInclude>
     <ClInclude Include="ResourceManage.h">
-      <Filter>头文件</Filter>
+      <Filter>Engine\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Engine\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Engine\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="GameTimer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GameLogic.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="GameInstance.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Render.h">
+      <Filter>Engine\DX12Render</Filter>
+    </ClInclude>
+    <ClInclude Include="InputSystem.h">
+      <Filter>Engine\IputSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="Win32Window.cpp">
+      <Filter>Engine\Window</Filter>
     </ClCompile>
     <ClCompile Include="Window.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>源文件\Main</Filter>
-    </ClCompile>
-    <ClCompile Include="WinMain.cpp">
-      <Filter>源文件\Main</Filter>
-    </ClCompile>
-    <ClCompile Include="Win32Window.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="GameTimer.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Engine\Window</Filter>
     </ClCompile>
     <ClCompile Include="d3dUtil.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Other</Filter>
     </ClCompile>
-    <ClCompile Include="Scene.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Other</Filter>
     </ClCompile>
     <ClCompile Include="Actor.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Engine\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="StaticMesh.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DX12Render.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Engine\Scene</Filter>
     </ClCompile>
     <ClCompile Include="ResourceManage.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Engine\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Engine\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMesh.cpp">
+      <Filter>Engine\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="GameTimer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="WinMain.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="GameInstance.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="GameLogic.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Render.cpp">
+      <Filter>Engine\DX12Render</Filter>
+    </ClCompile>
+    <ClCompile Include="InputSystem.cpp">
+      <Filter>Engine\IputSystem</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
