@@ -6,6 +6,11 @@ Actor::Actor()
 
 }
 
+Actor::~Actor()
+{
+
+}
+
 void Actor::ChangePosition(glm::vec3 Pos)
 {
 	Trans.Translation = Pos;

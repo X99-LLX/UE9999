@@ -1,9 +1,20 @@
 #include "stdafx.h"
 #include "DX12Render.h"
 
-bool DX12Render::InitRender(Win32Window* W)
+DX12Render::DX12Render()
+{
+
+}
+
+DX12Render::~DX12Render()
+{
+
+}
+
+bool DX12Render::InitRender(Win32Window* W, Scene* S)
 {
 	MainWnd = W;
+	mScene = S;
 
 #if defined(DEBUG) || defined(_DEBUG) 
 	// Enable the D3D12 debug layer.
@@ -50,15 +61,99 @@ bool DX12Render::InitRender(Win32Window* W)
 	m4xMsaaQuality = msQualityLevels.NumQualityLevels;
 	assert(m4xMsaaQuality > 0 && "Unexpected MSAA quality level.");
 
+	
 	CreateCommandObjects();
+	CreateSwapChain();
+	CreateRtvAndDsvDescriptorHeap();
+
+	OnResize();
+
+	mScene->mCamera.SetCameraPos(glm::vec3(0.0f,0.0f,1000.0f));
+
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 	BuildRootSignature();
 	BuildShadersAndInputLayout();
+
 	BuildPSO();
+	BuildGeometry(mScene);
+	
+
+	ThrowIfFailed(mCommandList->Close());
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	FlushCommandQueue();
 
 	return true;
 }
 
 
+
+void DX12Render::Update(const GameTimer& gt)
+{
+	mScene->mCamera.UpdateViewMatrix();
+}
+
+void DX12Render::Draw(const GameTimer& gt)
+{
+	ThrowIfFailed(mDirectCmdListAlloc->Reset());
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
+
+	mCommandList->RSSetViewports(1, &mScreenViewport);
+	mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	float BackColor[4] = { 1.000000000f, 0.713725507f, 0.756862819f, 1.000000000f };
+
+	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), BackColor, 0, nullptr);
+	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+
+	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+
+	for (auto actor :mScene->Actors)
+	{
+		ID3D12DescriptorHeap* descriptorHeaps[] = { actor->CbvHeap.Get() };
+		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+		mCommandList->IASetVertexBuffers(0, 1, &actor->Asset->VertexBufferView());
+		mCommandList->IASetIndexBuffer(&actor->Asset->IndexBufferView());
+		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		glm::mat4 worldViewProj = actor->WorldTrans * mScene->mCamera.GetView() * mScene->mCamera.GetProj();
+
+		ConstantBuffer objConstants;
+
+		objConstants.MVP = worldViewProj;
+		objConstants.Scale3D = actor->Scale3DTrans;
+		objConstants.Rotate = actor->RotateTrans;
+
+
+		objConstants.Offset = gt.TotalTime();
+		actor->CB->CopyData(0, objConstants);
+
+		mCommandList->SetGraphicsRootDescriptorTable(0, actor->CbvHeap->GetGPUDescriptorHandleForHeapStart());
+		mCommandList->DrawIndexedInstanced(
+			actor->Asset->IndexCount,
+			1, 0, 0, 0);
+	}
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+	ThrowIfFailed(mCommandList->Close());
+
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	ThrowIfFailed(mSwapChain->Present(0, 0));
+	mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
+	FlushCommandQueue();
+
+}
 
 void DX12Render::OnResize()
 {
@@ -154,6 +249,8 @@ void DX12Render::OnResize()
 	mScreenViewport.MaxDepth = 1.0f;
 
 	mScissorRect = { 0,0,MainWnd->Width,MainWnd->Height };
+
+	mScene->mCamera.UpdateProjMatrix(0.25f * glm::pi<float>(),MainWnd->GetAspectRatio(), 1.0f, 100000.0f);
 }
 
 ID3D12Resource* DX12Render::CurrentBackBuffer() const
@@ -347,5 +444,57 @@ void DX12Render::FlushCommandQueue()
 		ThrowIfFailed(mFence->SetEventOnCompletion(mCurrentFence, eventHandle));
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
+	}
+}
+
+void DX12Render::BuildGeometry(Scene* S)
+{
+	S->ReadScenceDat("mapactor");
+	std::vector<int> indices;
+	std::vector<Vertex> vertices;
+
+	for (auto actor :S->Actors)
+	{
+		actor->CreateCbvHeap(md3dDevice.Get());
+		actor->CreateConstantBuffer(md3dDevice.Get());
+
+		StaticMesh* TempMesh = actor->Asset.get();
+
+		/*vertices.insert(vertices.end(), TempMesh->VertexInfo.begin(), TempMesh->VertexInfo.end());*/
+
+		for (int i = 0; i < TempMesh->NumVertices; i++)
+		{
+			vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] });
+		}
+
+		indices.insert(indices.end(), TempMesh->Index.begin(), TempMesh->Index.end());
+
+		actor->WorldTrans = glm::transpose(glm::translate(glm::mat4(1.0f), actor->Trans.Translation));
+		actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->Trans.Scale3D);
+		actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->Trans.Rotation.w,actor->Trans.Rotation.x,
+			actor->Trans.Rotation.y, actor->Trans.Rotation.z));
+		
+		const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+		const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
+
+		
+
+		ThrowIfFailed(D3DCreateBlob(vbByteSize, &TempMesh->VertexBufferCPU));
+		CopyMemory(TempMesh->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+
+		ThrowIfFailed(D3DCreateBlob(ibByteSize, &TempMesh->IndexBufferCPU));
+		CopyMemory(TempMesh->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+		TempMesh->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+			mCommandList.Get(), vertices.data(), vbByteSize, TempMesh->VertexBufferUploader);
+
+		TempMesh->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+			mCommandList.Get(), indices.data(), ibByteSize, TempMesh->IndexBufferUploader);
+
+		TempMesh->VertexByteSize = sizeof(Vertex);
+		TempMesh->VertexBufferByteSize = vbByteSize;
+		TempMesh->IndexFormat = DXGI_FORMAT_R32_UINT;
+		TempMesh->IndexBufferByteSize = ibByteSize;
+		TempMesh->IndexCount = (UINT)indices.size();
 	}
 }

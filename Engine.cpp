@@ -1,23 +1,29 @@
 #include "stdafx.h"
 #include "Engine.h"
 
-Engine::Engine(HINSTANCE ins)
+Engine::Engine()
 {
-	mIns = ins;
+	
 }
 
-bool Engine::Init()
+Engine::~Engine()
 {
+
+}
+
+bool Engine::Init(HINSTANCE ins)
+{
+	mIns = ins;
 	if (!mWindow.InitWnd(mRender.GetDevice(), mIns))
 	{
 		return false;
 	}
-	if (!mRender.InitRender(&mWindow))
+	if (!mRender.InitRender(&mWindow,&mScene))
 	{
 		return false;
 	}
 	
-	mCamera.SetCameraPos(glm::vec3(0.0f, 0.0f, 1000.0f));
+	mScene.mCamera.SetCameraPos(glm::vec3(0.0f, 0.0f, 1000.0f));
 
 	return true;
 }

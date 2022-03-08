@@ -4,7 +4,7 @@
 Camera::Camera()
 {
 	UpdateViewMatrix();
-	UpdateProjMatrix(0.25 * glm::pi<float>(), 1.0f, 1.0f, 10000.0f);
+	UpdateProjMatrix(0.25f * glm::pi<float>(), 1.0f, 1.0f, 100000.0f);
 }
 
 Camera::~Camera()
@@ -20,6 +20,7 @@ glm::vec3 Camera::GetCameraPos() const
 void Camera::SetCameraPos(glm::vec3 Pos)
 {
 	mPosition = Pos;
+	mInitView = true;
 }
 
 glm::vec3 Camera::GetRight() const
@@ -93,7 +94,8 @@ void Camera::UpdateProjMatrix(float fovY, float aspect, float zn, float zf)
 	mNearWindowsHeight = 2.0f * mNearZ * tanf(0.5f * mFovY);
 	mFarWindowsHeight = 2.0f * mFarZ * tanf(0.5f * mFovY);
 
-	mProj = glm::perspective(glm::radians(fovY), mAspectRatio, mNearZ, mFarZ);
+	//mProj = glm::perspective(glm::radians(fovY), mAspectRatio, mNearZ, mFarZ);
+	mProj = glm::perspectiveLH_ZO(fovY, mAspectRatio, mNearZ, mFarZ);
 }
 
 void Camera::LookAt(glm::vec3 pos, glm::vec3 target, glm::vec3 worldUp)
@@ -126,6 +128,7 @@ void Camera::Walk(glm::vec3 Trans)
 	glm::mat4 Translate = glm::mat4(1.0f);
 	Translate = glm::translate(Translate, Trans);
 	mPosition = Translate * glm::vec4(mPosition, 1.0f);
+	mInitView = true;
 }
 
 void Camera::Pitch(float angle)
@@ -134,6 +137,7 @@ void Camera::Pitch(float angle)
 	Rotate = glm::rotate(Rotate, glm::radians(angle), mRight);
 	mUp = Rotate * glm::vec4(mUp, 1.0f);
 	mTarget = glm::cross(mRight, mUp);
+	mInitView = true;
 }
 
 void Camera::Yaw(float angle)
@@ -142,6 +146,7 @@ void Camera::Yaw(float angle)
 	Rotate = glm::rotate(Rotate, glm::radians(angle), mUp);
 	mRight = Rotate * glm::vec4(mRight, 1.0f);
 	mTarget = glm::cross(mRight, mUp);
+	mInitView = true;
 }
 
 void Camera::Roll(float angle)
@@ -150,13 +155,15 @@ void Camera::Roll(float angle)
 	Rotate = glm::rotate(Rotate, glm::radians(angle), mTarget);
 	mUp = Rotate * glm::vec4(mUp, 1.0f);
 	mTarget = glm::cross(mUp, mTarget);
+	mInitView = true;
 }
 
 void Camera::UpdateViewMatrix()
 {
 	if (mInitView)
 	{
-		mView = glm::lookAt(mPosition, mTarget, mUp);
+		mView = glm::lookAtLH(mPosition, mPosition + mTarget, mUp);
+		
 		mInitView = false;
 	}
 }

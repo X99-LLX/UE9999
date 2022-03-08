@@ -26,7 +26,8 @@
     <ClInclude Include="DX12Render.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="GameTimer.h" />
-    <ClInclude Include="Scence.h" />
+    <ClInclude Include="ResourceManage.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="UpLoadBuffer.h" />
@@ -46,7 +47,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Scence.cpp" />
+    <ClCompile Include="ResourceManage.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

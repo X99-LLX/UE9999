@@ -39,7 +39,7 @@
     <ClInclude Include="d3dUtil.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Scence.h">
+    <ClInclude Include="Scene.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Actor.h">
@@ -55,6 +55,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Engine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -83,7 +86,7 @@
     <ClCompile Include="d3dUtil.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Scence.cpp">
+    <ClCompile Include="Scene.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Actor.cpp">
@@ -96,6 +99,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Engine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

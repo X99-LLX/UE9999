@@ -9,6 +9,7 @@ public:
 	int NumIndices;
 	std::vector<int> Index;
 	std::vector<glm::vec3> VertexInfo;
+	std::vector<glm::vec4> color;
 	std::vector<glm::vec4> Normal;
 
 	Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;

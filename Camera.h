@@ -47,9 +47,9 @@ public:
 	void UpdateViewMatrix();
 
 private:
-	glm::vec3 mPosition = { 0.0f,0.0f,0.0f };
+	glm::vec3 mPosition = { 0.0f,0.0f,50.0f };
 	glm::vec3 mUp = { 0.0f,1.0f,0.0f };
-	glm::vec3 mTarget = { 0.0f,0.0f,1.0f };
+	glm::vec3 mTarget = { 0.0f,0.0f,-1.0f };
 	glm::vec3 mRight = { 1.0f,0.0f,0.0f };
 
 	float mNearZ = 0.0f;

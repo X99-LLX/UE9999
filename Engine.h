@@ -1,6 +1,6 @@
 #pragma once
 #include "Win32Window.h"
-#include "Scence.h"
+#include "Scene.h"
 #include "GameTimer.h"
 #include "Camera.h"
 #include "DX12Render.h"
@@ -9,10 +9,10 @@
 class Engine
 {
 public:
-	Engine(HINSTANCE ins);
+	Engine();
 	~Engine();
 
-	bool Init();
+	bool Init(HINSTANCE ins);
 	void Run();
 	void Destery();
 
@@ -21,9 +21,9 @@ public:
 
 private:
 	GameTimer mTimer;
-	Scence mScence;
+	Scene mScene;
 	DX12Render mRender;
-	Camera mCamera;
+	
 	Win32Window mWindow;
 };
 

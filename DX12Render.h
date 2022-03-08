@@ -2,6 +2,8 @@
 #include "Win32Window.h"
 #include "d3dUtil.h"
 #include "GameTimer.h"
+#include "Scene.h"
+
 
 class DX12Render
 {
@@ -9,7 +11,7 @@ public:
 	DX12Render();
 	~DX12Render();
 
-	bool InitRender(Win32Window* W);
+	bool InitRender(Win32Window* W, Scene* S);
 
 	void Update(const GameTimer& gt);
 	void Draw(const GameTimer& gt);
@@ -18,6 +20,10 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
 	ID3D12Device* GetDevice();
+
+	///////
+	Scene* mScene;
+
 protected:
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
@@ -26,6 +32,7 @@ protected:
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
+	void BuildGeometry(Scene* S);
 
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;

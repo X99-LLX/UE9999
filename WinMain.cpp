@@ -1,13 +1,12 @@
 #include "stdafx.h"
 #include <windows.h>
+#include "Engine.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
 {
 
-	MessageBox(NULL,
-		(LPCWSTR)L"Resource not available\nDo you want to try again?",
-		(LPCWSTR)L"Account Details",
-		MB_ICONWARNING | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2);
+	Engine mEngine;
+	mEngine.Init(hInstance);
+	mEngine.Run();
 	return 0;
-
 }

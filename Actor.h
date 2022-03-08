@@ -5,17 +5,17 @@
 
 struct ConstantBuffer
 {
-	glm::mat4x4 WorldViewProj = glm::mat4x4(1.0f);
+	glm::mat4x4 MVP = glm::mat4x4(1.0f);
 	glm::mat4x4 Scale3D = glm::mat4x4(1.0f);
 	glm::mat4x4 Rotate = glm::mat4x4(1.0f);
-	float Offset;
+	float Offset = 1;
 };
 
 struct Transform
 {
-	glm::vec4 Rotation;
-	glm::vec3 Translation;
-	glm::vec3 Scale3D;
+	glm::vec4 Rotation = glm::vec4(1.0f);
+	glm::vec3 Translation = glm::vec3(1.0f);
+	glm::vec3 Scale3D = glm::vec3(1.0f);
 };
 
 class Actor
@@ -26,18 +26,18 @@ public:
 
 	Transform Trans;
 
-	glm::mat4 WorldTrans;
-	glm::mat4 Scale3DTrans;
-	glm::mat4 RotateTrans;
+	glm::mat4 WorldTrans = glm::mat4(1.0f);
+	glm::mat4 Scale3DTrans = glm::mat4(1.0f);
+	glm::mat4 RotateTrans = glm::mat4(1.0f);
 
 	glm::mat4 MVP = glm::mat4(1.0f);
 
-	std::string AssetName;
+	std::string AssetName = "";
 
-	StaticMesh* Asset = nullptr;
+	std::shared_ptr<StaticMesh> Asset = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CbvHeap;
-	std::unique_ptr<UploadBuffer<ConstantBuffer>> CB;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CbvHeap = nullptr;
+	std::unique_ptr<UploadBuffer<ConstantBuffer>> CB = nullptr;
 
 	void ChangePosition(glm::vec3 Pos);
 	void ChangeRotation(glm::vec4 Rot);
