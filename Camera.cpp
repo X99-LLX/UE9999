@@ -38,6 +38,11 @@ glm::vec3 Camera::GetTarget() const
 	return mTarget;
 }
 
+void Camera::Init()
+{
+
+}
+
 float Camera::GetNearZ() const
 {
 	return mNearZ;
@@ -83,6 +88,7 @@ float Camera::GetFarWindowHeight() const
 {
 	return mFarWindowsHeight;
 }
+
 
 void Camera::UpdateProjMatrix(float fovY, float aspect, float zn, float zf)
 {
@@ -131,18 +137,18 @@ void Camera::Walk(glm::vec3 Trans)
 
 void Camera::Pitch(float angle)
 {
-	mUp = glm::rotate(mUp, angle, mRight);
+	mUp = glm::rotate(mUp, 0.1f * angle, mRight);
 
-	mTarget = glm::rotate(mTarget - mPosition, angle, mRight) + mPosition;
+	mTarget = glm::rotate(mTarget - mPosition, 0.1f * angle, mRight) + mPosition;
 	mInitView = true;
 
 }
 
 void Camera::Yaw(float angle)
 {
-	mRight = glm::rotate(mUp, angle, mUp);
+	mRight = glm::rotate(mRight, 0.1f * angle, mUp);
 
-	mTarget = glm::rotate(mTarget - mPosition, angle, mUp) + mPosition;
+	mTarget = glm::rotate(mTarget - mPosition, 0.1f * angle, mUp) + mPosition;
 
 	mInitView = true;
 }

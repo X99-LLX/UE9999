@@ -35,17 +35,13 @@ void InputSystem::OnMouseMove(WPARAM btnState, int x, int y)
 	if ((btnState & MK_LBUTTON) != 0)
 	{
 
-		float dx = glm::radians(0.25f * static_cast<float>(x - mLastMousePos.x));
-		float dy = glm::radians(0.25f * static_cast<float>(y - mLastMousePos.y));
+		float dx = 0.01f * static_cast<float>(x - mLastMousePos.x);
+		float dy = 0.01f * static_cast<float>(y - mLastMousePos.y);
 
 		Engine::GetEngine()->GetScene()->mCamera.Pitch(dy);
 		Engine::GetEngine()->GetScene()->mCamera.Yaw(dx);
 	}
-	else if ((btnState & MK_RBUTTON) != 0)
-	{
-
-	}
-
+	
 	mLastMousePos.x = x;
 	mLastMousePos.y = y;
 }

@@ -15,6 +15,7 @@ public:
 	glm::vec3 GetUp()const;
 	glm::vec3 GetTarget()const;
 
+	void Init();
 
 	float GetNearZ()const;
 	float GetFarZ()const;
@@ -27,8 +28,6 @@ public:
 	float GetNearWindowHeight()const;
 	float GetFarWindowWidth()const;
 	float GetFarWindowHeight()const;
-
-
 	
 	void LookAt(glm::vec3 pos, glm::vec3 target, glm::vec3 worldUp);
 
@@ -46,9 +45,10 @@ public:
 	void UpdateViewMatrix();
 
 private:
-	glm::vec3 mPosition = { 0.0f,0.0f,500.0f };
-	glm::vec3 mUp = { 0.0f,-1.0f,0.0f };
-	glm::vec3 mTarget = { 0.0f,0.0f,-1.0f }; 
+
+	glm::vec3 mPosition = { 0.0f,-1500.0f,1500.0f };
+	glm::vec3 mUp = { 0.0f,1.0f,0.0f };
+	glm::vec3 mTarget = { 0.0f,500.0f,0.0f }; 
 	glm::vec3 mRight = { 1.0f,0.0f,0.0f };
 
 	float mNearZ = 0.0f;
