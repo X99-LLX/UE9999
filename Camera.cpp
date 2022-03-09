@@ -4,7 +4,7 @@
 Camera::Camera()
 {
 	UpdateViewMatrix();
-	UpdateProjMatrix(0.25f * glm::pi<float>(), 1.0f, 1.0f, 100000.0f);
+	UpdateProjMatrix(0.25f * glm::pi<float>(), 1.0f, 1.0f, 1000.0f);
 }
 
 Camera::~Camera()
@@ -94,7 +94,6 @@ void Camera::UpdateProjMatrix(float fovY, float aspect, float zn, float zf)
 	mNearWindowsHeight = 2.0f * mNearZ * tanf(0.5f * mFovY);
 	mFarWindowsHeight = 2.0f * mFarZ * tanf(0.5f * mFovY);
 
-	//mProj = glm::perspective(glm::radians(fovY), mAspectRatio, mNearZ, mFarZ);
 	mProj = glm::perspectiveLH_ZO(fovY, mAspectRatio, mNearZ, mFarZ);
 }
 
@@ -125,58 +124,36 @@ glm::mat4x4 Camera::GetProj() const
 
 void Camera::Walk(glm::vec3 Trans)
 {
-	glm::mat4 Translate = glm::mat4(1.0f);
-	Translate = glm::translate(Translate, Trans);
-	mPosition = Translate * glm::vec4(mPosition, 1.0f);
+	mPosition += Trans;
+	mTarget += Trans;
 	mInitView = true;
 }
 
 void Camera::Pitch(float angle)
 {
-	glm::mat4 Rotate = glm::mat4(1.0f);
-	Rotate = glm::rotate(Rotate, glm::radians(angle), mRight);
-	mUp = Rotate * glm::vec4(mUp, 1.0f);
-	mTarget = glm::cross(mRight, mUp);
+	mUp = glm::rotate(mUp, angle, mRight);
+
+	mTarget = glm::rotate(mTarget - mPosition, angle, mRight) + mPosition;
 	mInitView = true;
+
 }
 
 void Camera::Yaw(float angle)
 {
-	glm::mat4 Rotate = glm::mat4(1.0f);
-	Rotate = glm::rotate(Rotate, glm::radians(angle), mUp);
-	mRight = Rotate * glm::vec4(mRight, 1.0f);
-	mTarget = glm::cross(mRight, mUp);
+	mRight = glm::rotate(mUp, angle, mUp);
+
+	mTarget = glm::rotate(mTarget - mPosition, angle, mUp) + mPosition;
+
 	mInitView = true;
 }
 
-void Camera::Roll(float angle)
-{
-	glm::mat4 Rotate = glm::mat4(1.0f);
-	Rotate = glm::rotate(Rotate, glm::radians(angle), mTarget);
-	mUp = Rotate * glm::vec4(mUp, 1.0f);
-	mTarget = glm::cross(mUp, mTarget);
-	mInitView = true;
-}
+
 
 void Camera::UpdateViewMatrix()
 {
 	if (mInitView)
 	{
-		glm::vec3 R = mRight;
-		glm::vec3 U = mUp;
-		glm::vec3 L = mTarget;
-		glm::vec3 P = mPosition;
-
-		L = glm::normalize(L);
-		U = glm::normalize(glm::cross(L, R));
-		R = glm::cross(U, L);
-
-		mRight = R;
-		mUp = U;
-		mTarget = L;
-
 		mView = glm::lookAtLH(mPosition, mTarget, mUp);
-
 		mInitView = false;
 	}
 }

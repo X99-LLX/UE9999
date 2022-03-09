@@ -130,6 +130,8 @@ void DX12Render::Draw(const GameTimer& gt)
 		objConstants.Rotate = actor->RotateTrans;
 		objConstants.Offset = gt.TotalTime();
 
+		float a = gt.TotalTime();
+
 		actor->CB->CopyData(0, objConstants);
 
 		mCommandList->SetGraphicsRootDescriptorTable(0, actor->CbvHeap->GetGPUDescriptorHandleForHeapStart());
@@ -452,7 +454,7 @@ void DX12Render::BuildGeometry(Scene* S)
 		std::vector<int> indices;
 		std::vector<Vertex> vertices;
 
-		actor->CreateCbvHeap(md3dDevice.Get());
+		actor->CreateCbvHeap(md3dDevice.Get()); 
 		actor->CreateConstantBuffer(md3dDevice.Get());
 
 		std::shared_ptr<StaticMesh> TempMesh = actor->Asset;
@@ -467,7 +469,6 @@ void DX12Render::BuildGeometry(Scene* S)
 		const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 		const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
 
-		
 
 		ThrowIfFailed(D3DCreateBlob(vbByteSize, &TempMesh->VertexBufferCPU));
 		CopyMemory(TempMesh->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);

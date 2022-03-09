@@ -7,6 +7,9 @@
 #include <glm/gtc/constants.hpp> 
 #include <glm/exponential.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+
 #include <windows.h>
 #include <wrl.h>
 #include <dxgi1_4.h>

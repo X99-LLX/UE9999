@@ -7,7 +7,7 @@ class GameLogic
 public:
 	void Init();
 	void LoadMap(std::string MapName);
-	void Run();
+	bool Run();
 	void Destery();
 
 private:

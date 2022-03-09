@@ -12,14 +12,15 @@ public:
 	Engine();
 	~Engine();
 
-	bool Init(HINSTANCE ins);
-	void Run();
+	bool Init();
+	bool Run();
 	void Destery();
 
 	static Engine* GetEngine();
 	ResourceManage* GetAssetMgr();
 	Scene* GetScene();
 	DX12Render* GetRender();
+	GameTimer* GetTimer();
 public:
 	HINSTANCE mIns;
 	static Engine* mEngine;

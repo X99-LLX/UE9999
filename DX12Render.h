@@ -20,8 +20,6 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
 	ID3D12Device* GetDevice();
-
-	///////
 	Scene* mScene;
 
 	void BuildGeometry(Scene* S);

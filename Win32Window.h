@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <string>
 #include "Window.h"
-
+#include "InputSystem.h"
 
 class Win32Window :
     public Window
@@ -10,12 +10,15 @@ class Win32Window :
 public:
     Win32Window();
     ~Win32Window();
-	bool InitWnd(ID3D12Device* D, HINSTANCE ins);
+	bool InitWnd(ID3D12Device* D);
     virtual void SetWidgthAndHeigh(int w, int h) override;
-	virtual bool CreateMainWindow(HINSTANCE ins);
+	virtual bool CreateMainWindow();
 
 	float GetAspectRatio();
 	HWND mMainWnd = nullptr;
+
+	static InputSystem* GetInput();
+
 
 protected:
 
@@ -27,6 +30,6 @@ protected:
 	bool mResizing = false;        
 	bool mFullscreenState = false; 
 
-	POINT mLastMousePos;
+	static InputSystem mInput;
 };
 

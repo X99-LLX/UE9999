@@ -5,7 +5,7 @@
 class GameInstance
 {
 public:
-	GameInstance(HINSTANCE ins);
+	GameInstance();
 	~GameInstance();
 
 	void Init();

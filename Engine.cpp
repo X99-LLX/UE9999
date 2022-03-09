@@ -13,10 +13,10 @@ Engine::~Engine()
 
 }
 
-bool Engine::Init(HINSTANCE ins)
+bool Engine::Init()
 {
-	mIns = ins;
-	if (!mWindow.InitWnd(mRender.GetDevice(), mIns))
+	mIns = GetModuleHandle(0);
+	if (!mWindow.InitWnd(mRender.GetDevice()))
 	{
 		return false;
 	}
@@ -33,31 +33,15 @@ bool Engine::Init(HINSTANCE ins)
 		return false;
 	}
 	
-	mScene.mCamera.SetCameraPos(glm::vec3(0.0f, 0.0f, 1000.0f));
 
 	return true;
 }
 
-void Engine::Run()
+bool Engine::Run()
 {
-	MSG msg = { 0 };
-
-	mTimer.Reset();
-
-	while (msg.message != WM_QUIT)
-	{
-		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		else
-		{
-			mTimer.Tick();
-			mRender.Update(mTimer);
-			mRender.Draw(mTimer);
-		}
-	}
+	mRender.Update(mTimer);
+	mRender.Draw(mTimer);
+	return true;
 }
 
 void Engine::Destery()
@@ -83,4 +67,9 @@ Scene* Engine::GetScene()
 DX12Render* Engine::GetRender()
 {
 	return &mRender;
+}
+
+GameTimer* Engine::GetTimer()
+{
+	return &mTimer;
 }
