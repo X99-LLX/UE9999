@@ -13,6 +13,7 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
+		MessageBox(hwnd, L"MouseDown", L"test", 1);
 		return 0;
 
 	case WM_LBUTTONUP:
@@ -27,6 +28,7 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_KEYUP:
 		if (wParam == VK_ESCAPE)
 		{
+			MessageBox(hwnd, L"ESC", L"test", 1);
 			PostQuitMessage(0);
 		}
 		return 0;

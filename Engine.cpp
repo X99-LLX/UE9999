@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Engine.h"
 
+Engine* Engine::mEngine = nullptr;
+
 Engine::Engine()
 {
 	mEngine = this;
@@ -76,4 +78,9 @@ ResourceManage* Engine::GetAssetMgr()
 Scene* Engine::GetScene()
 {
 	return &mScene;
+}
+
+DX12Render* Engine::GetRender()
+{
+	return &mRender;
 }

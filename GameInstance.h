@@ -5,16 +5,16 @@
 class GameInstance
 {
 public:
-	GameInstance();
+	GameInstance(HINSTANCE ins);
 	~GameInstance();
 
 	void Init();
 	void Run();
 	void Destroy();
 
-
 public:
-	Engine EngineIns;
-	GameLogic Logic;
+	HINSTANCE mIns;
+	Engine mEngine;
+	GameLogic mLogic;
 };
 

@@ -24,6 +24,8 @@ public:
 	///////
 	Scene* mScene;
 
+	void BuildGeometry(Scene* S);
+
 protected:
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
@@ -32,7 +34,7 @@ protected:
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
-	void BuildGeometry(Scene* S);
+	
 
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;

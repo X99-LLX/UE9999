@@ -19,6 +19,7 @@ public:
 	static Engine* GetEngine();
 	ResourceManage* GetAssetMgr();
 	Scene* GetScene();
+	DX12Render* GetRender();
 public:
 	HINSTANCE mIns;
 	static Engine* mEngine;

@@ -68,22 +68,13 @@ bool DX12Render::InitRender(Win32Window* W, Scene* S)
 
 	OnResize();
 
-	mScene->mCamera.SetCameraPos(glm::vec3(0.0f,0.0f,1000.0f));
 
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 	BuildRootSignature();
 	BuildShadersAndInputLayout();
 
 	BuildPSO();
-	BuildGeometry(mScene);
-	
-
-	ThrowIfFailed(mCommandList->Close());
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	FlushCommandQueue();
-
 	return true;
 }
 
@@ -92,6 +83,16 @@ bool DX12Render::InitRender(Win32Window* W, Scene* S)
 void DX12Render::Update(const GameTimer& gt)
 {
 	mScene->mCamera.UpdateViewMatrix();
+	for (auto actor: mScene->Actors)
+	{
+		actor->WorldTrans = glm::transpose(glm::translate(glm::mat4(1.0f), actor->Trans.Translation));
+		actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->Trans.Scale3D);
+		actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->Trans.Rotation.w, actor->Trans.Rotation.x,
+			actor->Trans.Rotation.y, actor->Trans.Rotation.z));
+		glm::mat4 worldViewProj = mScene->mCamera.GetProj() * mScene->mCamera.GetView() 
+			* glm::transpose(actor->WorldTrans);
+		actor->MVP = worldViewProj;
+	}
 }
 
 void DX12Render::Draw(const GameTimer& gt)
@@ -123,15 +124,12 @@ void DX12Render::Draw(const GameTimer& gt)
 		mCommandList->IASetIndexBuffer(&actor->Asset->IndexBufferView());
 		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		glm::mat4 worldViewProj = mScene->mCamera.GetProj() * mScene->mCamera.GetView() * glm::transpose(actor->WorldTrans);
-
 		ConstantBuffer objConstants;
-
-		objConstants.MVP = glm::transpose(worldViewProj);
+		objConstants.MVP = glm::transpose(actor->MVP);
 		objConstants.Scale3D = actor->Scale3DTrans;
 		objConstants.Rotate = actor->RotateTrans;
-
 		objConstants.Offset = gt.TotalTime();
+
 		actor->CB->CopyData(0, objConstants);
 
 		mCommandList->SetGraphicsRootDescriptorTable(0, actor->CbvHeap->GetGPUDescriptorHandleForHeapStart());
@@ -448,18 +446,16 @@ void DX12Render::FlushCommandQueue()
 
 void DX12Render::BuildGeometry(Scene* S)
 {
-	S->ReadScenceDat("mapactor");
-	std::vector<int> indices;
-	std::vector<Vertex> vertices;
-
 	for (auto actor :S->Actors)
 	{
+		ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+		std::vector<int> indices;
+		std::vector<Vertex> vertices;
+
 		actor->CreateCbvHeap(md3dDevice.Get());
 		actor->CreateConstantBuffer(md3dDevice.Get());
 
-		StaticMesh* TempMesh = actor->Asset.get();
-
-		/*vertices.insert(vertices.end(), TempMesh->VertexInfo.begin(), TempMesh->VertexInfo.end());*/
+		std::shared_ptr<StaticMesh> TempMesh = actor->Asset;
 
 		for (int i = 0; i < TempMesh->NumVertices; i++)
 		{
@@ -467,11 +463,6 @@ void DX12Render::BuildGeometry(Scene* S)
 		}
 
 		indices.insert(indices.end(), TempMesh->Index.begin(), TempMesh->Index.end());
-
-		actor->WorldTrans = glm::transpose(glm::translate(glm::mat4(1.0f), actor->Trans.Translation));
-		actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->Trans.Scale3D);
-		actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->Trans.Rotation.w,actor->Trans.Rotation.x,
-			actor->Trans.Rotation.y, actor->Trans.Rotation.z));
 		
 		const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 		const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
@@ -495,5 +486,10 @@ void DX12Render::BuildGeometry(Scene* S)
 		TempMesh->IndexFormat = DXGI_FORMAT_R32_UINT;
 		TempMesh->IndexBufferByteSize = ibByteSize;
 		TempMesh->IndexCount = (UINT)indices.size();
+
+		ThrowIfFailed(mCommandList->Close());
+		ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+		mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+		FlushCommandQueue();
 	}
 }

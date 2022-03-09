@@ -12,3 +12,13 @@ void GameLogic::LoadMap(std::string MapName)
 {
 	mAssetMgr->LoadMap(MapName,mEngine->GetScene()->Actors);
 }
+
+void GameLogic::Run()
+{
+	mEngine->GetRender()->BuildGeometry(mEngine->GetScene());
+}
+
+void GameLogic::Destery()
+{
+
+}
