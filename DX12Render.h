@@ -11,10 +11,10 @@ public:
 	DX12Render();
 	~DX12Render();
 
-	bool InitRender(Win32Window* W, Scene* S);
+	bool InitRender();
 
-	void Update(const GameTimer& gt);
-	void Draw(const GameTimer& gt);
+	void Update();
+	void Draw();
 	void OnResize();
 	ID3D12Resource* CurrentBackBuffer()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
@@ -70,6 +70,6 @@ protected:
 
 	bool m4xMsaaState = false;
 	UINT m4xMsaaQuality = 0;
-	Win32Window* MainWnd;
+	Window* MainWnd;
 };
 

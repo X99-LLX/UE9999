@@ -50,17 +50,11 @@ Win32Window::~Win32Window()
 
 }
 
-bool Win32Window::InitWnd(ID3D12Device* D)
+bool Win32Window::InitWnd()
 {
-	Device = D;
 	return CreateMainWindow();
 }
 
-void Win32Window::SetWidgthAndHeigh(int w, int h)
-{
-	Width = w;
-	Height = h;
-}
 
 bool Win32Window::CreateMainWindow()
 {
@@ -96,13 +90,5 @@ bool Win32Window::CreateMainWindow()
 	return true;
 }
 
-float Win32Window::GetAspectRatio()
-{
-	return (float)Width / Height;
-}
 
-InputSystem* Win32Window::GetInput()
-{
-	return &mInput;
-}
 

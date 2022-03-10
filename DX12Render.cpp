@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "DX12Render.h"
+#include "Engine.h"
 
 DX12Render::DX12Render()
 {
@@ -11,10 +12,10 @@ DX12Render::~DX12Render()
 
 }
 
-bool DX12Render::InitRender(Win32Window* W, Scene* S)
+bool DX12Render::InitRender()
 {
-	MainWnd = W;
-	mScene = S;
+	MainWnd = Engine::GetEngine()->GetWindow();
+	mScene = Engine::GetEngine()->GetScene();
 
 #if defined(DEBUG) || defined(_DEBUG) 
 	// Enable the D3D12 debug layer.
@@ -80,7 +81,7 @@ bool DX12Render::InitRender(Win32Window* W, Scene* S)
 
 
 
-void DX12Render::Update(const GameTimer& gt)
+void DX12Render::Update()
 {
 	mScene->mCamera.UpdateViewMatrix();
 	for (auto actor: mScene->Actors)
@@ -95,7 +96,7 @@ void DX12Render::Update(const GameTimer& gt)
 	}
 }
 
-void DX12Render::Draw(const GameTimer& gt)
+void DX12Render::Draw()
 {
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
@@ -128,9 +129,8 @@ void DX12Render::Draw(const GameTimer& gt)
 		objConstants.MVP = glm::transpose(actor->MVP);
 		objConstants.Scale3D = actor->Scale3DTrans;
 		objConstants.Rotate = actor->RotateTrans;
-		objConstants.Offset = gt.TotalTime();
-
-		float a = gt.TotalTime();
+		
+		objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
 
 		actor->CB->CopyData(0, objConstants);
 

@@ -5,8 +5,10 @@
 #include "Camera.h"
 #include "DX12Render.h"
 #include "ResourceManage.h"
+#include "Window.h"
 
-class Engine
+
+class Engine 
 {
 public:
 	Engine();
@@ -21,15 +23,19 @@ public:
 	Scene* GetScene();
 	DX12Render* GetRender();
 	GameTimer* GetTimer();
-	Win32Window* GetWindow();
+	Window* GetWindow();
+
+protected:
+	Window* CreateMainWnd();
+
 public:
-	HINSTANCE mIns;
 	static Engine* mEngine;
 private:
 	GameTimer mTimer;
 	Scene mScene;
 	ResourceManage mAssetMgr;
 	DX12Render mRender;
-	Win32Window mWindow;
+	//Win32Window mWindow;
+	Window* testwin;
 };
 

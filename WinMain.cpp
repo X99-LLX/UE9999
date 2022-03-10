@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <windows.h>
 #include "GameInstance.h"
-#define PlatFormWin32
+
 
 
 
@@ -9,7 +9,7 @@
 
 
 
-#elif defined(PlatFormWin32)
+#elif _PLATFORM_WIN32
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
 {
 	GameInstance Game;
@@ -18,9 +18,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, in
 	return 0;
 }
 
-#elif defined(PlatformIOS)
-
-
-#elif defined(PlatformAndroid)
 
 #endif

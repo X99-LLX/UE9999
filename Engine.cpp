@@ -10,17 +10,17 @@ Engine::Engine()
 
 Engine::~Engine()
 {
-
+	testwin = nullptr;
 }
 
 bool Engine::Init()
 {
-	mIns = GetModuleHandle(0);
-	if (!mWindow.InitWnd(mRender.GetDevice()))
+	testwin = CreateMainWnd();
+	if (!testwin->InitWnd())
 	{
 		return false;
 	}
-	if (!mRender.InitRender(&mWindow,&mScene))
+	if (!mRender.InitRender())
 	{
 		return false;
 	}
@@ -32,21 +32,37 @@ bool Engine::Init()
 	{
 		return false;
 	}
-	
-
 	return true;
 }
 
 bool Engine::Run()
 {
-	mRender.Update(mTimer);
-	mRender.Draw(mTimer);
+	MSG msg = { 0 };
+	mTimer.Reset();
+
+	while (msg.message != WM_QUIT)
+	{
+
+		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else
+		{
+			mTimer.Tick();
+			testwin->GetInput()->Update();
+			mRender.Update();
+			mRender.Draw();
+		}
+	}
+	
 	return true;
 }
 
 void Engine::Destery()
 {
-
+	
 }
 
 Engine* Engine::GetEngine()
@@ -74,7 +90,18 @@ GameTimer* Engine::GetTimer()
 	return &mTimer;
 }
 
-Win32Window* Engine::GetWindow()
+Window* Engine::GetWindow()
 {
-	return &mWindow;
+	return testwin;
+}
+
+Window* Engine::CreateMainWnd()
+{
+#ifdef _PLATFORM_WIN32
+	return new Win32Window();
+#endif
+
+#ifdef _PLATFORM_IOS
+	return new IOSWindow();
+#endif
 }
