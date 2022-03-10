@@ -38,6 +38,11 @@ glm::vec3 Camera::GetTarget() const
 	return mTarget;
 }
 
+glm::vec3 Camera::GetWorldUp() const
+{
+	return mWorldUp;
+}
+
 void Camera::Init()
 {
 
@@ -101,6 +106,7 @@ void Camera::UpdateProjMatrix(float fovY, float aspect, float zn, float zf)
 	mFarWindowsHeight = 2.0f * mFarZ * tanf(0.5f * mFovY);
 
 	mProj = glm::perspectiveLH_ZO(fovY, mAspectRatio, mNearZ, mFarZ);
+	//mProj = glm::perspectiveLH_NO(glm::radians(fovY), aspect, 1.0f, 1000.0f);
 }
 
 void Camera::LookAt(glm::vec3 pos, glm::vec3 target, glm::vec3 worldUp)
@@ -130,26 +136,32 @@ glm::mat4x4 Camera::GetProj() const
 
 void Camera::Walk(glm::vec3 Trans)
 {
-	mPosition += Trans;
-	mTarget += Trans;
+	glm::vec3 move = glm::vec3(0.0f);
+
+	move += mRight * Trans.y;
+	move += mTarget * Trans.x;
+	move += mUp * Trans.z;
+
+	mPosition += move;
 	mInitView = true;
 }
 
 void Camera::Pitch(float angle)
 {
-	mUp = glm::rotate(mUp, 0.1f * angle, mRight);
-
-	mTarget = glm::rotate(mTarget - mPosition, 0.1f * angle, mRight) + mPosition;
+	mUp = glm::normalize(glm::rotate(mUp, angle, mRight));
+	mTarget = glm::normalize(glm::rotate(mTarget, angle, mRight));
+	
+	//mTarget = glm::cross(mRight, mUp);
 	mInitView = true;
 
 }
 
 void Camera::Yaw(float angle)
 {
-	mRight = glm::rotate(mRight, 0.1f * angle, mUp);
+	mRight = glm::normalize(glm::rotate(mRight, angle, mUp));
+	mTarget = glm::normalize(glm::rotate(mTarget, angle, mUp));
 
-	mTarget = glm::rotate(mTarget - mPosition, 0.1f * angle, mUp) + mPosition;
-
+	//mTarget = glm::cross(mRight, mUp);
 	mInitView = true;
 }
 
@@ -159,7 +171,8 @@ void Camera::UpdateViewMatrix()
 {
 	if (mInitView)
 	{
-		mView = glm::lookAtLH(mPosition, mTarget, mUp);
+		mView = glm::lookAtLH(mPosition, mPosition + mTarget, glm::vec3(0.0f,0.0f,1.0f));
+		//mView = glm::lookAtLH(mPosition, mPosition + mTarget, mUp);
 		mInitView = false;
 	}
 }

@@ -7,10 +7,10 @@ public:
 
 	bool IsKeyDown(UINT8 KeyCode);
 	
-	void MouseDown(WPARAM btnState, int x, int y, HWND hwnd);
-	void MouseUp(WPARAM btnState, int x, int y);
-	void OnMouseMove(WPARAM btnState, int x, int y);
-
+	void MouseDown();
+	void MouseUp();
+	void OnMouseMove();
+	void Update();
 private:
 	bool Keys[256];
 	POINT mLastMousePos;

@@ -29,7 +29,7 @@ struct VertexOut
 VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
-	//vin.PosL = mul(vin.PosL, 0.2f * sin(gOffset) + 1);
+	vin.PosL = mul(vin.PosL, 0.2f * sin(gOffset) + 1);
 	//vout.PosH = mul(float4(vin.PosL, 1.0f), gRotate);
 	float4 ScalePos =mul(mul(float4(vin.PosL, 1.0f), gScale3D), gRotate);
 	//float4 RotatePos = mul(ScalePos, gScale3D);

@@ -21,6 +21,7 @@ public:
 	Scene* GetScene();
 	DX12Render* GetRender();
 	GameTimer* GetTimer();
+	Win32Window* GetWindow();
 public:
 	HINSTANCE mIns;
 	static Engine* mEngine;

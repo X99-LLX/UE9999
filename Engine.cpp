@@ -73,3 +73,8 @@ GameTimer* Engine::GetTimer()
 {
 	return &mTimer;
 }
+
+Win32Window* Engine::GetWindow()
+{
+	return &mWindow;
+}

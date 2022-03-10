@@ -11,19 +11,15 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_LBUTTONDOWN:
-	case WM_MBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		//Win32Window::GetInput()->MouseDown(wParam, lParam, lParam, hwnd);
+		Win32Window::GetInput()->MouseDown();
 		return 0;
 
 	case WM_LBUTTONUP:
-	case WM_MBUTTONUP:
-	case WM_RBUTTONUP:
-		//Win32Window::GetInput()->MouseUp(wParam, lParam, lParam);
+		Win32Window::GetInput()->MouseUp();
 		return 0;
 
 	case WM_MOUSEMOVE:
-		//Win32Window::GetInput()->OnMouseMove(wParam, lParam, lParam);
+		Win32Window::GetInput()->OnMouseMove();
 		return 0;
 
 	case WM_KEYUP:
