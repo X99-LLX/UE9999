@@ -2,6 +2,20 @@
 #include "InputSystem.h"
 #include "Engine.h"
 
+void InputSystem::KeyDown(UINT8 KeyCode)
+{
+	Keys[KeyCode] = true;
+}
+
+void InputSystem::KeyUp(UINT8 KeyCode)
+{
+	Keys[KeyCode] = false;
+}
+
+bool InputSystem::IsKeyDown(UINT8 KeyCode)
+{
+	return Keys[KeyCode];
+}
 
 void InputSystem::MouseDown()
 {

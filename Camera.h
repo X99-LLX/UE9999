@@ -47,7 +47,7 @@ public:
 
 private:
 
-	glm::vec3 mPosition = { 0.0f,0.0f,500.0f };
+	glm::vec3 mPosition = { 0.0f,0.0f,0.0f };
 	
 	glm::vec3 mWorldUp = { 0.0f,0.0f,1.0f };
 
