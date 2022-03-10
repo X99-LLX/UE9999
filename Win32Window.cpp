@@ -27,13 +27,10 @@ MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			PostQuitMessage(0);
 		}
-		else
-		{
-			Win32Window::GetInput()->KeyUp(static_cast<UINT8>(wParam));
-		}
+		
 		return 0;
 	case WM_KEYDOWN:
-		Win32Window::GetInput()->KeyDown(static_cast<UINT8>(wParam));
+		
 		return 0;
 	}
 

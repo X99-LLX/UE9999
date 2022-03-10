@@ -82,6 +82,9 @@
     <ClInclude Include="InputSystem.h">
       <Filter>Engine\IputSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Sngleton.h">
+      <Filter>Other</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
