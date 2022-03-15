@@ -35,7 +35,6 @@ private:
 	Scene mScene;
 	ResourceManage mAssetMgr;
 	DX12Render mRender;
-	//Win32Window mWindow;
 	Window* testwin;
 };
 

@@ -8,7 +8,7 @@ struct ConstantBuffer
 	glm::mat4x4 MVP = glm::mat4x4(1.0f);
 	glm::mat4x4 Scale3D = glm::mat4x4(1.0f);
 	glm::mat4x4 Rotate = glm::mat4x4(1.0f);
-	float Offset = 1;
+	float Offset = 0;
 };
 
 struct Transform
@@ -36,14 +36,14 @@ public:
 
 	std::shared_ptr<StaticMesh> Asset = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CbvHeap = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CbvSrvUavHeap = nullptr;
 	std::unique_ptr<UploadBuffer<ConstantBuffer>> CB = nullptr;
 
 	void ChangePosition(glm::vec3 Pos);
 	void ChangeRotation(glm::vec4 Rot);
 	void ChangeScale3D(glm::vec3 Sca);
 
-	void CreateCbvHeap(ID3D12Device* device);
-	void CreateConstantBuffer(ID3D12Device* device);
+	void CreateDescriptorHeap();
+	void CreateConstantBuffer();
 };
 

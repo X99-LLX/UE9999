@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "ResourceManage.h"
+#include "Engine.h"
+
 
 bool ResourceManage::Init()
 {
@@ -32,6 +34,13 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Ac
 		Actors.push_back(actorinfo);
 	}
 	fin.close();
+
+	LoadTexture("bricks3");
+}
+
+Texture* ResourceManage::GetTexture(std::string name)
+{
+	return TextureAsset.find(name)->second.get();
 }
 
 std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
@@ -43,7 +52,7 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 	{
 		return nullptr;
 	}
-	if (AssetIndex.find(filename) == AssetIndex.end())
+	if (MeshAsset.find(filename) == MeshAsset.end())
 	{
 		std::shared_ptr<StaticMesh> meshinfo(new StaticMesh());
 		INT32 Num;
@@ -63,17 +72,35 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 		fin.read((char*)&Num, sizeof(int));
 		meshinfo->Normal.resize(Num);
 		fin.read((char*)meshinfo->Normal.data(), sizeof(glm::vec4) * Num);
+		fin.read((char*)&Num, sizeof(int));
+		meshinfo->TexCoord.resize(Num);
+		fin.read((char*)meshinfo->TexCoord.data(), sizeof(glm::vec2) * Num);
 		fin.close();
-		AssetIndex.insert({ filename,meshinfo });
+		MeshAsset.insert({ filename,meshinfo });
 		return meshinfo;
 	}
 	else
 	{
-		return AssetIndex.find(filename)->second;
+		return MeshAsset.find(filename)->second;
 	}
 }
 
 void ResourceManage::ClearAsset()
 {
-	AssetIndex.clear();
+	MeshAsset.clear();
+}
+
+void ResourceManage::LoadTexture(std::string Name)
+{
+	Engine::GetEngine()->GetRender()->OpenCmdList();
+	auto woodCrateTex = std::make_unique<Texture>();
+	woodCrateTex->Name = Name;
+	woodCrateTex->Filename = L"Textures/bricks3.dds";
+
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(Engine::GetEngine()->GetRender()->GetDevice(),
+		Engine::GetEngine()->GetRender()->GetCmdList(), woodCrateTex->Filename.c_str(),
+		woodCrateTex->Resource, woodCrateTex->UploadHeap));
+
+	TextureAsset[woodCrateTex->Name] = std::move(woodCrateTex);
+	Engine::GetEngine()->GetRender()->CloseCmdList();
 }

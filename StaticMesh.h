@@ -1,4 +1,5 @@
 #pragma once
+
 class StaticMesh
 {
 public:
@@ -11,6 +12,7 @@ public:
 	std::vector<glm::vec3> VertexInfo;
 	std::vector<glm::vec4> color;
 	std::vector<glm::vec4> Normal;
+	std::vector<glm::vec2> TexCoord;
 
 	Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU = nullptr;
@@ -34,7 +36,6 @@ public:
 		vbv.BufferLocation = VertexBufferGPU->GetGPUVirtualAddress();
 		vbv.StrideInBytes = VertexByteSize;
 		vbv.SizeInBytes = VertexBufferByteSize;
-
 		return vbv;
 	}
 

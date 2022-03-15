@@ -34,10 +34,13 @@
 #include <windowsx.h>
 #include "d3dx12.h"
 #include "d3dUtil.h"
+#include "DDSTextureLoader.h"
+
 
 struct Vertex
 {
 	glm::vec3 Pos = glm::vec3(1.0f);
 	glm::vec4 Color = glm::vec4(1.0f);
 	glm::vec4 Normal = glm::vec4(1.0f);
+	glm::vec2 TexCoord = glm::vec2(1.0f);
 };

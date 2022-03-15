@@ -29,6 +29,9 @@
     <Filter Include="Engine\IputSystem">
       <UniqueIdentifier>{6e9a72f7-f55b-47a9-b2a7-8cdae7bdaae7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\DX12Render\HeapManager">
+      <UniqueIdentifier>{c86d4229-1bac-427d-b0af-85b4ecb6660c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Window.h">
@@ -85,6 +88,12 @@
     <ClInclude Include="Singleton.h">
       <Filter>Other</Filter>
     </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>Other</Filter>
+    </ClInclude>
+    <ClInclude Include="HeapManager.h">
+      <Filter>Engine\DX12Render\HeapManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -138,5 +147,16 @@
     <ClCompile Include="InputSystem.cpp">
       <Filter>Engine\IputSystem</Filter>
     </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Other</Filter>
+    </ClCompile>
+    <ClCompile Include="HeapManager.cpp">
+      <Filter>Engine\DX12Render\HeapManager</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ShaderH.hlsli">
+      <Filter>Other</Filter>
+    </None>
   </ItemGroup>
 </Project>

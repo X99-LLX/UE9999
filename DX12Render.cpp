@@ -62,19 +62,15 @@ bool DX12Render::InitRender()
 	m4xMsaaQuality = msQualityLevels.NumQualityLevels;
 	assert(m4xMsaaQuality > 0 && "Unexpected MSAA quality level.");
 
-	
 	CreateCommandObjects();
 	CreateSwapChain();
 	CreateRtvAndDsvDescriptorHeap();
-
 	OnResize();
-
-
-	BuildRootSignature();
+	
 	BuildShadersAndInputLayout();
-
+	BuildRootSignature();
 	BuildPSO();
-
+	
 	FlushCommandQueue();
 	return true;
 }
@@ -86,12 +82,14 @@ void DX12Render::Update()
 	mScene->mCamera.UpdateViewMatrix();
 	for (auto actor: mScene->Actors)
 	{
-		actor->WorldTrans = glm::transpose(glm::translate(glm::mat4(1.0f), actor->Trans.Translation));
+		actor->WorldTrans = glm::translate(glm::mat4(1.0f), actor->Trans.Translation);
 		actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->Trans.Scale3D);
+
 		actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->Trans.Rotation.w, actor->Trans.Rotation.x,
 			actor->Trans.Rotation.y, actor->Trans.Rotation.z));
+
 		glm::mat4 worldViewProj = mScene->mCamera.GetProj() * mScene->mCamera.GetView() 
-			* glm::transpose(actor->WorldTrans);
+			* actor->WorldTrans;
 		actor->MVP = worldViewProj;
 	}
 }
@@ -118,7 +116,10 @@ void DX12Render::Draw()
 
 	for (auto actor :mScene->Actors)
 	{
-		ID3D12DescriptorHeap* descriptorHeaps[] = { actor->CbvHeap.Get() };
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		ID3D12DescriptorHeap* descriptorHeaps[] = { actor->CbvSrvUavHeap.Get() };
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 		mCommandList->IASetVertexBuffers(0, 1, &actor->Asset->VertexBufferView());
@@ -129,12 +130,16 @@ void DX12Render::Draw()
 		objConstants.MVP = glm::transpose(actor->MVP);
 		objConstants.Scale3D = actor->Scale3DTrans;
 		objConstants.Rotate = actor->RotateTrans;
-		
 		objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
-
 		actor->CB->CopyData(0, objConstants);
+		
+		mCommandList->SetGraphicsRoot32BitConstants(0, 3, &mScene->mCamera.GetCameraPos(), 0);
 
-		mCommandList->SetGraphicsRootDescriptorTable(0, actor->CbvHeap->GetGPUDescriptorHandleForHeapStart());
+		mCommandList->SetGraphicsRootConstantBufferView(1, actor->CB->Resource()->GetGPUVirtualAddress());
+
+		mCommandList->SetGraphicsRootDescriptorTable(2, actor->CbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
+
+
 		mCommandList->DrawIndexedInstanced(
 			actor->Asset->IndexCount,
 			1, 0, 0, 0);
@@ -143,10 +148,7 @@ void DX12Render::Draw()
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
-	ThrowIfFailed(mCommandList->Close());
-
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	CloseCmdList();
 
 	ThrowIfFailed(mSwapChain->Present(0, 0));
 	mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
@@ -275,42 +277,30 @@ ID3D12Device* DX12Render::GetDevice()
 	return md3dDevice.Get();
 }
 
+ID3D12GraphicsCommandList* DX12Render::GetCmdList()
+{
+	return mCommandList.Get();
+}
+
+void DX12Render::OpenCmdList()
+{
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+}
+
+void DX12Render::CloseCmdList()
+{
+	ThrowIfFailed(mCommandList->Close());
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	FlushCommandQueue();
+}
+
 void DX12Render::BuildRootSignature()
 {
-	// Shader programs typically require resources as input (constant buffers,
-// textures, samplers).  The root signature defines the resources the shader
-// programs expect.  If we think of the shader programs as a function, and
-// the input resources as function parameters, then the root signature can be
-// thought of as defining the function signature.  
-
-// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[1];
-
-	// Create a single descriptor table of CBVs.
-	CD3DX12_DESCRIPTOR_RANGE cbvTable;
-	cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
-
-	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(1, slotRootParameter, 0, nullptr,
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
-	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
-	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
-
-	if (errorBlob != nullptr)
-	{
-		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-	}
-	ThrowIfFailed(hr);
-
 	ThrowIfFailed(md3dDevice->CreateRootSignature(
 		0,
-		serializedRootSig->GetBufferPointer(),
-		serializedRootSig->GetBufferSize(),
+		mvsByteCode->GetBufferPointer(),
+		mvsByteCode->GetBufferSize(),
 		IID_PPV_ARGS(&mRootSignature)));
 }
 
@@ -325,7 +315,8 @@ void DX12Render::BuildShadersAndInputLayout()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }
 
@@ -446,22 +437,23 @@ void DX12Render::FlushCommandQueue()
 	}
 }
 
-void DX12Render::BuildGeometry(Scene* S)
+void DX12Render::BuildGeometry()
 {
+	Scene* S = Engine::GetEngine()->GetScene();
 	for (auto actor :S->Actors)
 	{
 		ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 		std::vector<int> indices;
 		std::vector<Vertex> vertices;
 
-		actor->CreateCbvHeap(md3dDevice.Get()); 
-		actor->CreateConstantBuffer(md3dDevice.Get());
+		actor->CreateDescriptorHeap(); 
+		actor->CreateConstantBuffer();
 
 		std::shared_ptr<StaticMesh> TempMesh = actor->Asset;
 
 		for (int i = 0; i < TempMesh->NumVertices; i++)
 		{
-			vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] });
+			vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] ,TempMesh->TexCoord[i]});
 		}
 
 		indices.insert(indices.end(), TempMesh->Index.begin(), TempMesh->Index.end());

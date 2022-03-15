@@ -33,23 +33,23 @@ void InputSystem::OnMouseMove()
 
 void InputSystem::Update()
 {
+	float t = Engine::GetEngine()->GetTimer()->DeltaTime();
 	if (GetAsyncKeyState('W') & 0x8000)
-		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(30.0f, 0.0f, 0.0f));
+		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(t * 1000.0f, 0.0f, 0.0f));
 
 	if (GetAsyncKeyState('S') & 0x8000)
-		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(-30.0f, 0.0f, 0.0f));
+		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(t * -1000.0f, 0.0f, 0.0f));
 
 	if (GetAsyncKeyState('A') & 0x8000)
-		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, -30.0f, 0.0f));
+		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, t * -1000.0f, 0.0f));
 
 	if (GetAsyncKeyState('D') & 0x8000)
-		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, 30.0f, 0.0f));
+		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, t * 1000.0f, 0.0f));
 
 	if (GetAsyncKeyState('Q') & 0x8000)
-		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, 0.0f, 30.0f));
+		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, 0.0f, t * 1000.0f));
 
 	if (GetAsyncKeyState('E') & 0x8000)
-		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, 0.0f, -30.0f));
+		Engine::GetEngine()->GetScene()->mCamera.Walk(glm::vec3(0.0f, 0.0f, t * -1000.0f));
 
-	
 }
