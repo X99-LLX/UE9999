@@ -80,7 +80,7 @@ Scene* Engine::GetScene()
 	return &mScene;
 }
 
-DX12Render* Engine::GetRender()
+DX12RHI* Engine::GetRender()
 {
 	return &mRender;
 }

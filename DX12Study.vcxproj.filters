@@ -23,14 +23,17 @@
     <Filter Include="Main">
       <UniqueIdentifier>{c77ec068-59cc-425c-8468-b2d9f0bc29ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\DX12Render">
-      <UniqueIdentifier>{ae4faf6e-aeed-44c0-b2db-35202d6023e8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\IputSystem">
       <UniqueIdentifier>{6e9a72f7-f55b-47a9-b2a7-8cdae7bdaae7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\DX12Render\HeapManager">
+    <Filter Include="Engine\RHI">
+      <UniqueIdentifier>{ae4faf6e-aeed-44c0-b2db-35202d6023e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\RHI\HeapManager">
       <UniqueIdentifier>{c86d4229-1bac-427d-b0af-85b4ecb6660c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\RHI\DX12RHI">
+      <UniqueIdentifier>{59fa7ddf-5e2c-454f-8705-bfd6ebe49985}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -79,9 +82,6 @@
     <ClInclude Include="GameInstance.h">
       <Filter>Game</Filter>
     </ClInclude>
-    <ClInclude Include="DX12Render.h">
-      <Filter>Engine\DX12Render</Filter>
-    </ClInclude>
     <ClInclude Include="InputSystem.h">
       <Filter>Engine\IputSystem</Filter>
     </ClInclude>
@@ -92,7 +92,13 @@
       <Filter>Other</Filter>
     </ClInclude>
     <ClInclude Include="HeapManager.h">
-      <Filter>Engine\DX12Render\HeapManager</Filter>
+      <Filter>Engine\RHI\HeapManager</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12RHI.h">
+      <Filter>Engine\RHI\DX12RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI.h">
+      <Filter>Engine\RHI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -141,9 +147,6 @@
     <ClCompile Include="GameLogic.cpp">
       <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="DX12Render.cpp">
-      <Filter>Engine\DX12Render</Filter>
-    </ClCompile>
     <ClCompile Include="InputSystem.cpp">
       <Filter>Engine\IputSystem</Filter>
     </ClCompile>
@@ -151,7 +154,13 @@
       <Filter>Other</Filter>
     </ClCompile>
     <ClCompile Include="HeapManager.cpp">
-      <Filter>Engine\DX12Render\HeapManager</Filter>
+      <Filter>Engine\RHI\HeapManager</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12RHI.cpp">
+      <Filter>Engine\RHI\DX12RHI</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI.cpp">
+      <Filter>Engine\RHI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

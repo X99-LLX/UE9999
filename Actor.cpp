@@ -40,19 +40,12 @@ void Actor::CreateDescriptorHeap()
 		IID_PPV_ARGS(&CbvSrvUavHeap)));
 }
 
-void Actor::CreateConstantBuffer()
+void Actor::CreateSRV()
 {
 	ID3D12Device* device = Engine::GetEngine()->GetRender()->GetDevice();
 	CB = std::make_unique<UploadBuffer<ConstantBuffer>>(device, 1, true);
 	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = CB->Resource()->GetGPUVirtualAddress();
 
-	/*D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-	cbvDesc.BufferLocation = cbAddress;
-	cbvDesc.SizeInBytes = d3dUtil::CalcConstantBufferByteSize(sizeof(ConstantBuffer));
-
-	device->CreateConstantBufferView(
-		&cbvDesc,
-		CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());*/
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -67,7 +60,7 @@ void Actor::CreateConstantBuffer()
 
 
 	device->CreateShaderResourceView(Res->GetTexture("bricks3")->Resource.Get(), &srvDesc, hDescriptor);
-	
+	 
 	hDescriptor.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	device->CreateShaderResourceView(Res->GetTexture("bricks3")->Resource.Get(), &srvDesc, hDescriptor);

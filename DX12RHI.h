@@ -5,11 +5,11 @@
 #include "Scene.h"
 
 
-class DX12Render
+class DX12RHI
 {
 public:
-	DX12Render();
-	~DX12Render();
+	DX12RHI();
+	~DX12RHI();
 
 	bool InitRender();
 

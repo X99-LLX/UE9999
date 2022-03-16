@@ -1,18 +1,18 @@
 #include "stdafx.h"
-#include "DX12Render.h"
+#include "DX12RHI.h"
 #include "Engine.h"
 
-DX12Render::DX12Render()
+DX12RHI::DX12RHI()
 {
 
 }
 
-DX12Render::~DX12Render()
+DX12RHI::~DX12RHI()
 {
 
 }
 
-bool DX12Render::InitRender()
+bool DX12RHI::InitRender()
 {
 	MainWnd = Engine::GetEngine()->GetWindow();
 	mScene = Engine::GetEngine()->GetScene();
@@ -77,7 +77,7 @@ bool DX12Render::InitRender()
 
 
 
-void DX12Render::Update()
+void DX12RHI::Update()
 {
 	mScene->mCamera.UpdateViewMatrix();
 	for (auto actor: mScene->Actors)
@@ -94,7 +94,7 @@ void DX12Render::Update()
 	}
 }
 
-void DX12Render::Draw()
+void DX12RHI::Draw()
 {
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
@@ -156,7 +156,7 @@ void DX12Render::Draw()
 
 }
 
-void DX12Render::OnResize()
+void DX12RHI::OnResize()
 {
 	assert(md3dDevice);
 	assert(mSwapChain);
@@ -254,12 +254,12 @@ void DX12Render::OnResize()
 	mScene->mCamera.UpdateProjMatrix(0.25f * glm::pi<float>(),MainWnd->GetAspectRatio(), 1.0f, 100000.0f);
 }
 
-ID3D12Resource* DX12Render::CurrentBackBuffer() const
+ID3D12Resource* DX12RHI::CurrentBackBuffer() const
 {
 	return mSwapChainBuffer[mCurrentBackBuffer].Get();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DX12Render::CurrentBackBufferView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::CurrentBackBufferView() const
 {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
 		mRtvHeap->GetCPUDescriptorHandleForHeapStart(),
@@ -267,27 +267,27 @@ D3D12_CPU_DESCRIPTOR_HANDLE DX12Render::CurrentBackBufferView() const
 		mRtvDescriptorSize);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DX12Render::DepthStencilView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::DepthStencilView() const
 {
 	return mDsvHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
-ID3D12Device* DX12Render::GetDevice()
+ID3D12Device* DX12RHI::GetDevice()
 {
 	return md3dDevice.Get();
 }
 
-ID3D12GraphicsCommandList* DX12Render::GetCmdList()
+ID3D12GraphicsCommandList* DX12RHI::GetCmdList()
 {
 	return mCommandList.Get();
 }
 
-void DX12Render::OpenCmdList()
+void DX12RHI::OpenCmdList()
 {
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 }
 
-void DX12Render::CloseCmdList()
+void DX12RHI::CloseCmdList()
 {
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
@@ -295,7 +295,7 @@ void DX12Render::CloseCmdList()
 	FlushCommandQueue();
 }
 
-void DX12Render::BuildRootSignature()
+void DX12RHI::BuildRootSignature()
 {
 	ThrowIfFailed(md3dDevice->CreateRootSignature(
 		0,
@@ -304,7 +304,7 @@ void DX12Render::BuildRootSignature()
 		IID_PPV_ARGS(&mRootSignature)));
 }
 
-void DX12Render::BuildShadersAndInputLayout()
+void DX12RHI::BuildShadersAndInputLayout()
 {
 	HRESULT hr = S_OK;
 
@@ -320,7 +320,7 @@ void DX12Render::BuildShadersAndInputLayout()
 	};
 }
 
-void DX12Render::BuildPSO()
+void DX12RHI::BuildPSO()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
@@ -351,7 +351,7 @@ void DX12Render::BuildPSO()
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
 }
 
-void DX12Render::CreateRtvAndDsvDescriptorHeap()
+void DX12RHI::CreateRtvAndDsvDescriptorHeap()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
 	rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
@@ -370,7 +370,7 @@ void DX12Render::CreateRtvAndDsvDescriptorHeap()
 		&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
 }
 
-void DX12Render::CreateSwapChain()
+void DX12RHI::CreateSwapChain()
 {
 	//释放原来的交换链
 	mSwapChain.Reset();
@@ -402,7 +402,7 @@ void DX12Render::CreateSwapChain()
 		mSwapChain.GetAddressOf()));
 }
 
-void DX12Render::CreateCommandObjects()
+void DX12RHI::CreateCommandObjects()
 {
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -423,7 +423,7 @@ void DX12Render::CreateCommandObjects()
 	mCommandList->Close();
 }
 
-void DX12Render::FlushCommandQueue()
+void DX12RHI::FlushCommandQueue()
 {
 	mCurrentFence++;
 	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mCurrentFence));
@@ -437,7 +437,7 @@ void DX12Render::FlushCommandQueue()
 	}
 }
 
-void DX12Render::BuildGeometry()
+void DX12RHI::BuildGeometry()
 {
 	Scene* S = Engine::GetEngine()->GetScene();
 	for (auto actor :S->Actors)
@@ -447,7 +447,7 @@ void DX12Render::BuildGeometry()
 		std::vector<Vertex> vertices;
 
 		actor->CreateDescriptorHeap(); 
-		actor->CreateConstantBuffer();
+		actor->CreateSRV();
 
 		std::shared_ptr<StaticMesh> TempMesh = actor->Asset;
 

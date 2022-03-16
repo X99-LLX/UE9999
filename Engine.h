@@ -3,7 +3,7 @@
 #include "Scene.h"
 #include "GameTimer.h"
 #include "Camera.h"
-#include "DX12Render.h"
+#include "DX12RHI.h"
 #include "ResourceManage.h"
 #include "Window.h"
 
@@ -21,7 +21,9 @@ public:
 	static Engine* GetEngine();
 	ResourceManage* GetAssetMgr();
 	Scene* GetScene();
-	DX12Render* GetRender();
+
+	DX12RHI* GetRender();
+
 	GameTimer* GetTimer();
 	Window* GetWindow();
 
@@ -34,7 +36,7 @@ private:
 	GameTimer mTimer;
 	Scene mScene;
 	ResourceManage mAssetMgr;
-	DX12Render mRender;
+	DX12RHI mRender;
 	Window* testwin;
 };
 

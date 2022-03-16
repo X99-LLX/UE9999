@@ -44,6 +44,6 @@ public:
 	void ChangeScale3D(glm::vec3 Sca);
 
 	void CreateDescriptorHeap();
-	void CreateConstantBuffer();
+	void CreateSRV();
 };
 
