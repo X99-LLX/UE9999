@@ -3,6 +3,8 @@
 class StaticMesh
 {
 public:
+
+	~StaticMesh();
 	std::string MeshName;
 	int NumLod;
 	int NumVertices;

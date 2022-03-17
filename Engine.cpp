@@ -10,20 +10,20 @@ Engine::Engine()
 
 Engine::~Engine()
 {
-	testwin = nullptr;
+	delete mWindow;
 }
 
 bool Engine::Init()
 {
-	testwin = CreateMainWnd();
-	if (!testwin->InitWnd())
+	mWindow = CreateMainWnd();
+	if (!mWindow->InitWnd())
 	{
 		return false;
 	}
-	if (!mRender.InitRender())
+	/*if (!mRender.Init())
 	{
 		return false;
-	}
+	}*/
 	if (!mScene.Init()) 
 	{
 		return false;
@@ -32,6 +32,7 @@ bool Engine::Init()
 	{
 		return false;
 	}
+	TestRender.GetRHI()->Init();
 	return true;
 }
 
@@ -51,9 +52,8 @@ bool Engine::Run()
 		else
 		{
 			mTimer.Tick();
-			testwin->GetInput()->Update();
-			mRender.Update();
-			mRender.Draw();
+			mWindow->GetInput()->Update();
+			TestRender.run();
 		}
 	}
 	
@@ -80,10 +80,11 @@ Scene* Engine::GetScene()
 	return &mScene;
 }
 
-DX12RHI* Engine::GetRender()
+Render* Engine::GetRender()
 {
-	return &mRender;
+	return &TestRender;
 }
+
 
 GameTimer* Engine::GetTimer()
 {
@@ -92,7 +93,7 @@ GameTimer* Engine::GetTimer()
 
 Window* Engine::GetWindow()
 {
-	return testwin;
+	return mWindow;
 }
 
 Window* Engine::CreateMainWnd()

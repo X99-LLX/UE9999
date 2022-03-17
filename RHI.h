@@ -1,11 +1,13 @@
 #pragma once
 
-class RHI
+class RHI 
 {
 public:
 	virtual ~RHI();
 
-	bool Init();
-
+	virtual bool Init() = 0;
+	virtual void Update() = 0;
+	virtual void Draw() = 0;
+	virtual void BuildGeo() = 0;
 };
 

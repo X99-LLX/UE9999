@@ -29,11 +29,11 @@
     <Filter Include="Engine\RHI">
       <UniqueIdentifier>{ae4faf6e-aeed-44c0-b2db-35202d6023e8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\RHI\HeapManager">
-      <UniqueIdentifier>{c86d4229-1bac-427d-b0af-85b4ecb6660c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\RHI\DX12RHI">
       <UniqueIdentifier>{59fa7ddf-5e2c-454f-8705-bfd6ebe49985}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Render">
+      <UniqueIdentifier>{373445c2-5885-4b38-8b1e-1fcec0a82282}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -91,14 +91,17 @@
     <ClInclude Include="DDSTextureLoader.h">
       <Filter>Other</Filter>
     </ClInclude>
-    <ClInclude Include="HeapManager.h">
-      <Filter>Engine\RHI\HeapManager</Filter>
-    </ClInclude>
     <ClInclude Include="DX12RHI.h">
       <Filter>Engine\RHI\DX12RHI</Filter>
     </ClInclude>
     <ClInclude Include="RHI.h">
       <Filter>Engine\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="Render.h">
+      <Filter>Engine\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="StoWS.h">
+      <Filter>Other</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -153,14 +156,14 @@
     <ClCompile Include="DDSTextureLoader.cpp">
       <Filter>Other</Filter>
     </ClCompile>
-    <ClCompile Include="HeapManager.cpp">
-      <Filter>Engine\RHI\HeapManager</Filter>
-    </ClCompile>
     <ClCompile Include="DX12RHI.cpp">
       <Filter>Engine\RHI\DX12RHI</Filter>
     </ClCompile>
     <ClCompile Include="RHI.cpp">
       <Filter>Engine\RHI</Filter>
+    </ClCompile>
+    <ClCompile Include="Render.cpp">
+      <Filter>Engine\Render</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

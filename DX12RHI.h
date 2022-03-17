@@ -3,18 +3,20 @@
 #include "d3dUtil.h"
 #include "GameTimer.h"
 #include "Scene.h"
+#include "RHI.h"
 
 
-class DX12RHI
+class DX12RHI : public RHI
 {
 public:
 	DX12RHI();
 	~DX12RHI();
 
-	bool InitRender();
-
+	bool Init();
 	void Update();
 	void Draw();
+	void BuildGeo();
+
 	void OnResize();
 	ID3D12Resource* CurrentBackBuffer()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
@@ -24,12 +26,8 @@ public:
 	void OpenCmdList();
 	void CloseCmdList();
 
-	Scene* mScene;
-	
-
-	void BuildGeometry();
-
 protected:
+	void BuildTexture();
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
 	void BuildPSO();   
@@ -37,7 +35,8 @@ protected:
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
-	
+	void CreateActorHeap(Actor& A);
+	void CreateActorView(Actor& A);
 
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;
@@ -75,8 +74,6 @@ protected:
 
 	bool m4xMsaaState = false;
 	UINT m4xMsaaQuality = 0;
-	Window* MainWnd;
-
 
 };
 

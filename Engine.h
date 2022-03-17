@@ -6,6 +6,7 @@
 #include "DX12RHI.h"
 #include "ResourceManage.h"
 #include "Window.h"
+#include "Render.h"
 
 
 class Engine 
@@ -21,8 +22,7 @@ public:
 	static Engine* GetEngine();
 	ResourceManage* GetAssetMgr();
 	Scene* GetScene();
-
-	DX12RHI* GetRender();
+	Render* GetRender();
 
 	GameTimer* GetTimer();
 	Window* GetWindow();
@@ -36,7 +36,7 @@ private:
 	GameTimer mTimer;
 	Scene mScene;
 	ResourceManage mAssetMgr;
-	DX12RHI mRender;
-	Window* testwin;
+	Window* mWindow;
+	Render TestRender;
 };
 

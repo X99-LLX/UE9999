@@ -44,3 +44,4 @@ struct Vertex
 	glm::vec4 Normal = glm::vec4(1.0f);
 	glm::vec2 TexCoord = glm::vec2(1.0f);
 };
+

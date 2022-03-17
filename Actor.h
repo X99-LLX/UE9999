@@ -37,13 +37,12 @@ public:
 	std::shared_ptr<StaticMesh> Asset = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CbvSrvUavHeap = nullptr;
+
 	std::unique_ptr<UploadBuffer<ConstantBuffer>> CB = nullptr;
 
 	void ChangePosition(glm::vec3 Pos);
 	void ChangeRotation(glm::vec4 Rot);
 	void ChangeScale3D(glm::vec3 Sca);
 
-	void CreateDescriptorHeap();
-	void CreateSRV();
 };
 

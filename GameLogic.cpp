@@ -6,7 +6,8 @@ void GameLogic::Init()
 	mEngine = Engine::GetEngine();
 	mAssetMgr = mEngine->GetAssetMgr();
 	LoadMap("mapactor");
-	mEngine->GetRender()->BuildGeometry();
+	//mEngine->GetRender()->BuildGeo();
+	mEngine->GetRender()->GetRHI()->BuildGeo();
 }
 
 void GameLogic::LoadMap(std::string MapName)

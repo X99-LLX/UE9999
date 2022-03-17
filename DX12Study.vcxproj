@@ -29,14 +29,15 @@
     <ClInclude Include="GameInstance.h" />
     <ClInclude Include="GameLogic.h" />
     <ClInclude Include="GameTimer.h" />
-    <ClInclude Include="HeapManager.h" />
     <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="Render.h" />
     <ClInclude Include="ResourceManage.h" />
     <ClInclude Include="RHI.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StoWS.h" />
     <ClInclude Include="UpLoadBuffer.h" />
     <ClInclude Include="Win32Window.h" />
     <ClInclude Include="Window.h" />
@@ -51,7 +52,6 @@
     <ClCompile Include="GameInstance.cpp" />
     <ClCompile Include="GameLogic.cpp" />
     <ClCompile Include="GameTimer.cpp" />
-    <ClCompile Include="HeapManager.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="Main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -59,6 +59,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Render.cpp" />
     <ClCompile Include="ResourceManage.cpp" />
     <ClCompile Include="RHI.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -192,7 +193,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_PLATFORM_WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_PLATFORM_WIN32;_RHI_DX12;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

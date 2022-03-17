@@ -8,6 +8,7 @@ class Scene
 {
 public:
 
+	~Scene();
 	bool Init();
 
 	std::vector<std::shared_ptr<Actor>> Actors;

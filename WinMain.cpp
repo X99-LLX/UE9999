@@ -2,11 +2,11 @@
 #include <windows.h>
 #include "GameInstance.h"
 
-
-
-
 #ifdef PlatFormUndef
-
+int main()
+{
+	return 0;
+}
 
 
 #elif _PLATFORM_WIN32

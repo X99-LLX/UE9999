@@ -5,6 +5,7 @@
 class ResourceManage
 {
 public:
+	~ResourceManage();
 
 	bool Init();
 	void LoadMap(std::string MapName,std::vector<std::shared_ptr<Actor>>& Actors);
@@ -15,7 +16,8 @@ private:
 	void ClearAsset();
 	void LoadTexture(std::string Name);
 
-private:
+public:
+
 	std::unordered_map<std::string, std::shared_ptr<StaticMesh>> MeshAsset;
 	std::unordered_map<std::string, std::shared_ptr<Texture>> TextureAsset;
 };

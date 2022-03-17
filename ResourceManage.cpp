@@ -1,7 +1,13 @@
 #include "stdafx.h"
 #include "ResourceManage.h"
 #include "Engine.h"
+#include "StoWS.h"
 
+
+ResourceManage::~ResourceManage()
+{
+
+}
 
 bool ResourceManage::Init()
 {
@@ -55,6 +61,7 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 	if (MeshAsset.find(filename) == MeshAsset.end())
 	{
 		std::shared_ptr<StaticMesh> meshinfo(new StaticMesh());
+
 		INT32 Num;
 		fin.read((char*)&Num, sizeof(int));
 		meshinfo->MeshName.resize(Num);
@@ -76,7 +83,8 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 		meshinfo->TexCoord.resize(Num);
 		fin.read((char*)meshinfo->TexCoord.data(), sizeof(glm::vec2) * Num);
 		fin.close();
-		MeshAsset.insert({ filename,meshinfo });
+
+		MeshAsset.insert({ filename ,meshinfo });
 		return meshinfo;
 	}
 	else
@@ -88,19 +96,16 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 void ResourceManage::ClearAsset()
 {
 	MeshAsset.clear();
+	TextureAsset.clear();
 }
+
+
 
 void ResourceManage::LoadTexture(std::string Name)
 {
-	Engine::GetEngine()->GetRender()->OpenCmdList();
-	auto woodCrateTex = std::make_unique<Texture>();
+	auto woodCrateTex = std::make_shared<Texture>();
 	woodCrateTex->Name = Name;
-	woodCrateTex->Filename = L"Textures/bricks3.dds";
+	woodCrateTex->Filename = L"Textures/" + SToWS(Name) + L".dds";
+	TextureAsset.insert({ Name, woodCrateTex });
 
-	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(Engine::GetEngine()->GetRender()->GetDevice(),
-		Engine::GetEngine()->GetRender()->GetCmdList(), woodCrateTex->Filename.c_str(),
-		woodCrateTex->Resource, woodCrateTex->UploadHeap));
-
-	TextureAsset[woodCrateTex->Name] = std::move(woodCrateTex);
-	Engine::GetEngine()->GetRender()->CloseCmdList();
 }
