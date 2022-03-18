@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Actor.h"
-#include "StaticMesh.h"
+#include "DXRenderItem.h"
+
+#include "RenderItem.h"
+#include "DXMesh.h"
 #include "Camera.h"
 
 class Scene
@@ -11,7 +13,10 @@ public:
 	~Scene();
 	bool Init();
 
-	std::vector<std::shared_ptr<Actor>> Actors;
+	std::vector<std::shared_ptr<RenderItem>> Actors;
+
+	//std::vector<std::shared_ptr<RenderItem>> Actors;
+
 	Camera mCamera;
 
 };

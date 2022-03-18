@@ -1,20 +1,27 @@
 #pragma once
+#include "GPUMesh.h"
+#include "DXTexture.h"
 
-class StaticMesh
+class DXMesh : public GPUMesh
 {
 public:
+	DXMesh(GPUMesh* mesh)
+	{
+		MeshName = mesh->MeshName;
+		NumLod = mesh->NumLod;
+		NumVertices = mesh->NumVertices;
+		NumTriangles = mesh->NumTriangles;
+		NumIndices = mesh->NumIndices;
+		indices = mesh->indices;
+		VertexInfo = mesh->VertexInfo;
+		color = mesh->color;
+		Normal = mesh->Normal;
+		TexCoord = mesh->TexCoord;
+	}
 
-	~StaticMesh();
-	std::string MeshName;
-	int NumLod;
-	int NumVertices;
-	int NumTriangles;
-	int NumIndices;
-	std::vector<int> Index;
-	std::vector<glm::vec3> VertexInfo;
-	std::vector<glm::vec4> color;
-	std::vector<glm::vec4> Normal;
-	std::vector<glm::vec2> TexCoord;
+	~DXMesh();
+
+	std::shared_ptr<DXTexture> Tex = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU = nullptr;
@@ -50,12 +57,5 @@ public:
 
 		return ibv;
 	}
-
-	void DisposeUploaders()
-	{
-		VertexBufferUploader = nullptr;
-		IndexBufferUploader = nullptr;
-	}
-
 };
 

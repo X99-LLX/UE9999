@@ -17,6 +17,11 @@ RHI* Render::GetRHI()
 	return mRHI;
 }
 
+void Render::BuildRes(std::vector<std::shared_ptr<RenderItem>> RI)
+{
+	mRHI->CreateRenderItem(RI);
+}
+
 void Render::run()
 {
 	mRHI->Update();

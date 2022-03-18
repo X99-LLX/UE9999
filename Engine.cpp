@@ -20,10 +20,6 @@ bool Engine::Init()
 	{
 		return false;
 	}
-	/*if (!mRender.Init())
-	{
-		return false;
-	}*/
 	if (!mScene.Init()) 
 	{
 		return false;
@@ -41,6 +37,7 @@ bool Engine::Run()
 	MSG msg = { 0 };
 	mTimer.Reset();
 
+	TestRender.BuildRes(mScene.Actors);
 	while (msg.message != WM_QUIT)
 	{
 

@@ -35,6 +35,15 @@
     <Filter Include="Engine\Render">
       <UniqueIdentifier>{373445c2-5885-4b38-8b1e-1fcec0a82282}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Resource">
+      <UniqueIdentifier>{dfe5c600-a45e-4642-822d-c87f4d3a46e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Resource\GPUResource">
+      <UniqueIdentifier>{4a6f3ead-9968-468b-93d1-7597398ae9f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Resource\DX12Resource">
+      <UniqueIdentifier>{58d35e25-5b39-4fa2-8083-94fbe5809bfb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Window.h">
@@ -55,12 +64,6 @@
     <ClInclude Include="d3dUtil.h">
       <Filter>Other</Filter>
     </ClInclude>
-    <ClInclude Include="Actor.h">
-      <Filter>Engine\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="StaticMesh.h">
-      <Filter>Engine\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="ResourceManage.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
@@ -69,9 +72,6 @@
     </ClInclude>
     <ClInclude Include="Scene.h">
       <Filter>Engine\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="GameTimer.h">
-      <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Engine.h">
       <Filter>Engine</Filter>
@@ -103,6 +103,27 @@
     <ClInclude Include="StoWS.h">
       <Filter>Other</Filter>
     </ClInclude>
+    <ClInclude Include="GameTimer.h">
+      <Filter>Other</Filter>
+    </ClInclude>
+    <ClInclude Include="DXMesh.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="DXRenderItem.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="GPUMesh.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
+    <ClInclude Include="GPUTexture.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
+    <ClInclude Include="DXTexture.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderItem.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -117,9 +138,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Other</Filter>
     </ClCompile>
-    <ClCompile Include="Actor.cpp">
-      <Filter>Engine\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
@@ -129,13 +147,7 @@
     <ClCompile Include="Scene.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="StaticMesh.cpp">
-      <Filter>Engine\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="Engine.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="GameTimer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
@@ -164,6 +176,27 @@
     </ClCompile>
     <ClCompile Include="Render.cpp">
       <Filter>Engine\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="GameTimer.cpp">
+      <Filter>Other</Filter>
+    </ClCompile>
+    <ClCompile Include="DXMesh.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="DXRenderItem.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="GPUMesh.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
+    <ClCompile Include="GPUTexture.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
+    <ClCompile Include="DXTexture.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderItem.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

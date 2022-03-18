@@ -15,7 +15,7 @@ bool ResourceManage::Init()
 	return true;
 }
 
-void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Actor>>& Actors)
+void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<RenderItem>>& Actors)
 {
 	std::string FilePath = "Data/" + MapName + ".dat";
 	std::ifstream fin(FilePath, std::ios::binary);
@@ -30,7 +30,7 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Ac
 
 	for (int i = 0; i < Num; i++)
 	{
-		std::shared_ptr<Actor> actorinfo(new Actor());
+		std::shared_ptr<RenderItem> actorinfo(new RenderItem());
 		INT32 TempNum;
 		fin.read((char*)&actorinfo->Trans, sizeof(int) * 10);
 		fin.read((char*)&TempNum, sizeof(int));
@@ -44,12 +44,12 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Ac
 	LoadTexture("bricks3");
 }
 
-Texture* ResourceManage::GetTexture(std::string name)
+GPUTexture* ResourceManage::GetTexture(std::string name)
 {
 	return TextureAsset.find(name)->second.get();
 }
 
-std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
+std::shared_ptr<GPUMesh> ResourceManage::LoadMeshAsset(std::string filename)
 {
 	filename = filename.erase(filename.length() - 1, 1);
 	std::string FilePath = "Data/" + filename + ".dat";
@@ -60,7 +60,7 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 	}
 	if (MeshAsset.find(filename) == MeshAsset.end())
 	{
-		std::shared_ptr<StaticMesh> meshinfo(new StaticMesh());
+		std::shared_ptr<GPUMesh> meshinfo(new GPUMesh());
 
 		INT32 Num;
 		fin.read((char*)&Num, sizeof(int));
@@ -71,8 +71,8 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 		fin.read((char*)&meshinfo->NumTriangles, sizeof(int));
 		fin.read((char*)&meshinfo->NumIndices, sizeof(int));
 		fin.read((char*)&Num, sizeof(int));
-		meshinfo->Index.resize(Num);
-		fin.read((char*)meshinfo->Index.data(), sizeof(int) * Num);
+		meshinfo->indices.resize(Num);
+		fin.read((char*)meshinfo->indices.data(), sizeof(int) * Num);
 		fin.read((char*)&Num, sizeof(int));
 		meshinfo->VertexInfo.resize(Num);
 		fin.read((char*)meshinfo->VertexInfo.data(), sizeof(glm::vec3) * Num);
@@ -83,6 +83,8 @@ std::shared_ptr<StaticMesh> ResourceManage::LoadMeshAsset(std::string filename)
 		meshinfo->TexCoord.resize(Num);
 		fin.read((char*)meshinfo->TexCoord.data(), sizeof(glm::vec2) * Num);
 		fin.close();
+		meshinfo->Tex = std::make_shared<GPUTexture>("bricks3",L"Textures/bricks3.dds");
+
 
 		MeshAsset.insert({ filename ,meshinfo });
 		return meshinfo;
@@ -103,7 +105,7 @@ void ResourceManage::ClearAsset()
 
 void ResourceManage::LoadTexture(std::string Name)
 {
-	auto woodCrateTex = std::make_shared<Texture>();
+	auto woodCrateTex = std::make_shared<GPUTexture>();
 	woodCrateTex->Name = Name;
 	woodCrateTex->Filename = L"Textures/" + SToWS(Name) + L".dds";
 	TextureAsset.insert({ Name, woodCrateTex });

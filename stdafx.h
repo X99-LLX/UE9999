@@ -45,3 +45,17 @@ struct Vertex
 	glm::vec2 TexCoord = glm::vec2(1.0f);
 };
 
+struct ConstantBuffer
+{
+	glm::mat4x4 MVP = glm::mat4x4(1.0f);
+	glm::mat4x4 Scale3D = glm::mat4x4(1.0f);
+	glm::mat4x4 Rotate = glm::mat4x4(1.0f);
+	float Offset = 0;
+};
+
+struct Transform
+{
+	glm::vec4 Rotation = glm::vec4(1.0f);
+	glm::vec3 Translation = glm::vec3(1.0f);
+	glm::vec3 Scale3D = glm::vec3(1.0f);
+};

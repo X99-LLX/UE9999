@@ -208,7 +208,7 @@ struct Material
     glm::mat4 MatTransform = glm::mat4(1.0f);
 };
 
-struct Texture
+struct DX12Texture
 {
     // Unique material name for lookup.
     std::string Name;

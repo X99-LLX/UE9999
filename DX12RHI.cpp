@@ -69,6 +69,8 @@ bool DX12RHI::Init()
 	BuildPSO();
 	
 	FlushCommandQueue();
+
+	/*BuildGeo();*/
 	return true;
 }
 
@@ -76,7 +78,7 @@ void DX12RHI::Update()
 {
 	Scene* mScene = Engine::GetEngine()->GetScene();
 	mScene->mCamera.UpdateViewMatrix();
-	for (auto actor: mScene->Actors)
+	for (auto actor: mActors)
 	{
 		actor->WorldTrans = glm::translate(glm::mat4(1.0f), actor->Trans.Translation);
 		actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->Trans.Scale3D);
@@ -112,7 +114,7 @@ void DX12RHI::Draw()
 
 	Scene* mScene = Engine::GetEngine()->GetScene();
 
-	for (auto actor :mScene->Actors)
+	for (auto actor : mActors)
 	{
 		ID3D12DescriptorHeap* descriptorHeaps[] = { actor->CbvSrvUavHeap.Get() };
 		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
@@ -296,12 +298,13 @@ void DX12RHI::CloseCmdList()
 void DX12RHI::BuildTexture()
 {
 	OpenCmdList();
-	ResourceManage* mRmg = Engine::GetEngine()->GetAssetMgr();
-	for (auto Tex : mRmg->TextureAsset)
+	for (auto Actor : mActors)
 	{
+		auto Tex = Actor->Asset->Tex;
 		ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-			mCommandList.Get(), Tex.second->Filename.c_str(),
-			Tex.second->Resource, Tex.second->UploadHeap));
+			mCommandList.Get(), Tex->Filename.c_str(),
+			Tex->Resource, Tex->UploadHeap));
+
 	}
 	CloseCmdList();
 }
@@ -450,7 +453,7 @@ void DX12RHI::FlushCommandQueue()
 	}
 }
 
-void DX12RHI::CreateActorHeap(Actor& A)
+void DX12RHI::CreateActorHeap(DXRenderItem& A)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
 	cbvHeapDesc.NumDescriptors = 1000;
@@ -462,30 +465,27 @@ void DX12RHI::CreateActorHeap(Actor& A)
 		IID_PPV_ARGS(&A.CbvSrvUavHeap)));
 }
 
-void DX12RHI::CreateActorView(Actor& A)
+void DX12RHI::CreateActorSRV(DXRenderItem& A)
 {
-
 	A.CB = std::make_unique<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
 	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = A.CB->Resource()->GetGPUVirtualAddress();
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(A.CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	ResourceManage* Res = Engine::GetEngine()->GetAssetMgr();
-	srvDesc.Format = Res->GetTexture("bricks3")->Resource->GetDesc().Format;
+	srvDesc.Format = A.Asset->Tex->Resource->GetDesc().Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = Res->GetTexture("bricks3")->Resource->GetDesc().MipLevels;
+	srvDesc.Texture2D.MipLevels = A.Asset->Tex->Resource->GetDesc().MipLevels;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-	md3dDevice->CreateShaderResourceView(Res->GetTexture("bricks3")->Resource.Get(), &srvDesc, hDescriptor);
+	md3dDevice->CreateShaderResourceView(A.Asset->Tex->Resource.Get(), &srvDesc, hDescriptor);
 	hDescriptor.ptr += md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	md3dDevice->CreateShaderResourceView(Res->GetTexture("bricks3")->Resource.Get(), &srvDesc, hDescriptor);
+	md3dDevice->CreateShaderResourceView(A.Asset->Tex->Resource.Get(), &srvDesc, hDescriptor);
 }
 
 void DX12RHI::BuildGeo()
 {
 	BuildTexture();
-	Scene* S = Engine::GetEngine()->GetScene();
-	for (auto actor :S->Actors)
+	for (auto actor : mActors)
 	{
 		
 		ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
@@ -493,14 +493,14 @@ void DX12RHI::BuildGeo()
 		std::vector<Vertex> vertices;
 
 		CreateActorHeap(*actor);
-		CreateActorView(*actor);
+		CreateActorSRV(*actor);
 
-		std::shared_ptr<StaticMesh> TempMesh = actor->Asset;
+		std::shared_ptr<DXMesh> TempMesh = actor->Asset;
 		for (int i = 0; i < TempMesh->NumVertices; i++)
 		{
 			vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] ,TempMesh->TexCoord[i]});
 		}
-		indices.insert(indices.end(), TempMesh->Index.begin(), TempMesh->Index.end());
+		indices.insert(indices.end(), TempMesh->indices.begin(), TempMesh->indices.end());
 
 		const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 		const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
@@ -526,4 +526,18 @@ void DX12RHI::BuildGeo()
 		mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 		FlushCommandQueue();
 	}
+}
+
+void DX12RHI::CreateRenderItem(std::vector<std::shared_ptr<RenderItem>> RI)
+{
+	for (auto ri : RI)
+	{
+		std::shared_ptr<DXRenderItem> DXRI(new DXRenderItem(ri.get()));
+		std::shared_ptr<DXMesh> DXMesh(new DXMesh(ri->Asset.get()));
+		std::shared_ptr<DXTexture> DXTex(new DXTexture(ri->Asset->Tex.get()));
+		DXMesh->Tex = DXTex;
+		DXRI->Asset = DXMesh;
+		mActors.push_back(DXRI);
+	}
+	BuildGeo();
 }

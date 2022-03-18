@@ -4,7 +4,7 @@
 #include "GameTimer.h"
 #include "Scene.h"
 #include "RHI.h"
-
+#include "DXRenderItem.h"
 
 class DX12RHI : public RHI
 {
@@ -16,6 +16,7 @@ public:
 	void Update();
 	void Draw();
 	void BuildGeo();
+	void CreateRenderItem(std::vector<std::shared_ptr<RenderItem>> RI);
 
 	void OnResize();
 	ID3D12Resource* CurrentBackBuffer()const;
@@ -25,18 +26,19 @@ public:
 	ID3D12GraphicsCommandList* GetCmdList();
 	void OpenCmdList();
 	void CloseCmdList();
+	
 
 protected:
 	void BuildTexture();
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
-	void BuildPSO();   
+	void BuildPSO();
 	void CreateRtvAndDsvDescriptorHeap();
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
-	void CreateActorHeap(Actor& A);
-	void CreateActorView(Actor& A);
+	void CreateActorHeap(DXRenderItem& A);
+	void CreateActorSRV(DXRenderItem& A);
 
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;
@@ -74,6 +76,8 @@ protected:
 
 	bool m4xMsaaState = false;
 	UINT m4xMsaaQuality = 0;
+
+	std::vector<std::shared_ptr<DXRenderItem>> mActors;
 
 };
 
