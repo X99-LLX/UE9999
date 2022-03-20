@@ -37,10 +37,10 @@ bool Engine::Run()
 	MSG msg = { 0 };
 	mTimer.Reset();
 
-	TestRender.BuildRes(mScene.Actors);
+	TestRender.BuildResource(mScene.Actors1);
+
 	while (msg.message != WM_QUIT)
 	{
-
 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -50,7 +50,8 @@ bool Engine::Run()
 		{
 			mTimer.Tick();
 			mWindow->GetInput()->Update();
-			TestRender.run();
+
+			TestRender.Draw(mScene.Actors1);
 		}
 	}
 	

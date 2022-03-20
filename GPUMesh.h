@@ -4,7 +4,7 @@
 class GPUMesh
 {
 public:
-	~GPUMesh() {};
+	virtual ~GPUMesh() {};
 	std::string MeshName;
 	int NumLod;
 	int NumVertices;

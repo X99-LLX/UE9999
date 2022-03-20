@@ -13,10 +13,10 @@ public:
 	~DX12RHI();
 
 	bool Init();
-	void Update();
-	void Draw();
-	void BuildGeo();
-	void CreateRenderItem(std::vector<std::shared_ptr<RenderItem>> RI);
+	void Update(Scene* mScene, Primitive* actor);
+	void DrawCall(Primitive* actor);
+	void BuildGeo(Primitive* actor);
+	void CreateRenderItem(Primitive* actor);
 
 	void OnResize();
 	ID3D12Resource* CurrentBackBuffer()const;
@@ -26,10 +26,22 @@ public:
 	ID3D12GraphicsCommandList* GetCmdList();
 	void OpenCmdList();
 	void CloseCmdList();
-	
+
+	void ResetViewportsAndScissorRects();
+	void ClearRTVAndDSV();
+	void SetRTVAndDSV();
+	void SetRootSignature();
+	void Swapchain();
+	void DrawInstance(Primitive* actor);
+
+	void OpenRtv();
+	void CloseRtv();
 
 protected:
-	void BuildTexture();
+	
+	void SetCommonBuffer(Primitive* actor);
+
+	void BuildTexture(Primitive* actor);
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
 	void BuildPSO();
@@ -77,7 +89,6 @@ protected:
 	bool m4xMsaaState = false;
 	UINT m4xMsaaQuality = 0;
 
-	std::vector<std::shared_ptr<DXRenderItem>> mActors;
 
 };
 

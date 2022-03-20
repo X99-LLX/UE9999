@@ -3,6 +3,7 @@ class GPUTexture
 {
 public:
 	GPUTexture() {}
+	virtual ~GPUTexture() {}
 	GPUTexture(std::string n, std::wstring fn) {
 		Name = n;
 		Filename = fn;

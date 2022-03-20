@@ -7,8 +7,10 @@ public:
 	Render();
 	~Render();
 	RHI* GetRHI();
-	void BuildRes(std::vector<std::shared_ptr<RenderItem>> RI);
-	void run();
+	void BuildResource(std::vector<std::shared_ptr<Primitive>> RI);
+	void Init();
+	void Draw(std::vector<std::shared_ptr<Primitive>> primitives);
+
 private:
 	RHI* CreateRHI();
 

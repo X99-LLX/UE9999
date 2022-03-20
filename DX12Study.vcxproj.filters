@@ -44,6 +44,9 @@
     <Filter Include="Engine\Resource\DX12Resource">
       <UniqueIdentifier>{58d35e25-5b39-4fa2-8083-94fbe5809bfb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\ResourceManage">
+      <UniqueIdentifier>{e254202e-bd9f-4bf5-8e05-7281fe48d945}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Win32Window.h">
@@ -63,9 +66,6 @@
     </ClInclude>
     <ClInclude Include="d3dUtil.h">
       <Filter>Other</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceManage.h">
-      <Filter>Engine\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Engine\Scene</Filter>
@@ -124,6 +124,17 @@
     <ClInclude Include="RenderItem.h">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClInclude>
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="DX12Mesh.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="DX12Texture.h" />
+    <ClInclude Include="Primitive.h" />
+    <ClInclude Include="ResourceManage.h">
+      <Filter>Engine\ResourceManage</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Primitive.h" />
+    <ClInclude Include="CommonBuffer.h" />
+    <ClInclude Include="DX12CommonBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -139,9 +150,6 @@
       <Filter>Other</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
-      <Filter>Engine\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="ResourceManage.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">
@@ -198,6 +206,17 @@
     <ClCompile Include="RenderItem.cpp">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="DX12Mesh.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="DX12Texture.cpp" />
+    <ClCompile Include="Primitive.cpp" />
+    <ClCompile Include="ResourceManage.cpp">
+      <Filter>Engine\ResourceManage</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Primitive.cpp" />
+    <ClCompile Include="CommonBuffer.cpp" />
+    <ClCompile Include="DX12CommonBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ShaderH.hlsli">

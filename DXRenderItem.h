@@ -3,7 +3,7 @@
 #include "UpLoadBuffer.h"
 #include "RenderItem.h"
 
-class DXRenderItem : public RenderItem
+class DXRenderItem : public RenderItem 
 {
 public:
 	DXRenderItem();
@@ -12,7 +12,8 @@ public:
 		Trans = ri->Trans;
 		AssetName = ri->AssetName;
 	}
-	~DXRenderItem();
+	virtual ~DXRenderItem();
+
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CbvSrvUavHeap = nullptr;
 

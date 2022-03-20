@@ -5,6 +5,7 @@ class DXTexture : public GPUTexture
 {
 public:
 	DXTexture() {}
+	virtual ~DXTexture() {}
 	DXTexture(GPUTexture* tex)
 	{
 		Name = tex->Name;

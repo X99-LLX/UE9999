@@ -145,16 +145,6 @@ public:
 // geometries are stored in one vertex and index buffer.  It provides the offsets
 // and data needed to draw a subset of geometry stores in the vertex and index 
 // buffers so that we can implement the technique described by Figure 6.3.
-struct SubmeshGeometry
-{
-    UINT IndexCount = 0;
-    UINT StartIndexLocation = 0;
-    INT BaseVertexLocation = 0;
-
-    // Bounding box of the geometry defined by this submesh. 
-    // This is used in later chapters of the book.
-    DirectX::BoundingBox Bounds;
-};
 
 
 struct Light
@@ -208,14 +198,39 @@ struct Material
     glm::mat4 MatTransform = glm::mat4(1.0f);
 };
 
-struct DX12Texture
+//struct DX12Texture
+//{
+//    // Unique material name for lookup.
+//    std::string Name;
+//    std::wstring Filename;
+//    Microsoft::WRL::ComPtr<ID3D12Resource> Resource = nullptr;
+//    Microsoft::WRL::ComPtr<ID3D12Resource> UploadHeap = nullptr;
+//};
+
+
+struct Vertex
 {
-    // Unique material name for lookup.
-    std::string Name;
-    std::wstring Filename;
-    Microsoft::WRL::ComPtr<ID3D12Resource> Resource = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12Resource> UploadHeap = nullptr;
+	glm::vec3 Pos = glm::vec3(1.0f);
+	glm::vec4 Color = glm::vec4(1.0f);
+	glm::vec4 Normal = glm::vec4(1.0f);
+	glm::vec2 TexCoord = glm::vec2(1.0f);
 };
+
+struct ConstantBuffer
+{
+	glm::mat4x4 MVP = glm::mat4x4(1.0f);
+	glm::mat4x4 Scale3D = glm::mat4x4(1.0f);
+	glm::mat4x4 Rotate = glm::mat4x4(1.0f);
+	float Offset = 0;
+};
+
+struct Transform
+{
+	glm::vec4 Rotation = glm::vec4(1.0f);
+	glm::vec3 Translation = glm::vec3(1.0f);
+	glm::vec3 Scale3D = glm::vec3(1.0f);
+};
+
 
 #ifndef ThrowIfFailed
 #define ThrowIfFailed(x)                                              \

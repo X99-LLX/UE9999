@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "DX12RHI.h"
 #include "Engine.h"
+#include "DXRenderItem.h"
+#include "DX12Texture.h"
+#include "DX12CommonBuffer.h"
+#include "DX12Mesh.h"
 
 DX12RHI::DX12RHI()
 {
@@ -70,88 +74,32 @@ bool DX12RHI::Init()
 	
 	FlushCommandQueue();
 
-	/*BuildGeo();*/
 	return true;
 }
 
-void DX12RHI::Update()
+void DX12RHI::Update(Scene* mScene, Primitive* actor)
 {
-	Scene* mScene = Engine::GetEngine()->GetScene();
 	mScene->mCamera.UpdateViewMatrix();
-	for (auto actor: mActors)
-	{
-		actor->WorldTrans = glm::translate(glm::mat4(1.0f), actor->Trans.Translation);
-		actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->Trans.Scale3D);
+	
+	actor->WorldTrans = glm::translate(glm::mat4(1.0f), actor->GetTransform().Translation);
+	actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->GetTransform().Scale3D);
 
-		actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->Trans.Rotation.w, actor->Trans.Rotation.x,
-			actor->Trans.Rotation.y, actor->Trans.Rotation.z));
+	actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->GetTransform().Rotation.w, actor->GetTransform().Rotation.x,
+		actor->GetTransform().Rotation.y, actor->GetTransform().Rotation.z));
 
-		glm::mat4 worldViewProj = mScene->mCamera.GetProj() * mScene->mCamera.GetView() 
-			* actor->WorldTrans;
-		actor->MVP = worldViewProj;
-	}
+	glm::mat4 worldViewProj = mScene->mCamera.GetProj() * mScene->mCamera.GetView()
+		* actor->WorldTrans;
+	actor->MVP = worldViewProj;
+	
 }
 
-void DX12RHI::Draw()
+void DX12RHI::DrawCall(Primitive* actor)
 {
-	ThrowIfFailed(mDirectCmdListAlloc->Reset());
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
-
-	mCommandList->RSSetViewports(1, &mScreenViewport);
-	mCommandList->RSSetScissorRects(1, &mScissorRect);
-
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-	float BackColor[4] = { 1.000000000f, 0.713725507f, 0.756862819f, 1.000000000f };
-
-	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), BackColor, 0, nullptr);
-	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-
-	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
-
-	Scene* mScene = Engine::GetEngine()->GetScene();
-
-	for (auto actor : mActors)
-	{
-		ID3D12DescriptorHeap* descriptorHeaps[] = { actor->CbvSrvUavHeap.Get() };
-		mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
-		mCommandList->IASetVertexBuffers(0, 1, &actor->Asset->VertexBufferView());
-		mCommandList->IASetIndexBuffer(&actor->Asset->IndexBufferView());
-		mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		ConstantBuffer objConstants;
-		objConstants.MVP = glm::transpose(actor->MVP);
-		objConstants.Scale3D = actor->Scale3DTrans;
-		objConstants.Rotate = actor->RotateTrans;
-		objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
-		actor->CB->CopyData(0, objConstants);
-		
-		mCommandList->SetGraphicsRoot32BitConstants(0, 3, &mScene->mCamera.GetCameraPos(), 0);
-
-		mCommandList->SetGraphicsRootConstantBufferView(1, actor->CB->Resource()->GetGPUVirtualAddress());
-
-		mCommandList->SetGraphicsRootDescriptorTable(2, actor->CbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
-
-
-		mCommandList->DrawIndexedInstanced(
-			actor->Asset->IndexCount,
-			1, 0, 0, 0);
-	}
-
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
-	CloseCmdList();
-
-	ThrowIfFailed(mSwapChain->Present(0, 0));
-	mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
-	FlushCommandQueue();
+	//Swapchain();
+	DrawInstance(actor);
 
 }
+ 
 
 void DX12RHI::OnResize()
 {
@@ -284,7 +232,8 @@ ID3D12GraphicsCommandList* DX12RHI::GetCmdList()
 
 void DX12RHI::OpenCmdList()
 {
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+	ThrowIfFailed(mDirectCmdListAlloc->Reset());
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
 }
 
 void DX12RHI::CloseCmdList()
@@ -292,21 +241,139 @@ void DX12RHI::CloseCmdList()
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	/*FlushCommandQueue();*/
+}
+
+void DX12RHI::ResetViewportsAndScissorRects()
+{
+	OpenCmdList();
+	mCommandList->RSSetViewports(1, &mScreenViewport);
+	mCommandList->RSSetScissorRects(1, &mScissorRect);
+	
+}
+
+void DX12RHI::ClearRTVAndDSV()
+{
+	
+	float BackColor[4] = { 1.000000000f, 0.713725507f, 0.756862819f, 1.000000000f };
+	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), BackColor, 0, nullptr);
+	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	
+}
+
+void DX12RHI::SetRTVAndDSV()
+{
+	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+}
+
+void DX12RHI::SetRootSignature()
+{
+	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+}
+
+void DX12RHI::Swapchain()
+{
+	CloseCmdList();
+	ThrowIfFailed(mSwapChain->Present(0, 0));
+	mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
+	
 	FlushCommandQueue();
 }
 
-void DX12RHI::BuildTexture()
+void DX12RHI::DrawInstance(Primitive* actor)
+{
+	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = { Temp->GetHeap().Get() };
+	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
+
+
+
+	mCommandList->IASetVertexBuffers(0, 1, &TempMesh->VertexBufferView);
+	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
+
+	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	ConstantBuffer objConstants;
+	objConstants.MVP = glm::transpose(actor->MVP);
+	objConstants.Scale3D = actor->Scale3DTrans;
+	objConstants.Rotate = actor->RotateTrans;
+	objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
+
+	Temp->GetCB()->CopyData(0, objConstants);
+
+	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &actor->GetTransform().Translation, 0);
+	mCommandList->SetGraphicsRootConstantBufferView(1, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
+	mCommandList->SetGraphicsRootDescriptorTable(2, Temp->GetHeap()->GetGPUDescriptorHandleForHeapStart());
+
+	mCommandList->DrawIndexedInstanced(
+		TempMesh->IndexCount,
+		1, 0, 0, 0);
+}
+
+void DX12RHI::OpenRtv()
+{
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+}
+
+void DX12RHI::CloseRtv()
+{
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	
+}
+
+void DX12RHI::SetCommonBuffer(Primitive* actor)
+{
+	DX12CommonBuffer* C = new DX12CommonBuffer();
+	actor->SetCommon(C);
+	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
+	
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+	cbvHeapDesc.NumDescriptors = 1000;
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbvHeapDesc.NodeMask = 0;
+
+	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc,
+		IID_PPV_ARGS(&Temp->CbvSrvUavHeap)));
+
+	Temp->CB = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
+
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = Temp->GetCB()->Resource()->GetGPUVirtualAddress();
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(Temp->CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex);
+	srvDesc.Format = Tex->Resource->GetDesc().Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = Tex->Resource->GetDesc().MipLevels;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	md3dDevice->CreateShaderResourceView(Tex->Resource.Get(), &srvDesc, hDescriptor);
+	hDescriptor.ptr += md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	md3dDevice->CreateShaderResourceView(Tex->Resource.Get(), &srvDesc, hDescriptor);
+}
+
+void DX12RHI::BuildTexture(Primitive* actor)
 {
 	OpenCmdList();
-	for (auto Actor : mActors)
-	{
-		auto Tex = Actor->Asset->Tex;
-		ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-			mCommandList.Get(), Tex->Filename.c_str(),
-			Tex->Resource, Tex->UploadHeap));
+	
 
-	}
+	DX12Mesh* m = new DX12Mesh(actor->MeshBuffer);
+	m->MeshTex = new DX12Texture(actor->GetMesh()->MeshTex->GetTextureName(), actor->GetMesh()->MeshTex->GetFileName());
+	actor->MeshBuffer = m;
+
+	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex);
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), Tex->GetFileName().c_str(),
+		Tex->Resource, Tex->UploadHeap));
+
 	CloseCmdList();
+	
 }
 
 void DX12RHI::BuildRootSignature()
@@ -416,6 +483,7 @@ void DX12RHI::CreateSwapChain()
 		mCommandQueue.Get(),
 		&sd,
 		mSwapChain.GetAddressOf()));
+	
 }
 
 void DX12RHI::CreateCommandObjects()
@@ -482,62 +550,66 @@ void DX12RHI::CreateActorSRV(DXRenderItem& A)
 	md3dDevice->CreateShaderResourceView(A.Asset->Tex->Resource.Get(), &srvDesc, hDescriptor);
 }
 
-void DX12RHI::BuildGeo()
+void DX12RHI::BuildGeo(Primitive* actor)
 {
-	BuildTexture();
-	for (auto actor : mActors)
+	BuildTexture(actor);
+	
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+	std::vector<int> indices;
+	std::vector<Vertex> vertices;
+
+	SetCommonBuffer(actor);
+
+	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
+	
+
+	for (int i = 0; i < TempMesh->NumVertices; i++)
 	{
-		
-		ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
-		std::vector<int> indices;
-		std::vector<Vertex> vertices;
-
-		CreateActorHeap(*actor);
-		CreateActorSRV(*actor);
-
-		std::shared_ptr<DXMesh> TempMesh = actor->Asset;
-		for (int i = 0; i < TempMesh->NumVertices; i++)
-		{
-			vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] ,TempMesh->TexCoord[i]});
-		}
-		indices.insert(indices.end(), TempMesh->indices.begin(), TempMesh->indices.end());
-
-		const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-		const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
-
-		ThrowIfFailed(D3DCreateBlob(vbByteSize, &TempMesh->VertexBufferCPU));
-		CopyMemory(TempMesh->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
-		ThrowIfFailed(D3DCreateBlob(ibByteSize, &TempMesh->IndexBufferCPU));
-		CopyMemory(TempMesh->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
-
-		TempMesh->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-			mCommandList.Get(), vertices.data(), vbByteSize, TempMesh->VertexBufferUploader);
-		TempMesh->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-			mCommandList.Get(), indices.data(), ibByteSize, TempMesh->IndexBufferUploader);
-		TempMesh->VertexByteSize = sizeof(Vertex);
-		TempMesh->VertexBufferByteSize = vbByteSize;
-		TempMesh->IndexFormat = DXGI_FORMAT_R32_UINT;
-		TempMesh->IndexBufferByteSize = ibByteSize;
-		TempMesh->IndexCount = (UINT)indices.size();
-
-		TempMesh = nullptr;
-		ThrowIfFailed(mCommandList->Close());
-		ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-		mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-		FlushCommandQueue();
+		vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] ,TempMesh->TexCoord[i]});
 	}
+
+	indices.insert(indices.end(), TempMesh->IndexVector.begin(), TempMesh->IndexVector.end());
+
+	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+	const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
+
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &TempMesh->VertexBufferCPU));
+	CopyMemory(TempMesh->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &TempMesh->IndexBufferCPU));
+	CopyMemory(TempMesh->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+	TempMesh->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+		mCommandList.Get(), vertices.data(), vbByteSize, TempMesh->VertexBufferUploader);
+	TempMesh->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+		mCommandList.Get(), indices.data(), ibByteSize, TempMesh->IndexBufferUploader);
+
+	TempMesh->VertexByteSize = sizeof(Vertex);
+	TempMesh->VertexBufferByteSize = vbByteSize;
+	TempMesh->IndexFormat = DXGI_FORMAT_R32_UINT;
+	TempMesh->IndexBufferByteSize = ibByteSize;
+	TempMesh->IndexCount = (UINT)indices.size();
+
+	D3D12_VERTEX_BUFFER_VIEW vbv;
+	vbv.BufferLocation = TempMesh->VertexBufferGPU->GetGPUVirtualAddress();
+	vbv.StrideInBytes = TempMesh->VertexByteSize;
+	vbv.SizeInBytes = TempMesh->VertexBufferByteSize;
+	TempMesh->VertexBufferView = vbv;
+
+	D3D12_INDEX_BUFFER_VIEW ibv;
+	ibv.BufferLocation = TempMesh->IndexBufferGPU->GetGPUVirtualAddress();
+	ibv.Format = TempMesh->IndexFormat;
+	ibv.SizeInBytes = TempMesh->IndexBufferByteSize;
+	TempMesh->IndexBufferView = ibv;
+
+	ThrowIfFailed(mCommandList->Close());
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	FlushCommandQueue();
+	
 }
 
-void DX12RHI::CreateRenderItem(std::vector<std::shared_ptr<RenderItem>> RI)
+void DX12RHI::CreateRenderItem(Primitive* actor)
 {
-	for (auto ri : RI)
-	{
-		std::shared_ptr<DXRenderItem> DXRI(new DXRenderItem(ri.get()));
-		std::shared_ptr<DXMesh> DXMesh(new DXMesh(ri->Asset.get()));
-		std::shared_ptr<DXTexture> DXTex(new DXTexture(ri->Asset->Tex.get()));
-		DXMesh->Tex = DXTex;
-		DXRI->Asset = DXMesh;
-		mActors.push_back(DXRI);
-	}
-	BuildGeo();
+
+	BuildGeo(actor);
 }

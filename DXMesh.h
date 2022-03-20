@@ -5,7 +5,8 @@
 class DXMesh : public GPUMesh
 {
 public:
-	DXMesh(GPUMesh* mesh)
+	DXMesh() {};
+	/*DXMesh(GPUMesh* mesh)
 	{
 		MeshName = mesh->MeshName;
 		NumLod = mesh->NumLod;
@@ -17,9 +18,9 @@ public:
 		color = mesh->color;
 		Normal = mesh->Normal;
 		TexCoord = mesh->TexCoord;
-	}
+	}*/
 
-	~DXMesh();
+	virtual ~DXMesh();
 
 	std::shared_ptr<DXTexture> Tex = nullptr;
 
@@ -37,7 +38,6 @@ public:
 	DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
 	UINT IndexBufferByteSize = 0;
 	UINT IndexCount = 0;
-
 
 	D3D12_VERTEX_BUFFER_VIEW VertexBufferView()const
 	{

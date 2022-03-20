@@ -19,6 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommonBuffer.h" />
+    <ClInclude Include="DX12CommonBuffer.h" />
+    <ClInclude Include="DX12Mesh.h" />
+    <ClInclude Include="DX12Primitive.h" />
+    <ClInclude Include="DX12Texture.h" />
     <ClInclude Include="DXRenderItem.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="d3dUtil.h" />
@@ -33,6 +38,8 @@
     <ClInclude Include="GPUTexture.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="GPUMesh.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Primitive.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="RenderItem.h" />
     <ClInclude Include="ResourceManage.h" />
@@ -42,11 +49,17 @@
     <ClInclude Include="DXMesh.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StoWS.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="UpLoadBuffer.h" />
     <ClInclude Include="Win32Window.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CommonBuffer.cpp" />
+    <ClCompile Include="DX12CommonBuffer.cpp" />
+    <ClCompile Include="DX12Mesh.cpp" />
+    <ClCompile Include="DX12Primitive.cpp" />
+    <ClCompile Include="DX12Texture.cpp" />
     <ClCompile Include="DXRenderItem.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="d3dUtil.cpp" />
@@ -66,6 +79,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GPUMesh.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Primitive.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="RenderItem.cpp" />
     <ClCompile Include="ResourceManage.cpp" />
@@ -78,6 +93,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Win32Window.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WinMain.cpp">

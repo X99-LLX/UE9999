@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Render.h"
 #include "DX12RHI.h"
+#include "Engine.h"
 
 Render::Render()
 {
@@ -17,15 +18,36 @@ RHI* Render::GetRHI()
 	return mRHI;
 }
 
-void Render::BuildRes(std::vector<std::shared_ptr<RenderItem>> RI)
+void Render::BuildResource(std::vector<std::shared_ptr<Primitive>> RI)
 {
-	mRHI->CreateRenderItem(RI);
+	for (auto actor : RI)
+	{
+		mRHI->CreateRenderItem(actor.get());
+	}
 }
 
-void Render::run()
+void Render::Init()
 {
-	mRHI->Update();
-	mRHI->Draw();
+	mRHI->ResetViewportsAndScissorRects();
+	mRHI->OpenRtv();
+	mRHI->ClearRTVAndDSV();
+	mRHI->SetRTVAndDSV();
+	mRHI->SetRootSignature();
+}
+
+void Render::Draw(std::vector<std::shared_ptr<Primitive>> primitives)
+{
+	Scene* mScene = Engine::GetEngine()->GetScene();
+	Init();
+
+	for (auto actor : primitives)
+	{
+		mRHI->Update(mScene, actor.get());
+		mRHI->DrawCall(actor.get());
+	}
+	mRHI->CloseRtv();
+	mRHI->Swapchain();
+	
 }
 
 RHI* Render::CreateRHI()

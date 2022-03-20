@@ -6,6 +6,8 @@
 #include "DXMesh.h"
 #include "Camera.h"
 
+#include "Primitive.h"
+
 class Scene
 {
 public:
@@ -13,10 +15,7 @@ public:
 	~Scene();
 	bool Init();
 
-	std::vector<std::shared_ptr<RenderItem>> Actors;
-
-	//std::vector<std::shared_ptr<RenderItem>> Actors;
-
+	std::vector<std::shared_ptr<Primitive>> Actors1;
 	Camera mCamera;
 
 };

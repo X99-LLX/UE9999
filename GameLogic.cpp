@@ -10,7 +10,8 @@ void GameLogic::Init()
 
 void GameLogic::LoadMap(std::string MapName)
 {
-	mAssetMgr->LoadMap(MapName,mEngine->GetScene()->Actors);
+	/*mAssetMgr->LoadMap(MapName,mEngine->GetScene()->Actors);*/
+	mAssetMgr->LoadMap(MapName, mEngine->GetScene()->Actors1);
 }
 
 bool GameLogic::Run()

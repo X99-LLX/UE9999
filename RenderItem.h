@@ -8,7 +8,7 @@ class RenderItem
 {
 public:
 	RenderItem() {};
-	~RenderItem() {};
+	virtual ~RenderItem() {};
 
 	Transform Trans;
 
