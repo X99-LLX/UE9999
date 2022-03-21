@@ -6,7 +6,7 @@ class Primitive
 {
 public:
 	Primitive() {};
-	virtual ~Primitive() {};
+	virtual ~Primitive() { delete HeapAndCB; delete MeshBuffer; };
 	Transform& GetTransform() { return Trans; }
 	Mesh* GetMesh() { return MeshBuffer; }
 	CommonBuffer* GetCommon() { return HeapAndCB; }

@@ -5,7 +5,7 @@ class Mesh
 {
 public:
 	Mesh() {}
-	virtual ~Mesh() {}
+	virtual ~Mesh() { delete MeshTex; }
 
 	UINT32 GetVertexByteStride() const { return VertexByteSize; }
 	UINT32 GetVertexCount() const { return VertexCount; }
