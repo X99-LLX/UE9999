@@ -521,34 +521,34 @@ void DX12RHI::FlushCommandQueue()
 	}
 }
 
-void DX12RHI::CreateActorHeap(DXRenderItem& A)
-{
-	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-	cbvHeapDesc.NumDescriptors = 1000;
-	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbvHeapDesc.NodeMask = 0;
-	
-	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc,
-		IID_PPV_ARGS(&A.CbvSrvUavHeap)));
-}
-
-void DX12RHI::CreateActorSRV(DXRenderItem& A)
-{
-	A.CB = std::make_unique<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
-	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = A.CB->Resource()->GetGPUVirtualAddress();
-	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(A.CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = A.Asset->Tex->Resource->GetDesc().Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = A.Asset->Tex->Resource->GetDesc().MipLevels;
-	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-	md3dDevice->CreateShaderResourceView(A.Asset->Tex->Resource.Get(), &srvDesc, hDescriptor);
-	hDescriptor.ptr += md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	md3dDevice->CreateShaderResourceView(A.Asset->Tex->Resource.Get(), &srvDesc, hDescriptor);
-}
+//void DX12RHI::CreateActorHeap(DXRenderItem& A)
+//{
+//	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+//	cbvHeapDesc.NumDescriptors = 1000;
+//	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+//	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+//	cbvHeapDesc.NodeMask = 0;
+//	
+//	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc,
+//		IID_PPV_ARGS(&A.CbvSrvUavHeap)));
+//}
+//
+//void DX12RHI::CreateActorSRV(DXRenderItem& A)
+//{
+//	A.CB = std::make_unique<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
+//	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = A.CB->Resource()->GetGPUVirtualAddress();
+//	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(A.CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
+//	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+//	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+//	srvDesc.Format = A.Asset->Tex->Resource->GetDesc().Format;
+//	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+//	srvDesc.Texture2D.MostDetailedMip = 0;
+//	srvDesc.Texture2D.MipLevels = A.Asset->Tex->Resource->GetDesc().MipLevels;
+//	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+//	md3dDevice->CreateShaderResourceView(A.Asset->Tex->Resource.Get(), &srvDesc, hDescriptor);
+//	hDescriptor.ptr += md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+//	md3dDevice->CreateShaderResourceView(A.Asset->Tex->Resource.Get(), &srvDesc, hDescriptor);
+//}
 
 void DX12RHI::BuildGeo(Primitive* actor)
 {

@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "DXMesh.h"
-
-DXMesh::~DXMesh()
-{
-
-}
+//#include "DXMesh.h"
+//
+//DXMesh::~DXMesh()
+//{
+//
+//}

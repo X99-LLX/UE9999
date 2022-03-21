@@ -49,8 +49,8 @@ protected:
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
-	void CreateActorHeap(DXRenderItem& A);
-	void CreateActorSRV(DXRenderItem& A);
+	//void CreateActorHeap(DXRenderItem& A);
+	//void CreateActorSRV(DXRenderItem& A);
 
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;
