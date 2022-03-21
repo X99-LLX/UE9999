@@ -1,6 +1,5 @@
 #pragma once
-#include "DXRenderItem.h"
-#include "DXMesh.h"
+
 
 #include "Primitive.h"
 #include "Texture.h"

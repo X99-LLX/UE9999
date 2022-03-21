@@ -4,7 +4,7 @@
 #include "GameTimer.h"
 #include "Scene.h"
 #include "RHI.h"
-#include "DXRenderItem.h"
+
 
 class DX12RHI : public RHI
 {
@@ -49,8 +49,7 @@ protected:
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
-	//void CreateActorHeap(DXRenderItem& A);
-	//void CreateActorSRV(DXRenderItem& A);
+
 
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;

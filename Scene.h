@@ -1,9 +1,6 @@
 #pragma once
 
-#include "DXRenderItem.h"
 
-#include "RenderItem.h"
-#include "DXMesh.h"
 #include "Camera.h"
 
 #include "Primitive.h"

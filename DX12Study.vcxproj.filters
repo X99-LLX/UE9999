@@ -106,35 +106,33 @@
     <ClInclude Include="GameTimer.h">
       <Filter>Other</Filter>
     </ClInclude>
-    <ClInclude Include="DXMesh.h">
-      <Filter>Engine\Resource\DX12Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="DXRenderItem.h">
-      <Filter>Engine\Resource\DX12Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="GPUMesh.h">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClInclude>
-    <ClInclude Include="GPUTexture.h">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClInclude>
-    <ClInclude Include="DXTexture.h">
-      <Filter>Engine\Resource\DX12Resource</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderItem.h">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="DX12Mesh.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="DX12Texture.h" />
-    <ClInclude Include="Primitive.h" />
     <ClInclude Include="ResourceManage.h">
       <Filter>Engine\ResourceManage</Filter>
     </ClInclude>
-    <ClInclude Include="DX12Primitive.h" />
-    <ClInclude Include="CommonBuffer.h" />
-    <ClInclude Include="DX12CommonBuffer.h" />
+    <ClInclude Include="DX12CommonBuffer.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Mesh.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Primitive.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Texture.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonBuffer.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
+    <ClInclude Include="Primitive.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -188,35 +186,33 @@
     <ClCompile Include="GameTimer.cpp">
       <Filter>Other</Filter>
     </ClCompile>
-    <ClCompile Include="DXMesh.cpp">
-      <Filter>Engine\Resource\DX12Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="DXRenderItem.cpp">
-      <Filter>Engine\Resource\DX12Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="GPUMesh.cpp">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClCompile>
-    <ClCompile Include="GPUTexture.cpp">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClCompile>
-    <ClCompile Include="DXTexture.cpp">
-      <Filter>Engine\Resource\DX12Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderItem.cpp">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="DX12Mesh.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="DX12Texture.cpp" />
-    <ClCompile Include="Primitive.cpp" />
     <ClCompile Include="ResourceManage.cpp">
       <Filter>Engine\ResourceManage</Filter>
     </ClCompile>
-    <ClCompile Include="DX12Primitive.cpp" />
-    <ClCompile Include="CommonBuffer.cpp" />
-    <ClCompile Include="DX12CommonBuffer.cpp" />
+    <ClCompile Include="DX12CommonBuffer.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Mesh.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Primitive.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Texture.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonBuffer.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
+    <ClCompile Include="Primitive.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ShaderH.hlsli">
