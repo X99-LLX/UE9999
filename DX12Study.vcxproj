@@ -40,6 +40,7 @@
     <ClInclude Include="ResourceManage.h" />
     <ClInclude Include="RHI.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StoWS.h" />
@@ -75,6 +76,7 @@
     <ClCompile Include="ResourceManage.cpp" />
     <ClCompile Include="RHI.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -92,7 +94,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ShaderH.hlsli" />
+    <None Include="CommonH.hlsli" />
+    <None Include="ShadowH.hlsli" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

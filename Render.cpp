@@ -22,7 +22,7 @@ void Render::BuildResource(std::vector<std::shared_ptr<Primitive>> RI)
 {
 	for (auto actor : RI)
 	{
-		mRHI->CreateRenderItem(actor.get());
+		mRHI->BuildGeo(actor.get());
 	}
 }
 

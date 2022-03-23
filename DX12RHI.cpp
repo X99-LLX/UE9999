@@ -6,6 +6,8 @@
 #include "DX12CommonBuffer.h"
 #include "DX12Mesh.h"
 
+
+
 DX12RHI::DX12RHI()
 {
 
@@ -95,12 +97,9 @@ void DX12RHI::Update(Scene* mScene, Primitive* actor)
 
 void DX12RHI::DrawCall(Primitive* actor)
 {
-	//Swapchain();
 	DrawInstance(actor);
-
 }
  
-
 void DX12RHI::OnResize()
 {
 	assert(md3dDevice);
@@ -233,7 +232,7 @@ ID3D12GraphicsCommandList* DX12RHI::GetCmdList()
 void DX12RHI::OpenCmdList()
 {
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mCommonPSO.Get()));
 }
 
 void DX12RHI::CloseCmdList()
@@ -241,7 +240,6 @@ void DX12RHI::CloseCmdList()
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-	/*FlushCommandQueue();*/
 }
 
 void DX12RHI::ResetViewportsAndScissorRects()
@@ -249,16 +247,13 @@ void DX12RHI::ResetViewportsAndScissorRects()
 	OpenCmdList();
 	mCommandList->RSSetViewports(1, &mScreenViewport);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
-	
 }
 
 void DX12RHI::ClearRTVAndDSV()
 {
-	
 	float BackColor[4] = { 1.000000000f, 0.713725507f, 0.756862819f, 1.000000000f };
 	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), BackColor, 0, nullptr);
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	
 }
 
 void DX12RHI::SetRTVAndDSV()
@@ -268,7 +263,7 @@ void DX12RHI::SetRTVAndDSV()
 
 void DX12RHI::SetRootSignature()
 {
-	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+	mCommandList->SetGraphicsRootSignature(mCommonRS.Get());
 }
 
 void DX12RHI::Swapchain()
@@ -280,6 +275,8 @@ void DX12RHI::Swapchain()
 	FlushCommandQueue();
 }
 
+
+
 void DX12RHI::DrawInstance(Primitive* actor)
 {
 	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
@@ -289,11 +286,8 @@ void DX12RHI::DrawInstance(Primitive* actor)
 
 	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
 
-
-
 	mCommandList->IASetVertexBuffers(0, 1, &TempMesh->VertexBufferView);
 	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
-
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	ConstantBuffer objConstants;
@@ -324,6 +318,107 @@ void DX12RHI::CloseRtv()
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	
+}
+
+void DX12RHI::BuildShadowMap()
+{
+	
+}
+
+void DX12RHI::DrawShadow()
+{
+
+	mCommandList->RSSetViewports(1, &mShadowMap->mViewport);
+	mCommandList->RSSetScissorRects(1, &mShadowMap->mScissorRect);
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap->mShadowMap.Get(),
+		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+
+	mCommandList->ClearDepthStencilView(mShadowMap->DsvHeap->GetCPUDescriptorHandleForHeapStart(),
+		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	mCommandList->OMSetRenderTargets(0, nullptr, false, &mShadowMap->DsvHeap->GetCPUDescriptorHandleForHeapStart());
+
+	auto passCB = PassCB->Resource();
+	D3D12_GPU_VIRTUAL_ADDRESS passCBAddress = passCB->GetGPUVirtualAddress();
+	mCommandList->SetGraphicsRootConstantBufferView(1, passCBAddress);
+
+	mCommandList->SetPipelineState(mShadowPSO.Get());
+
+}
+
+void DX12RHI::DrawItemShadow(Primitive* actor)
+{
+	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
+
+	mCommandList->IASetVertexBuffers(0, 1, &TempMesh->VertexBufferView);
+	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
+	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	ConstantBuffer objConstants;
+	objConstants.MVP = glm::transpose(actor->MVP);
+	objConstants.Scale3D = actor->Scale3DTrans;
+	objConstants.Rotate = actor->RotateTrans;
+	objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
+
+	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
+
+	Temp->GetCB()->CopyData(0, objConstants);
+
+	mCommandList->DrawIndexedInstanced(
+		TempMesh->IndexCount,
+		1, 0, 0, 0);
+}
+
+void DX12RHI::CloseShadowMapDsv()
+{
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap->mShadowMap.Get(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_GENERIC_READ));
+}
+
+void DX12RHI::UpdateShadowPassCB(const GameTimer& gt)
+{
+	mSceneBounds.Center = glm::vec3(0.0f, 0.0f, 0.0f);
+	mSceneBounds.Radius = sqrtf(10.0f * 10.0f + 15.0f * 15.0f);
+
+	mLightRotationAngle += 0.1f * gt.DeltaTime();
+	glm::mat4 trans = glm::rotate(trans, mLightRotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	mBaseLightDirections = glm::vec4(mBaseLightDirections, 0.0f) * trans;
+
+	glm::vec3 lightDir = mRotatedLightDirection;
+	glm::vec3 lightPos = -2.0f * mSceneBounds.Radius * lightDir;
+	glm::vec3 targetPos = mSceneBounds.Center;
+	glm::vec3 lightUp = glm::vec3(0.0f, 0.0f, 1.0f);
+	glm::mat4 lightView = glm::lookAtLH(lightPos, lightPos + targetPos, lightUp);
+
+	mLightPosW = lightPos;
+
+	mLightNearZ = 1.0f;
+	mLightFarZ = 1000.0f;
+	glm::mat4 lightProj = glm::perspectiveLH_ZO(0.25f * glm::pi<float>(), 1.0f, 1.0f, 1000.0f);
+	glm::mat4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+
+	glm::mat4 S = T * lightProj * lightView;
+
+	mLightView = lightView;
+	mLightProj = lightProj;
+	mShadowTransform = S;
+
+	mShadowPassCB.View = mLightView;
+	mShadowPassCB.Proj = mLightProj;
+	mShadowPassCB.ViewProj = mLightProj * mLightView;
+	mShadowPassCB.EyePosW = mLightPosW;
+	mShadowPassCB.RenderTargetSize = { (float)960, (float)540 };
+
+	mShadowPassCB.NearZ = mLightNearZ;
+	mShadowPassCB.FarZ = mLightFarZ;
+
+	PassCB->CopyData(1, mShadowPassCB);
 }
 
 void DX12RHI::SetCommonBuffer(Primitive* actor)
@@ -380,17 +475,26 @@ void DX12RHI::BuildRootSignature()
 {
 	ThrowIfFailed(md3dDevice->CreateRootSignature(
 		0,
-		mvsByteCode->GetBufferPointer(),
-		mvsByteCode->GetBufferSize(),
-		IID_PPV_ARGS(&mRootSignature)));
+		mCommonVS->GetBufferPointer(),
+		mCommonVS->GetBufferSize(),
+		IID_PPV_ARGS(&mCommonRS)));
+
+	ThrowIfFailed(md3dDevice->CreateRootSignature(
+		0,
+		mShadowVS->GetBufferPointer(),
+		mShadowVS->GetBufferSize(),
+		IID_PPV_ARGS(&mShadowRS)));
 }
 
 void DX12RHI::BuildShadersAndInputLayout()
 {
 	HRESULT hr = S_OK;
 
-	mvsByteCode = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	mpsByteCode = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	mCommonVS = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
+	mCommonPS = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+
+	mShadowVS = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "VS", "vs_5_0");
+	mShadowPS = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "PS", "ps_5_0");
 
 	mInputLayout =
 	{
@@ -406,16 +510,16 @@ void DX12RHI::BuildPSO()
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	psoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-	psoDesc.pRootSignature = mRootSignature.Get();
+	psoDesc.pRootSignature = mCommonRS.Get();
 	psoDesc.VS =
 	{
-		reinterpret_cast<BYTE*>(mvsByteCode->GetBufferPointer()),
-		mvsByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(mCommonVS->GetBufferPointer()),
+		mCommonVS->GetBufferSize()
 	};
 	psoDesc.PS =
 	{
-		reinterpret_cast<BYTE*>(mpsByteCode->GetBufferPointer()),
-		mpsByteCode->GetBufferSize()
+		reinterpret_cast<BYTE*>(mCommonPS->GetBufferPointer()),
+		mCommonPS->GetBufferSize()
 	};
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.FrontCounterClockwise = true;
@@ -429,7 +533,28 @@ void DX12RHI::BuildPSO()
 	psoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	psoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	psoDesc.DSVFormat = mDepthStencilFormat;
-	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPSO)));
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mCommonPSO)));
+
+	//D3D12_GRAPHICS_PIPELINE_STATE_DESC smapPsoDesc = psoDesc;
+	//smapPsoDesc.RasterizerState.DepthBias = 100000;
+	//smapPsoDesc.RasterizerState.DepthBiasClamp = 0.0f;
+	//smapPsoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
+	//smapPsoDesc.pRootSignature = mShadowRS.Get();
+	//smapPsoDesc.VS =
+	//{
+	//	reinterpret_cast<BYTE*>(mShadowVS->GetBufferPointer()),
+	//	mShadowVS->GetBufferSize()
+	//};
+	//smapPsoDesc.PS =
+	//{
+	//	reinterpret_cast<BYTE*>(mShadowPS->GetBufferPointer()),
+	//	mShadowPS->GetBufferSize()
+	//};
+
+	//// Shadow map pass does not have a render target.
+	//smapPsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+	//smapPsoDesc.NumRenderTargets = 0;
+	//ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&smapPsoDesc, IID_PPV_ARGS(&mShadowPSO)));
 }
 
 void DX12RHI::CreateRtvAndDsvDescriptorHeap()
@@ -521,7 +646,6 @@ void DX12RHI::FlushCommandQueue()
 	}
 }
 
-
 void DX12RHI::BuildGeo(Primitive* actor)
 {
 	BuildTexture(actor);
@@ -582,6 +706,5 @@ void DX12RHI::BuildGeo(Primitive* actor)
 
 void DX12RHI::CreateRenderItem(Primitive* actor)
 {
-
 	BuildGeo(actor);
 }

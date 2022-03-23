@@ -4,7 +4,8 @@
 #include "GameTimer.h"
 #include "Scene.h"
 #include "RHI.h"
-
+#include "ShadowMap.h"
+#include "UpLoadBuffer.h"
 
 class DX12RHI : public RHI
 {
@@ -37,6 +38,13 @@ public:
 	void OpenRtv();
 	void CloseRtv();
 
+	void BuildShadowMap();
+
+	void DrawShadow();
+	void DrawItemShadow(Primitive* actor);
+	void CloseShadowMapDsv();
+	void UpdateShadowPassCB(const GameTimer& gt);
+
 protected:
 	
 	void SetCommonBuffer(Primitive* actor);
@@ -54,13 +62,11 @@ protected:
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;
 
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> mvsByteCode = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> mpsByteCode = nullptr;
+	
 	Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDsvHeap;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> mPSO = nullptr;
+	
 	Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
 	Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
@@ -88,6 +94,35 @@ protected:
 	bool m4xMsaaState = false;
 	UINT m4xMsaaQuality = 0;
 
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> mCommonPSO = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> mShadowPSO = nullptr;
 
+	Microsoft::WRL::ComPtr<ID3DBlob> mCommonVS = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> mCommonPS = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> mShadowVS = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> mShadowPS = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> mCommonRS = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> mShadowRS = nullptr;
+
+	std::unique_ptr<ShadowMap> mShadowMap;
+
+	std::unique_ptr<UploadBuffer<PassConstants>> PassCB = nullptr;
+
+	PassConstants mShadowPassCB;
+
+	scenebounds mSceneBounds;
+
+	float mLightNearZ = 0.0f;
+	float mLightFarZ = 0.0f;
+	glm::vec3 mLightPosW;
+	glm::mat4 mLightView = glm::mat4(1.0f);
+	glm::mat4 mLightProj = glm::mat4(1.0f);
+	glm::mat4 mShadowTransform = glm::mat4(1.0f);
+
+	float mLightRotationAngle = 0.0f;
+
+	glm::vec3 mBaseLightDirections = glm::vec3(0.57735f, -0.57735f, 0.57735f);
+	glm::vec3 mRotatedLightDirection;
 };
 

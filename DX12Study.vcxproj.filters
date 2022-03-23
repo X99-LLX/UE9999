@@ -133,6 +133,7 @@
     <ClInclude Include="Texture.h">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClInclude>
+    <ClInclude Include="ShadowMap.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -213,9 +214,13 @@
     <ClCompile Include="Texture.cpp">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClCompile>
+    <ClCompile Include="ShadowMap.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ShaderH.hlsli">
+    <None Include="CommonH.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="ShadowH.hlsli">
       <Filter>Other</Filter>
     </None>
   </ItemGroup>
