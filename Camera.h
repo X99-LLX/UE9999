@@ -47,11 +47,11 @@ public:
 
 private:
 
-	glm::vec3 mPosition = { 0.0f,0.0f,500.0f };
+	glm::vec3 mPosition = { -2000.0f,0.0f,1500.0f };
 	
 	glm::vec3 mWorldUp = { 0.0f,0.0f,1.0f };
 
-	glm::vec3 mTarget = { 1.0f,0.0f,0.0f }; 
+	glm::vec3 mTarget = { 1.0f,0.0f,-0.7f }; 
 	glm::vec3 mUp = { 0.0f,0.0f,1.0f };
 	glm::vec3 mRight = { 0.0f,1.0f,0.0f };
 

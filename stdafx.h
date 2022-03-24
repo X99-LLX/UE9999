@@ -10,7 +10,12 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
-
+#include "glm/ext/scalar_constants.hpp"
+#include "glm/gtc/constants.hpp"
+#include "glm/gtx/rotate_vector.hpp"
+#include "glm/gtx/color_space.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/quaternion.hpp"
 
 #include <windows.h>
 #include <wrl.h>

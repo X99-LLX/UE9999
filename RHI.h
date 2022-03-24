@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene.h"
+#include "GameTimer.h"
 
 class RHI 
 {
@@ -20,5 +21,11 @@ public:
 	virtual void OpenRtv() = 0;
 	virtual void CloseRtv() = 0;
 	virtual void Swapchain() = 0;
+	virtual void DrawallShadow(Primitive* actor) = 0;
+	virtual void UpdateShadowPassCB(const GameTimer& gt) = 0;
+
+	virtual void OpenShadowMapDsv() = 0;
+	virtual void CloseShadowMapDsv() = 0;
+	virtual void InitDrawShadow() = 0;
 };
 

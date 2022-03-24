@@ -28,9 +28,12 @@ void ShadowMap::Init(ID3D12Device* device)
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
 		&depthStencilDesc,
-		D3D12_RESOURCE_STATE_COMMON,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&optClear,
 		IID_PPV_ARGS(mShadowMap.GetAddressOf())));
+
+	CreateHeap(device);
+	CreateSRVAndDSV(device);
 }
 
 void ShadowMap::CreateHeap(ID3D12Device* device)
@@ -46,7 +49,7 @@ void ShadowMap::CreateHeap(ID3D12Device* device)
 	D3D12_DESCRIPTOR_HEAP_DESC SrvHeapDesc;
 	SrvHeapDesc.NumDescriptors = 1;
 	SrvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	SrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	SrvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	SrvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(device->CreateDescriptorHeap(
 		&SrvHeapDesc, IID_PPV_ARGS(SrvHeap.GetAddressOf())));

@@ -50,7 +50,7 @@ bool Engine::Run()
 		{
 			mTimer.Tick();
 			mWindow->GetInput()->Update();
-
+			TestRender.DrawShadow(mScene.Actors1);
 			TestRender.Draw(mScene.Actors1);
 		}
 	}

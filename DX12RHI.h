@@ -42,8 +42,11 @@ public:
 
 	void DrawShadow();
 	void DrawItemShadow(Primitive* actor);
+	void OpenShadowMapDsv();
 	void CloseShadowMapDsv();
 	void UpdateShadowPassCB(const GameTimer& gt);
+	void DrawallShadow(Primitive* actor);
+	void InitDrawShadow();
 
 protected:
 	
@@ -105,9 +108,9 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> mCommonRS = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> mShadowRS = nullptr;
 
-	std::unique_ptr<ShadowMap> mShadowMap;
+	std::unique_ptr<ShadowMap> mShadowMap = std::make_unique<ShadowMap>();
 
-	std::unique_ptr<UploadBuffer<PassConstants>> PassCB = nullptr;
+	std::unique_ptr<UploadBuffer<PassConstants>> PassCB  = nullptr;
 
 	PassConstants mShadowPassCB;
 
@@ -115,7 +118,7 @@ protected:
 
 	float mLightNearZ = 0.0f;
 	float mLightFarZ = 0.0f;
-	glm::vec3 mLightPosW;
+	glm::vec3 mLightPosW = glm::vec3(1.0f);
 	glm::mat4 mLightView = glm::mat4(1.0f);
 	glm::mat4 mLightProj = glm::mat4(1.0f);
 	glm::mat4 mShadowTransform = glm::mat4(1.0f);
@@ -123,6 +126,7 @@ protected:
 	float mLightRotationAngle = 0.0f;
 
 	glm::vec3 mBaseLightDirections = glm::vec3(0.57735f, -0.57735f, 0.57735f);
+
 	glm::vec3 mRotatedLightDirection;
 };
 

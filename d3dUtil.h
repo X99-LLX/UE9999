@@ -93,6 +93,20 @@ public:
 
     static bool IsKeyDown(int vkeyCode);
 
+	static glm::vec4 Vector3TransformCoord(glm::vec3 V, glm::mat4 M) {
+		glm::vec4 Z(V.z, V.z, V.z, V.z);
+		glm::vec4 Y(V.y, V.y, V.y, V.y);
+		glm::vec4 X(V.x, V.x, V.x, V.x);
+
+		glm::vec4 Result = Z * M[2] + M[3];
+		Result = Y * M[1] + Result;
+		Result = X * M[0] + Result;
+		glm::vec4 W(Result.w, Result.w, Result.w, Result.w);
+
+		return Result / W;
+	}
+
+
     static std::string ToString(HRESULT hr);
 
     static UINT CalcConstantBufferByteSize(UINT byteSize)
@@ -218,6 +232,8 @@ struct Vertex
 
 struct ConstantBuffer
 {
+    glm::mat4x4 Tans = glm::mat4x4(1.0f);
+    glm::mat4x4 World = glm::mat4x4(1.0f);
 	glm::mat4x4 MVP = glm::mat4x4(1.0f);
 	glm::mat4x4 Scale3D = glm::mat4x4(1.0f);
 	glm::mat4x4 Rotate = glm::mat4x4(1.0f);
@@ -261,6 +277,9 @@ struct PassConstants
 	// are spot lights for a maximum of MaxLights per object.
 	Light Lights;
 };
+
+
+
 
 #ifndef ThrowIfFailed
 #define ThrowIfFailed(x)                                              \

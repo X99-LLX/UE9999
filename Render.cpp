@@ -26,6 +26,8 @@ void Render::BuildResource(std::vector<std::shared_ptr<Primitive>> RI)
 	}
 }
 
+
+
 void Render::Init()
 {
 	mRHI->ResetViewportsAndScissorRects();
@@ -39,7 +41,7 @@ void Render::Draw(std::vector<std::shared_ptr<Primitive>> primitives)
 {
 	Scene* mScene = Engine::GetEngine()->GetScene();
 	Init();
-
+	
 	for (auto actor : primitives)
 	{
 		mRHI->Update(mScene, actor.get());
@@ -47,7 +49,22 @@ void Render::Draw(std::vector<std::shared_ptr<Primitive>> primitives)
 	}
 	mRHI->CloseRtv();
 	mRHI->Swapchain();
+}
+
+void Render::DrawShadow(std::vector<std::shared_ptr<Primitive>> primitives)
+{
+	Scene* mScene = Engine::GetEngine()->GetScene();
+	mRHI->InitDrawShadow();
 	
+	mRHI->UpdateShadowPassCB(*Engine::GetEngine()->GetTimer());
+	//mRHI->OpenShadowMapDsv();
+	
+	for (auto actor : primitives)
+	{
+		mRHI->Update(mScene, actor.get());
+		mRHI->DrawallShadow(actor.get());
+	}
+	mRHI->CloseShadowMapDsv();
 }
 
 RHI* Render::CreateRHI()
