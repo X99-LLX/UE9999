@@ -7,8 +7,8 @@ void ShadowMap::Init(ID3D12Device* device)
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilDesc.Alignment = 0;
-	depthStencilDesc.Width = 960;
-	depthStencilDesc.Height = 540;
+	depthStencilDesc.Width = 2000;
+	depthStencilDesc.Height = 2000;
 	depthStencilDesc.DepthOrArraySize = 1;
 	depthStencilDesc.MipLevels = 1;
 

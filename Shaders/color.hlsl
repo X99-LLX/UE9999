@@ -29,6 +29,7 @@ float4	CameraLoc	:	register(b0);
 
 cbuffer cbPerObject : register(b1)
 {
+	float4x4	Test;
 	float4x4	gTrans;
 	float4x4	gWorld;
 	float4x4	gWorldViewProj; 
@@ -107,18 +108,20 @@ float CalcShadowFactor(float4 shadowPosH)
 
 
 
+
 [RootSignature(Test_RootSig)]
 
 VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
-	/*vin.PosL = mul(vin.PosL, 0.2f * sin(gOffset) + 1);*/
-	float4 ScalePos =mul(mul(float4(vin.PosL, 1.0f), gScale3D), gRotate);
-	vout.PosH = mul(ScalePos, gWorldViewProj);
+
+	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
+
     vout.Color = vin.Color;
 	vout.Normal = mul(vin.Normal,gRotate);
 	vout.TexCoord = vin.TexCoord;
-	vout.ShadowPos = mul(ScalePos, gTrans);
+
+	vout.ShadowPos = mul(mul(float4(vin.PosL, 1.0f), gWorld), gTrans);
     return vout;
 }
 

@@ -17,7 +17,7 @@ public:
 	D3D12_DEPTH_STENCIL_VIEW_DESC mDsv;
 	D3D12_SHADER_RESOURCE_VIEW_DESC mSrv;
 
-	D3D12_VIEWPORT mViewport = { 0.0f, 0.0f, (float)960, (float)540, 0.0f, 1.0f };
-	D3D12_RECT mScissorRect = { 0, 0, 960, 540 };
+	D3D12_VIEWPORT mViewport = { 0.0f, 0.0f, (float)2000, (float)2000, 0.0f, 1.0f };
+	D3D12_RECT mScissorRect = { 0, 0, 2000, 2000 };
 };
 

@@ -232,11 +232,12 @@ struct Vertex
 
 struct ConstantBuffer
 {
-    glm::mat4x4 Tans = glm::mat4x4(1.0f);
-    glm::mat4x4 World = glm::mat4x4(1.0f);
-	glm::mat4x4 MVP = glm::mat4x4(1.0f);
-	glm::mat4x4 Scale3D = glm::mat4x4(1.0f);
-	glm::mat4x4 Rotate = glm::mat4x4(1.0f);
+    glm::mat4 Test = glm::mat4(1.0f);
+    glm::mat4 Tans = glm::mat4(1.0f);
+    glm::mat4 World = glm::mat4(1.0f);
+	glm::mat4 MVP = glm::mat4(1.0f);
+	glm::mat4 Scale3D = glm::mat4(1.0f);
+	glm::mat4 Rotate = glm::mat4(1.0f);
 	float Offset = 0;
 };
 

@@ -54,11 +54,11 @@ void Render::Draw(std::vector<std::shared_ptr<Primitive>> primitives)
 void Render::DrawShadow(std::vector<std::shared_ptr<Primitive>> primitives)
 {
 	Scene* mScene = Engine::GetEngine()->GetScene();
+
 	mRHI->InitDrawShadow();
-	
+
 	mRHI->UpdateShadowPassCB(*Engine::GetEngine()->GetTimer());
-	//mRHI->OpenShadowMapDsv();
-	
+
 	for (auto actor : primitives)
 	{
 		mRHI->Update(mScene, actor.get());

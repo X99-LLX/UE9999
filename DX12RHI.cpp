@@ -77,7 +77,7 @@ bool DX12RHI::Init()
 	FlushCommandQueue();
 
 
-	PassCB = std::make_unique<UploadBuffer<PassConstants>>(md3dDevice.Get(), 1, true);
+	
 	mShadowMap->Init(md3dDevice.Get());
 
 	return true;
@@ -92,11 +92,9 @@ void DX12RHI::Update(Scene* mScene, Primitive* actor)
 
 	actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->GetTransform().Rotation.w, actor->GetTransform().Rotation.x,
 		actor->GetTransform().Rotation.y, actor->GetTransform().Rotation.z));
-
-	glm::mat4 worldViewProj = mScene->mCamera.GetProj() * mScene->mCamera.GetView()
-		* actor->WorldTrans;
+	glm::mat4 worldViewProj =  mScene->mCamera.GetProj() * mScene->mCamera.GetView()
+		* actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans;
 	actor->MVP = worldViewProj;
-	
 }
 
 void DX12RHI::DrawCall(Primitive* actor)
@@ -268,6 +266,7 @@ void DX12RHI::SetRTVAndDSV()
 void DX12RHI::SetRootSignature()
 {
 	mCommandList->SetGraphicsRootSignature(mCommonRS.Get());
+	mCommandList->SetPipelineState(mCommonPSO.Get());
 }
 
 void DX12RHI::Swapchain()
@@ -292,10 +291,16 @@ void DX12RHI::DrawInstance(Primitive* actor)
 	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	glm::mat4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+
 	ConstantBuffer objConstants;
-
-	objConstants.Tans = glm::transpose(mLightProj * mLightView * actor->WorldTrans);
-
+	objConstants.Test = glm::transpose(mLightProj * mLightView);
+	objConstants.Tans = glm::transpose(T * mLightProj * mLightView);
+	objConstants.World = glm::transpose(actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans);
 	objConstants.MVP = glm::transpose(actor->MVP);
 	objConstants.Scale3D = actor->Scale3DTrans;
 	objConstants.Rotate = actor->RotateTrans;
@@ -305,7 +310,7 @@ void DX12RHI::DrawInstance(Primitive* actor)
 
 	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &actor->GetTransform().Translation, 0);
 	mCommandList->SetGraphicsRootConstantBufferView(1, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
-	mCommandList->SetGraphicsRootConstantBufferView(2, PassCB->Resource()->GetGPUVirtualAddress());
+	
 
 	mCommandList->SetGraphicsRootDescriptorTable(3, Temp->GetHeap()->GetGPUDescriptorHandleForHeapStart());
 
@@ -359,24 +364,15 @@ void DX12RHI::DrawItemShadow(Primitive* actor)
 	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	glm::mat4x4 T(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
-
 	ConstantBuffer objConstants;
-	objConstants.Tans = glm::transpose(T * mLightProj * mLightView * actor->WorldTrans);
-	objConstants.World = actor->WorldTrans;
-	objConstants.MVP = glm::transpose(actor->MVP);
-	objConstants.Scale3D = actor->Scale3DTrans;
-	objConstants.Rotate = actor->RotateTrans;
-	objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
+	objConstants.Tans = glm::transpose(mLightProj * mLightView * actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans);
+	
 
 	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
 
-	Temp->GetCB()->CopyData(0, objConstants);
-	mCommandList->SetGraphicsRootConstantBufferView(0, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
+	Temp->GetCB1()->CopyData(0, objConstants);
+
+	mCommandList->SetGraphicsRootConstantBufferView(0, Temp->GetCB1()->Resource()->GetGPUVirtualAddress());
 
 
 	mCommandList->DrawIndexedInstanced(
@@ -392,28 +388,25 @@ void DX12RHI::OpenShadowMapDsv()
 
 void DX12RHI::CloseShadowMapDsv()
 {
-	/*mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap->mShadowMap.Get(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_GENERIC_READ));*/
 	CloseCmdList();
 }
 
 void DX12RHI::UpdateShadowPassCB(const GameTimer& gt)
 {
 	glm::vec3 lightPos = { -2000.0f,0.0f,1500.0f };
-	//glm::vec3 lightPos = Engine::GetEngine()->GetScene()->mCamera.GetCameraPos();
 	glm::vec3 targetPos = { 1.0f,0.0f,-0.7f };
 	glm::vec3 lightUp = glm::vec3(0.0f, 0.0f, 1.0f);
 
+	int a  = gt.TotalTime();
+	
+
+	lightPos = glm::vec4(lightPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a % 4 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+	targetPos = glm::vec4(targetPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a % 4 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
 	glm::mat4 lightView = glm::lookAtLH(lightPos, lightPos + targetPos, lightUp);
-
-	glm::vec3 lightDir = targetPos - lightPos;
-
-	mLightNearZ = -1000.0f;
-	mLightFarZ = 1000.0f;
 
 	glm::vec3 LS = d3dUtil::Vector3TransformCoord(targetPos, lightView);
 
-	float Radius = 1500;
+	float Radius = 2500;
 	
 	float l = LS.x - Radius;
 	float b = LS.y - Radius;
@@ -422,40 +415,11 @@ void DX12RHI::UpdateShadowPassCB(const GameTimer& gt)
 	float t = LS.y + Radius;
 	float f = LS.z + Radius;
 
-	glm::mat4 lightProj = glm::orthoLH_ZO(l, r, b, t,0.0f, 10000.0f);
-
-
- 	glm::mat4x4 T(
- 		0.5f, 0.0f, 0.0f, 0.0f,
- 		0.0f, -0.5f, 0.0f, 0.0f,
- 		0.0f, 0.0f, 1.0f, 0.0f,
- 		0.5f, 0.5f, 0.0f, 1.0f );
-
-	//glm::mat4 S = lightProj * T * lightView ;
-	glm::mat4 S = lightProj * lightView ;
+	glm::mat4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
 
 	mLightView = lightView;
 	mLightProj = lightProj;
-	mShadowTransform = S;
 
-
-	mShadowPassCB.View = glm::transpose(mLightView);
-	mShadowPassCB.Proj = glm::transpose(mLightProj);
-	mShadowPassCB.ViewProj = glm::transpose(mLightProj * mLightView);
-
-	mShadowPassCB.RenderTargetSize = { (float)960, (float)540 };
-
-	mShadowPassCB.NearZ = mLightNearZ;
-	mShadowPassCB.FarZ = mLightFarZ;
-
-	mShadowPassCB.ShadowTransform = glm::transpose(mShadowTransform);
-
-	mShadowPassCB.TotalTime = gt.TotalTime();
-	mShadowPassCB.DeltaTime = gt.DeltaTime();
-
-	PassCB->CopyData(0, mShadowPassCB);
-
-	mCommandList->SetGraphicsRootConstantBufferView(1, PassCB->Resource()->GetGPUVirtualAddress());
 }
 
 void DX12RHI::DrawallShadow(Primitive* actor)
@@ -479,7 +443,6 @@ void DX12RHI::InitDrawShadow()
 	mCommandList->ClearDepthStencilView(mShadowMap->DsvHeap->GetCPUDescriptorHandleForHeapStart(),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	OpenShadowMapDsv();
 
 	mCommandList->OMSetRenderTargets(0, nullptr, false, &mShadowMap->DsvHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -504,6 +467,7 @@ void DX12RHI::SetCommonBuffer(Primitive* actor)
 		IID_PPV_ARGS(&Temp->CbvSrvUavHeap)));
 
 	Temp->CB = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
+	Temp->CB1 = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
 
 	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = Temp->GetCB()->Resource()->GetGPUVirtualAddress();
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(Temp->CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
@@ -603,9 +567,9 @@ void DX12RHI::BuildPSO()
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mCommonPSO)));
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC smapPsoDesc = psoDesc;
-	/*smapPsoDesc.RasterizerState.DepthBias = 100000;
+	smapPsoDesc.RasterizerState.DepthBias = 10000;
 	smapPsoDesc.RasterizerState.DepthBiasClamp = 0.0f;
-	smapPsoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;*/
+	smapPsoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
 	smapPsoDesc.pRootSignature = mShadowRS.Get();
 	smapPsoDesc.VS =
 	{

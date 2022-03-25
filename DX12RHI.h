@@ -110,9 +110,6 @@ protected:
 
 	std::unique_ptr<ShadowMap> mShadowMap = std::make_unique<ShadowMap>();
 
-	std::unique_ptr<UploadBuffer<PassConstants>> PassCB  = nullptr;
-
-	PassConstants mShadowPassCB;
 
 	scenebounds mSceneBounds;
 

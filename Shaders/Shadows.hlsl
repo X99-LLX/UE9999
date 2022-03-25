@@ -21,6 +21,7 @@ struct Light
 
 cbuffer cbPerObject : register(b0)
 {
+	float4x4	Test;
 	float4x4	gTrans;
 	float4x4	gWorld;
 	float4x4	gWorldViewProj;
@@ -72,11 +73,10 @@ VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	
-	float4 ScalePos = mul(mul(float4(vin.PosL, 1.0f), gScale3D), gRotate);
-	vout.PosH = mul(ScalePos, gTrans);
+	vout.PosH = mul(float4(vin.PosL, 1.0f), gTrans);
 
-	vout.Color = mul(vin.Color, gView);
-	vout.Normal = mul(vin.Normal, gRotate);
+	vout.Color = vin.Color;
+	vout.Normal = vin.Normal;
 	vout.TexCoord = vin.TexCoord ;
 	return vout;
 }

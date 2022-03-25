@@ -44,7 +44,7 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 	}
 	fin.close();
 
-	LoadTexture("bricks3");
+	LoadTexture("jacket_diff");
 }
 
 Texture* ResourceManage::GetTexture(std::string name)
@@ -87,7 +87,7 @@ Mesh* ResourceManage::LoadMeshAsset(std::string filename)
 		fin.read((char*)meshinfo->TexCoord.data(), sizeof(glm::vec2) * Num);
 		fin.close();
 
-		meshinfo->SetTexture(new Texture("bricks3", L"Textures/bricks3.dds"));
+		meshinfo->SetTexture(new Texture("jacket_diff", L"Textures/jacket_diff.dds"));
 
 		MeshAsset1.insert({ filename ,meshinfo });
 		return meshinfo.get();
