@@ -63,6 +63,10 @@ struct VertexOut
 	float2 TexCoord		: TEXCOORD;
 };
 
+
+
+
+
 [RootSignature(Shadow_RootSig)]
 VertexOut VS(VertexIn vin)
 {

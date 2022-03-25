@@ -9,9 +9,6 @@ public:
 	void CreateSRVAndDSV(ID3D12Device* device);
 
 
-
-
-
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DsvHeap = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> SrvHeap = nullptr;
 

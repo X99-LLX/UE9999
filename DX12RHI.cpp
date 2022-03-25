@@ -293,6 +293,9 @@ void DX12RHI::DrawInstance(Primitive* actor)
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	ConstantBuffer objConstants;
+
+	objConstants.Tans = glm::transpose(mLightProj * mLightView * actor->WorldTrans);
+
 	objConstants.MVP = glm::transpose(actor->MVP);
 	objConstants.Scale3D = actor->Scale3DTrans;
 	objConstants.Rotate = actor->RotateTrans;
@@ -302,7 +305,14 @@ void DX12RHI::DrawInstance(Primitive* actor)
 
 	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &actor->GetTransform().Translation, 0);
 	mCommandList->SetGraphicsRootConstantBufferView(1, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
-	mCommandList->SetGraphicsRootDescriptorTable(2, Temp->GetHeap()->GetGPUDescriptorHandleForHeapStart());
+	mCommandList->SetGraphicsRootConstantBufferView(2, PassCB->Resource()->GetGPUVirtualAddress());
+
+	mCommandList->SetGraphicsRootDescriptorTable(3, Temp->GetHeap()->GetGPUDescriptorHandleForHeapStart());
+
+	ID3D12DescriptorHeap* descriptorHeaps1[] = { mShadowMap->SrvHeap.Get() };
+	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps1), descriptorHeaps1);
+
+	mCommandList->SetGraphicsRootDescriptorTable(4, mShadowMap->SrvHeap->GetGPUDescriptorHandleForHeapStart());
 
 	mCommandList->DrawIndexedInstanced(
 		TempMesh->IndexCount,
@@ -313,13 +323,18 @@ void DX12RHI::OpenRtv()
 {
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap->mShadowMap.Get(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 }
 
 void DX12RHI::CloseRtv()
 {
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-	
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap->mShadowMap.Get(),
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 }
 
 void DX12RHI::BuildShadowMap()
@@ -344,8 +359,14 @@ void DX12RHI::DrawItemShadow(Primitive* actor)
 	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	glm::mat4x4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+
 	ConstantBuffer objConstants;
-	objConstants.Tans = glm::transpose(mLightProj * mLightView * actor->WorldTrans);
+	objConstants.Tans = glm::transpose(T * mLightProj * mLightView * actor->WorldTrans);
 	objConstants.World = actor->WorldTrans;
 	objConstants.MVP = glm::transpose(actor->MVP);
 	objConstants.Scale3D = actor->Scale3DTrans;
@@ -356,6 +377,7 @@ void DX12RHI::DrawItemShadow(Primitive* actor)
 
 	Temp->GetCB()->CopyData(0, objConstants);
 	mCommandList->SetGraphicsRootConstantBufferView(0, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
+
 
 	mCommandList->DrawIndexedInstanced(
 		TempMesh->IndexCount,
@@ -403,11 +425,11 @@ void DX12RHI::UpdateShadowPassCB(const GameTimer& gt)
 	glm::mat4 lightProj = glm::orthoLH_ZO(l, r, b, t,0.0f, 10000.0f);
 
 
-// 	glm::mat4x4 T(
-// 		0.5f, 0.0f, 0.0f, 0.0f,
-// 		0.0f, -0.5f, 0.0f, 0.0f,
-// 		0.0f, 0.0f, 1.0f, 0.0f,
-// 		0.5f, 0.5f, 0.0f, 1.0f );
+ 	glm::mat4x4 T(
+ 		0.5f, 0.0f, 0.0f, 0.0f,
+ 		0.0f, -0.5f, 0.0f, 0.0f,
+ 		0.0f, 0.0f, 1.0f, 0.0f,
+ 		0.5f, 0.5f, 0.0f, 1.0f );
 
 	//glm::mat4 S = lightProj * T * lightView ;
 	glm::mat4 S = lightProj * lightView ;

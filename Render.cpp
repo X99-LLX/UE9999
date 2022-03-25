@@ -44,7 +44,7 @@ void Render::Draw(std::vector<std::shared_ptr<Primitive>> primitives)
 	
 	for (auto actor : primitives)
 	{
-		mRHI->Update(mScene, actor.get());
+		//mRHI->Update(mScene, actor.get());
 		mRHI->DrawCall(actor.get());
 	}
 	mRHI->CloseRtv();
