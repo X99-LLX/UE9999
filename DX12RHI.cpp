@@ -399,7 +399,6 @@ void DX12RHI::UpdateShadowPassCB(const GameTimer& gt)
 
 	int a  = gt.TotalTime();
 	
-
 	lightPos = glm::vec4(lightPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a % 4 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
 	targetPos = glm::vec4(targetPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a % 4 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
 	glm::mat4 lightView = glm::lookAtLH(lightPos, lightPos + targetPos, lightUp);
