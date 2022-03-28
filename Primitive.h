@@ -6,22 +6,18 @@ class Primitive
 {
 public:
 	Primitive() {};
-	virtual ~Primitive() { delete HeapAndCB; delete MeshBuffer; };
+	virtual ~Primitive() {}
 	Transform& GetTransform() { return Trans; }
-	Mesh* GetMesh() { return MeshBuffer; }
-	CommonBuffer* GetCommon() { return HeapAndCB; }
-	void SetMesh(Mesh* m) { MeshBuffer = m; }
-	void SetCommon(CommonBuffer* c) { HeapAndCB = c; }
+	Mesh* GetMesh() { return MeshBuffer.get(); }
+
 	std::string MeshName;
 
-	Mesh* MeshBuffer;
+	std::shared_ptr<Mesh> MeshBuffer;
 
 	glm::mat4 WorldTrans = glm::mat4(1.0f);
 	glm::mat4 Scale3DTrans = glm::mat4(1.0f);
 	glm::mat4 RotateTrans = glm::mat4(1.0f);
 	glm::mat4 MVP = glm::mat4(1.0f);
-private:
-	CommonBuffer* HeapAndCB;
 	Transform Trans;
 	
 };

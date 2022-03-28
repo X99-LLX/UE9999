@@ -8,10 +8,15 @@ public:
 	~Render();
 	RHI* GetRHI();
 	void BuildResource(std::vector<std::shared_ptr<Primitive>> RI);
-	void Init();
-	void Draw(std::vector<std::shared_ptr<Primitive>> primitives);
-	void DrawShadow(std::vector<std::shared_ptr<Primitive>> primitives);
+	
+	void DrawScene(std::vector<std::shared_ptr<Primitive>> primitives);
+
+	
 private:
+	void ColorPass(std::vector<std::shared_ptr<Primitive>> primitives);
+	void ShadowPass(std::vector<std::shared_ptr<Primitive>> primitives);
+	void BeginDraw();
+	void UpdatePrimitiveTrans(std::vector<std::shared_ptr<Primitive>> primitives);
 	RHI* CreateRHI();
 
 private:

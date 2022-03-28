@@ -9,10 +9,9 @@ public:
 	virtual ~RHI();
 
 	virtual bool Init() = 0;
-	virtual void Update(Scene* mScene, Primitive* actor) = 0;
-	virtual void DrawCall(Primitive* actor) = 0;
+	virtual void UpdateTrans(Scene* mScene, Primitive* actor) = 0;
+	virtual void DrawInstance(Primitive* actor) = 0;
 	virtual void BuildGeo(Primitive* actor) = 0;
-	virtual void CreateRenderItem(Primitive* actor) = 0;
 	
 	virtual void ResetViewportsAndScissorRects() = 0;
 	virtual void ClearRTVAndDSV() = 0;
@@ -21,11 +20,10 @@ public:
 	virtual void OpenRtv() = 0;
 	virtual void CloseRtv() = 0;
 	virtual void Swapchain() = 0;
-	virtual void DrawallShadow(Primitive* actor) = 0;
-	virtual void UpdateShadowPassCB(const GameTimer& gt) = 0;
+	virtual void DrawItemShadow(Primitive* actor) = 0;
+	virtual void UpdateLight(const GameTimer& gt) = 0;
 
-	virtual void OpenShadowMapDsv() = 0;
-	virtual void CloseShadowMapDsv() = 0;
-	virtual void InitDrawShadow() = 0;
+
+	virtual void BeginDrawShadow() = 0;
 };
 

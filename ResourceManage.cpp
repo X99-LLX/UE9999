@@ -2,7 +2,9 @@
 #include "ResourceManage.h"
 #include "Engine.h"
 #include "StoWS.h"
-
+#include "DX12Primitive.h"
+#include "DX12Mesh.h"
+#include "DX12Texture.h"
 
 ResourceManage::~ResourceManage()
 {
@@ -31,15 +33,15 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 
 	for (int i = 0; i < Num; i++)
 	{
-		std::shared_ptr<Primitive> actorinfo(new Primitive());
-		actorinfo->SetCommon(new CommonBuffer());
+#ifdef _RHI_DX12
+		auto actorinfo = std::make_shared<DX12Primitive>();
+#endif
 		INT32 TempNum;
 		fin.read((char*)&actorinfo->GetTransform(), sizeof(int) * 10);
 		fin.read((char*)&TempNum, sizeof(int));
 		actorinfo->MeshName.resize(TempNum);
 		fin.read((char*)actorinfo->MeshName.data(), TempNum);
-		actorinfo->SetMesh(LoadMeshAsset(actorinfo->MeshName));
-
+		actorinfo->MeshBuffer = LoadMeshAsset(actorinfo->MeshName);
 		Actors.push_back(actorinfo);
 	}
 	fin.close();
@@ -52,7 +54,7 @@ Texture* ResourceManage::GetTexture(std::string name)
 	return TextureAsset1.find(name)->second.get();
 }
 
-Mesh* ResourceManage::LoadMeshAsset(std::string filename)
+std::shared_ptr<Mesh> ResourceManage::LoadMeshAsset(std::string filename)
 {
 	filename = filename.erase(filename.length() - 1, 1);
 	std::string FilePath = "Data/" + filename + ".dat";
@@ -63,8 +65,9 @@ Mesh* ResourceManage::LoadMeshAsset(std::string filename)
 	}
 	if (MeshAsset1.find(filename) == MeshAsset1.end())
 	{
-		std::shared_ptr<Mesh> meshinfo(new Mesh());
-
+#ifdef _RHI_DX12
+		auto meshinfo = std::make_shared<DX12Mesh>();
+#endif
 		INT32 Num;
 		fin.read((char*)&Num, sizeof(int));
 		meshinfo->MeshName.resize(Num);
@@ -87,14 +90,14 @@ Mesh* ResourceManage::LoadMeshAsset(std::string filename)
 		fin.read((char*)meshinfo->TexCoord.data(), sizeof(glm::vec2) * Num);
 		fin.close();
 
-		meshinfo->SetTexture(new Texture("jacket_diff", L"Textures/jacket_diff.dds"));
+		meshinfo->MeshTex = std::make_shared<DX12Texture>("jacket_diff", L"Textures/jacket_diff.dds");
 
 		MeshAsset1.insert({ filename ,meshinfo });
-		return meshinfo.get();
+		return meshinfo;
 	}
 	else
 	{
-		return MeshAsset1.find(filename)->second.get();
+		return MeshAsset1.find(filename)->second;
 	}
 }
 
@@ -106,9 +109,10 @@ void ResourceManage::ClearAsset()
 
 void ResourceManage::LoadTexture(std::string Name)
 {
-	auto Tex = std::make_shared<Texture>();
-	Tex->GetTextureName() = Name;
-	Tex->GetFileName() = L"Textures/" + SToWS(Name) + L".dds";
+#ifdef _RHI_DX12
+	auto Tex = std::make_shared<DX12Texture>();
+	Tex->TextureName = Name;
+	Tex->FileName = L"Textures/" + SToWS(Name) + L".dds";
 	TextureAsset1.insert({ Name, Tex });
-
+#endif
 }

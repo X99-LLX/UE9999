@@ -5,7 +5,7 @@
 #include "DX12Texture.h"
 #include "DX12CommonBuffer.h"
 #include "DX12Mesh.h"
-
+#include "DX12Primitive.h"
 
 
 DX12RHI::DX12RHI()
@@ -83,7 +83,7 @@ bool DX12RHI::Init()
 	return true;
 }
 
-void DX12RHI::Update(Scene* mScene, Primitive* actor)
+void DX12RHI::UpdateTrans(Scene* mScene, Primitive* actor)
 {
 	mScene->mCamera.UpdateViewMatrix();
 	
@@ -95,11 +95,6 @@ void DX12RHI::Update(Scene* mScene, Primitive* actor)
 	glm::mat4 worldViewProj =  mScene->mCamera.GetProj() * mScene->mCamera.GetView()
 		* actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans;
 	actor->MVP = worldViewProj;
-}
-
-void DX12RHI::DrawCall(Primitive* actor)
-{
-	DrawInstance(actor);
 }
  
 void DX12RHI::OnResize()
@@ -233,7 +228,6 @@ ID3D12GraphicsCommandList* DX12RHI::GetCmdList()
 
 void DX12RHI::OpenCmdList()
 {
-	/*ThrowIfFailed(mDirectCmdListAlloc->Reset());*/
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mCommonPSO.Get()));
 }
 
@@ -246,7 +240,6 @@ void DX12RHI::CloseCmdList()
 
 void DX12RHI::ResetViewportsAndScissorRects()
 {
-	OpenCmdList();
 	mCommandList->RSSetViewports(1, &mScreenViewport);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
 }
@@ -280,7 +273,7 @@ void DX12RHI::Swapchain()
 
 void DX12RHI::DrawInstance(Primitive* actor)
 {
-	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
+	auto Temp = dynamic_cast<DX12Primitive*>(actor);
 
 	ID3D12DescriptorHeap* descriptorHeaps[] = { Temp->GetHeap().Get() };
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
@@ -290,23 +283,6 @@ void DX12RHI::DrawInstance(Primitive* actor)
 	mCommandList->IASetVertexBuffers(0, 1, &TempMesh->VertexBufferView);
 	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	glm::mat4 T(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
-
-	ConstantBuffer objConstants;
-	objConstants.Test = glm::transpose(mLightProj * mLightView);
-	objConstants.Tans = glm::transpose(T * mLightProj * mLightView);
-	objConstants.World = glm::transpose(actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans);
-	objConstants.MVP = glm::transpose(actor->MVP);
-	objConstants.Scale3D = actor->Scale3DTrans;
-	objConstants.Rotate = actor->RotateTrans;
-	objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
-
-	Temp->GetCB()->CopyData(0, objConstants);
 
 	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &actor->GetTransform().Translation, 0);
 	mCommandList->SetGraphicsRootConstantBufferView(1, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
@@ -354,8 +330,8 @@ void DX12RHI::DrawShadow()
 
 void DX12RHI::DrawItemShadow(Primitive* actor)
 {
-	auto Temp1 = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
-	ID3D12DescriptorHeap* descriptorHeaps[] = { Temp1->GetHeap().Get() };
+	auto Temp = dynamic_cast<DX12Primitive*>(actor);
+	ID3D12DescriptorHeap* descriptorHeaps[] = { Temp->GetHeap().Get() };
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
@@ -364,15 +340,25 @@ void DX12RHI::DrawItemShadow(Primitive* actor)
 	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
 	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	glm::mat4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+
 	ConstantBuffer objConstants;
+	objConstants.TTrans = glm::transpose(T * mLightProj * mLightView);
 	objConstants.Tans = glm::transpose(mLightProj * mLightView * actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans);
-	
+	objConstants.World = glm::transpose(actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans);
+	objConstants.MVP = glm::transpose(actor->MVP);
+	objConstants.Scale3D = actor->Scale3DTrans;
+	objConstants.Rotate = actor->RotateTrans;
+	objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
 
-	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
+	Temp->GetCB()->CopyData(0, objConstants);
 
-	Temp->GetCB1()->CopyData(0, objConstants);
 
-	mCommandList->SetGraphicsRootConstantBufferView(0, Temp->GetCB1()->Resource()->GetGPUVirtualAddress());
+	mCommandList->SetGraphicsRootConstantBufferView(0, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
 
 
 	mCommandList->DrawIndexedInstanced(
@@ -380,27 +366,20 @@ void DX12RHI::DrawItemShadow(Primitive* actor)
 		1, 0, 0, 0);
 }
 
-void DX12RHI::OpenShadowMapDsv()
-{
-	/*mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap->mShadowMap.Get(),
-		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));*/
-}
 
-void DX12RHI::CloseShadowMapDsv()
-{
-	CloseCmdList();
-}
 
-void DX12RHI::UpdateShadowPassCB(const GameTimer& gt)
+
+
+void DX12RHI::UpdateLight(const GameTimer& gt)
 {
 	glm::vec3 lightPos = { -2000.0f,0.0f,1500.0f };
 	glm::vec3 targetPos = { 1.0f,0.0f,-0.7f };
 	glm::vec3 lightUp = glm::vec3(0.0f, 0.0f, 1.0f);
 
-	int a  = gt.TotalTime();
+	int a = gt.TotalTime();
 	
-	lightPos = glm::vec4(lightPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a % 4 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-	targetPos = glm::vec4(targetPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a % 4 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+	lightPos = glm::vec4(lightPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a / 2 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+	targetPos = glm::vec4(targetPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a / 2 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
 	glm::mat4 lightView = glm::lookAtLH(lightPos, lightPos + targetPos, lightUp);
 
 	glm::vec3 LS = d3dUtil::Vector3TransformCoord(targetPos, lightView);
@@ -421,12 +400,8 @@ void DX12RHI::UpdateShadowPassCB(const GameTimer& gt)
 
 }
 
-void DX12RHI::DrawallShadow(Primitive* actor)
-{
-	DrawItemShadow(actor);
-}
 
-void DX12RHI::InitDrawShadow()
+void DX12RHI::BeginDrawShadow()
 {
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
 	OpenCmdList();
@@ -446,15 +421,11 @@ void DX12RHI::InitDrawShadow()
 	mCommandList->OMSetRenderTargets(0, nullptr, false, &mShadowMap->DsvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	mCommandList->SetPipelineState(mShadowPSO.Get());
-
-	
 }
 
 void DX12RHI::SetCommonBuffer(Primitive* actor)
 {
-	DX12CommonBuffer* C = new DX12CommonBuffer();
-	actor->SetCommon(C);
-	auto Temp = dynamic_cast<DX12CommonBuffer*>(actor->GetCommon());
+	auto Temp = dynamic_cast<DX12Primitive*>(actor);
 	
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
 	cbvHeapDesc.NumDescriptors = 1000;
@@ -466,13 +437,11 @@ void DX12RHI::SetCommonBuffer(Primitive* actor)
 		IID_PPV_ARGS(&Temp->CbvSrvUavHeap)));
 
 	Temp->CB = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
-	Temp->CB1 = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
-
 	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = Temp->GetCB()->Resource()->GetGPUVirtualAddress();
 	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(Temp->CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex);
+	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
 	srvDesc.Format = Tex->Resource->GetDesc().Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
@@ -483,23 +452,6 @@ void DX12RHI::SetCommonBuffer(Primitive* actor)
 	md3dDevice->CreateShaderResourceView(Tex->Resource.Get(), &srvDesc, hDescriptor);
 }
 
-void DX12RHI::BuildTexture(Primitive* actor)
-{
-	OpenCmdList();
-	
-
-	DX12Mesh* m = new DX12Mesh(actor->MeshBuffer);
-	m->MeshTex = new DX12Texture(actor->GetMesh()->MeshTex->GetTextureName(), actor->GetMesh()->MeshTex->GetFileName());
-	actor->MeshBuffer = m;
-
-	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex);
-	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-		mCommandList.Get(), Tex->GetFileName().c_str(),
-		Tex->Resource, Tex->UploadHeap));
-
-	CloseCmdList();
-	
-}
 
 void DX12RHI::BuildRootSignature()
 {
@@ -566,7 +518,7 @@ void DX12RHI::BuildPSO()
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mCommonPSO)));
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC smapPsoDesc = psoDesc;
-	smapPsoDesc.RasterizerState.DepthBias = 10000;
+	smapPsoDesc.RasterizerState.DepthBias = 50000;
 	smapPsoDesc.RasterizerState.DepthBiasClamp = 0.0f;
 	smapPsoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
 	smapPsoDesc.pRootSignature = mShadowRS.Get();
@@ -638,7 +590,6 @@ void DX12RHI::CreateSwapChain()
 		mCommandQueue.Get(),
 		&sd,
 		mSwapChain.GetAddressOf()));
-	
 }
 
 void DX12RHI::CreateCommandObjects()
@@ -678,17 +629,16 @@ void DX12RHI::FlushCommandQueue()
 
 void DX12RHI::BuildGeo(Primitive* actor)
 {
-	BuildTexture(actor);
-	
-	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+	OpenCmdList();
+	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), Tex->FileName.c_str(),
+		Tex->Resource, Tex->UploadHeap));
 	std::vector<int> indices;
 	std::vector<Vertex> vertices;
-
 	SetCommonBuffer(actor);
-
 	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
 	
-
 	for (int i = 0; i < TempMesh->NumVertices; i++)
 	{
 		vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] ,TempMesh->TexCoord[i]});
@@ -727,14 +677,7 @@ void DX12RHI::BuildGeo(Primitive* actor)
 	ibv.SizeInBytes = TempMesh->IndexBufferByteSize;
 	TempMesh->IndexBufferView = ibv;
 
-	ThrowIfFailed(mCommandList->Close());
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	CloseCmdList();
 	FlushCommandQueue();
-	
 }
 
-void DX12RHI::CreateRenderItem(Primitive* actor)
-{
-	BuildGeo(actor);
-}

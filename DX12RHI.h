@@ -14,10 +14,10 @@ public:
 	~DX12RHI();
 
 	bool Init();
-	void Update(Scene* mScene, Primitive* actor);
-	void DrawCall(Primitive* actor);
+	void UpdateTrans(Scene* mScene, Primitive* actor);
+	void DrawInstance(Primitive* actor);
 	void BuildGeo(Primitive* actor);
-	void CreateRenderItem(Primitive* actor);
+
 
 	void OnResize();
 	ID3D12Resource* CurrentBackBuffer()const;
@@ -27,32 +27,23 @@ public:
 	ID3D12GraphicsCommandList* GetCmdList();
 	void OpenCmdList();
 	void CloseCmdList();
-
 	void ResetViewportsAndScissorRects();
 	void ClearRTVAndDSV();
 	void SetRTVAndDSV();
 	void SetRootSignature();
 	void Swapchain();
-	void DrawInstance(Primitive* actor);
-
 	void OpenRtv();
 	void CloseRtv();
-
 	void BuildShadowMap();
-
 	void DrawShadow();
 	void DrawItemShadow(Primitive* actor);
-	void OpenShadowMapDsv();
-	void CloseShadowMapDsv();
-	void UpdateShadowPassCB(const GameTimer& gt);
-	void DrawallShadow(Primitive* actor);
-	void InitDrawShadow();
+	void UpdateLight(const GameTimer& gt);
+	void BeginDrawShadow();
 
 protected:
 	
 	void SetCommonBuffer(Primitive* actor);
 
-	void BuildTexture(Primitive* actor);
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
 	void BuildPSO();
@@ -111,19 +102,7 @@ protected:
 	std::unique_ptr<ShadowMap> mShadowMap = std::make_unique<ShadowMap>();
 
 
-	scenebounds mSceneBounds;
-
-	float mLightNearZ = 0.0f;
-	float mLightFarZ = 0.0f;
-	glm::vec3 mLightPosW = glm::vec3(1.0f);
 	glm::mat4 mLightView = glm::mat4(1.0f);
 	glm::mat4 mLightProj = glm::mat4(1.0f);
-	glm::mat4 mShadowTransform = glm::mat4(1.0f);
-
-	float mLightRotationAngle = 0.0f;
-
-	glm::vec3 mBaseLightDirections = glm::vec3(0.57735f, -0.57735f, 0.57735f);
-
-	glm::vec3 mRotatedLightDirection;
 };
 

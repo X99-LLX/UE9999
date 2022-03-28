@@ -5,7 +5,7 @@ class Mesh
 {
 public:
 	Mesh() {}
-	virtual ~Mesh() { delete MeshTex; }
+	virtual ~Mesh() {}
 
 	UINT32 GetVertexByteStride() const { return VertexByteSize; }
 	UINT32 GetVertexCount() const { return VertexCount; }
@@ -13,9 +13,8 @@ public:
 	UINT32 GetVertexBufferByteSize() const { return VertexBufferByteSize; }
 	UINT32 GetIndexBufferByteSize() const { return IndexBufferByteSize; }
 	UINT32 GetBufferSize() const { return BufferSize; }
-	void SetTexture(Texture* t) { MeshTex = t; }
 
-	Texture* MeshTex;
+	std::shared_ptr<Texture> MeshTex;
 
 	int NumLod = 0;
 	int NumVertices = 0;
@@ -39,6 +38,5 @@ public:
 	UINT32 VertexCount = 0;
 	UINT32 IndexCount = 0;
 
-	
 };
 

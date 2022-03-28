@@ -29,7 +29,7 @@ float4	CameraLoc	:	register(b0);
 
 cbuffer cbPerObject : register(b1)
 {
-	float4x4	Test;
+	float4x4	gTTrans;
 	float4x4	gTrans;
 	float4x4	gWorld;
 	float4x4	gWorldViewProj; 
@@ -121,7 +121,7 @@ VertexOut VS(VertexIn vin)
 	vout.Normal = mul(vin.Normal,gRotate);
 	vout.TexCoord = vin.TexCoord;
 
-	vout.ShadowPos = mul(mul(float4(vin.PosL, 1.0f), gWorld), gTrans);
+	vout.ShadowPos = mul(mul(float4(vin.PosL, 1.0f), gWorld), gTTrans);
     return vout;
 }
 

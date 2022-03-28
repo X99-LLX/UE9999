@@ -13,7 +13,7 @@ public:
 	Texture* GetTexture(std::string name);
 
 private:
-	Mesh* LoadMeshAsset(std::string filename);
+	std::shared_ptr<Mesh> LoadMeshAsset(std::string filename);
 	void ClearAsset();
 	void LoadTexture(std::string Name);
 

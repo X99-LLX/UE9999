@@ -232,7 +232,7 @@ struct Vertex
 
 struct ConstantBuffer
 {
-    glm::mat4 Test = glm::mat4(1.0f);
+    glm::mat4 TTrans = glm::mat4(1.0f);
     glm::mat4 Tans = glm::mat4(1.0f);
     glm::mat4 World = glm::mat4(1.0f);
 	glm::mat4 MVP = glm::mat4(1.0f);

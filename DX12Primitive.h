@@ -10,8 +10,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetHeap() { return CbvSrvUavHeap; }
 	UploadBuffer<ConstantBuffer>* GetCB() { return CB.get(); }
 
-private:
+public:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CbvSrvUavHeap = nullptr;
-	std::unique_ptr<UploadBuffer<ConstantBuffer>> CB = nullptr;
+	std::shared_ptr<UploadBuffer<ConstantBuffer>> CB = nullptr;
 };
 
