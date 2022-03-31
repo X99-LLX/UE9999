@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonBuffer.h" />
-    <ClInclude Include="DX12CommonBuffer.h" />
+    <ClInclude Include="DescHeapManager.h" />
     <ClInclude Include="DX12Mesh.h" />
     <ClInclude Include="DX12Primitive.h" />
     <ClInclude Include="DX12Texture.h" />
@@ -51,7 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CommonBuffer.cpp" />
-    <ClCompile Include="DX12CommonBuffer.cpp" />
+    <ClCompile Include="DescHeapManager.cpp" />
     <ClCompile Include="DX12Mesh.cpp" />
     <ClCompile Include="DX12Primitive.cpp" />
     <ClCompile Include="DX12Texture.cpp" />

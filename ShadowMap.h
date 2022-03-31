@@ -1,23 +1,20 @@
 #pragma once
+#define VIEW_SIZE 4096
 class ShadowMap
 {
 public:
 	ShadowMap() {}
 	~ShadowMap() {}
-	void Init(ID3D12Device* device);
-	void CreateHeap(ID3D12Device* device);
-	void CreateSRVAndDSV(ID3D12Device* device);
-
-
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DsvHeap = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> SrvHeap = nullptr;
+	void Init(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE Hsrv, D3D12_CPU_DESCRIPTOR_HANDLE Hdsv);
+	void CreateSRVAndDSV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE Hsrv, D3D12_CPU_DESCRIPTOR_HANDLE Hdsv);
+	void SetOffset(int s, int d);
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> mShadowMap = nullptr;
 
-	D3D12_DEPTH_STENCIL_VIEW_DESC mDsv;
-	D3D12_SHADER_RESOURCE_VIEW_DESC mSrv;
+	D3D12_VIEWPORT mViewport = { 0.0f, 0.0f, (float)VIEW_SIZE, (float)VIEW_SIZE, 0.0f, 1.0f };
+	D3D12_RECT mScissorRect = { 0, 0, VIEW_SIZE, VIEW_SIZE };
 
-	D3D12_VIEWPORT mViewport = { 0.0f, 0.0f, (float)2000, (float)2000, 0.0f, 1.0f };
-	D3D12_RECT mScissorRect = { 0, 0, 2000, 2000 };
+	int srvOffset = 0;
+	int dsvOffset = 0;
 };
 

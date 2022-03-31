@@ -22,8 +22,10 @@ public:
 	virtual void Swapchain() = 0;
 	virtual void DrawItemShadow(Primitive* actor) = 0;
 	virtual void UpdateLight(const GameTimer& gt) = 0;
-
-
 	virtual void BeginDrawShadow() = 0;
+
+
+	//some test
+	virtual void InputAssetInfo(Mesh* mesh) = 0;
 };
 

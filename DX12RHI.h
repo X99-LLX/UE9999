@@ -6,6 +6,7 @@
 #include "RHI.h"
 #include "ShadowMap.h"
 #include "UpLoadBuffer.h"
+#include "DescHeapManager.h"
 
 class DX12RHI : public RHI
 {
@@ -20,9 +21,9 @@ public:
 
 
 	void OnResize();
-	ID3D12Resource* CurrentBackBuffer()const;
-	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
-	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
+	ID3D12Resource* CurrentBackBuffer();
+	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView();
+	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView();
 	ID3D12Device* GetDevice();
 	ID3D12GraphicsCommandList* GetCmdList();
 	void OpenCmdList();
@@ -34,11 +35,13 @@ public:
 	void Swapchain();
 	void OpenRtv();
 	void CloseRtv();
-	void BuildShadowMap();
-	void DrawShadow();
 	void DrawItemShadow(Primitive* actor);
 	void UpdateLight(const GameTimer& gt);
 	void BeginDrawShadow();
+
+	//some test
+	void InputAssetInfo(Mesh* mesh);
+	void SetDescHeap(HeapType ht);
 
 protected:
 	
@@ -56,10 +59,7 @@ protected:
 	static const int SwapChainBufferCount = 2;
 	int mCurrentBackBuffer = 0;
 
-	
 	Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRtvHeap;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDsvHeap;
 	
 	Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
 	Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
@@ -81,9 +81,6 @@ protected:
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;
 
-	UINT mRtvDescriptorSize = 0;
-	UINT mDsvDescriptorSize = 0;
-	UINT mCbvSrvUavDescriptorSize = 0;
 
 	bool m4xMsaaState = false;
 	UINT m4xMsaaQuality = 0;
@@ -104,5 +101,9 @@ protected:
 
 	glm::mat4 mLightView = glm::mat4(1.0f);
 	glm::mat4 mLightProj = glm::mat4(1.0f);
+
+	DescHeapManager mHeapMng;
+
+	int TEST_dsvoffset = 0;
 };
 

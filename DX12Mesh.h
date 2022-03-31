@@ -5,30 +5,6 @@ class DX12Mesh : public Mesh
 public:
 	DX12Mesh() {}
 	~DX12Mesh() {};
-	DX12Mesh(Mesh* m)
-	{
-		NumLod = m->NumLod;
-		NumVertices = m->NumVertices;
-		NumTriangles = m->NumTriangles;
-		NumIndices = m->NumIndices;
-		MeshName = m->MeshName;
-
-		VertexInfo = m->VertexInfo;
-		color = m->color;
-		Normal = m->Normal;
-		TexCoord = m->TexCoord;
-
-		IndexVector = m->IndexVector;
-
-
-		VertexByteSize = m->VertexByteSize;
-		VertexBufferByteSize = m->VertexBufferByteSize;
-		IndexBufferByteSize = m->IndexBufferByteSize;
-		BufferSize = m->BufferSize;
-
-		VertexCount = m->VertexCount;
-		IndexCount = m->IndexCount;
-	}
 
 	D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW IndexBufferView;
@@ -43,5 +19,6 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
 
 	DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
+	D3D_PRIMITIVE_TOPOLOGY mTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 };
 

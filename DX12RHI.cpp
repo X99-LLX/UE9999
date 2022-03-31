@@ -3,7 +3,6 @@
 #include "Engine.h"
 
 #include "DX12Texture.h"
-#include "DX12CommonBuffer.h"
 #include "DX12Mesh.h"
 #include "DX12Primitive.h"
 
@@ -47,9 +46,6 @@ bool DX12RHI::Init()
 	ThrowIfFailed(md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE,
 		IID_PPV_ARGS(&mFence)));
 
-	mRtvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	mDsvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	mCbvSrvUavDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	//检查是否支持 4X MSAA
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
@@ -65,6 +61,7 @@ bool DX12RHI::Init()
 	m4xMsaaQuality = msQualityLevels.NumQualityLevels;
 	assert(m4xMsaaQuality > 0 && "Unexpected MSAA quality level.");
 
+
 	CreateCommandObjects();
 	CreateSwapChain();
 	CreateRtvAndDsvDescriptorHeap();
@@ -77,9 +74,9 @@ bool DX12RHI::Init()
 	FlushCommandQueue();
 
 
+	mShadowMap->SetOffset(mHeapMng.GetDescNum(HeapType::CBV_SRV_UAV), mHeapMng.GetDescNum(HeapType::DSV));
+	mShadowMap->Init(md3dDevice.Get(),mHeapMng.GetCPUCurrentHandleStart(HeapType::CBV_SRV_UAV),mHeapMng.GetCPUCurrentHandleStart(HeapType::DSV));
 	
-	mShadowMap->Init(md3dDevice.Get());
-
 	return true;
 }
 
@@ -126,13 +123,11 @@ void DX12RHI::OnResize()
 
 	mCurrentBackBuffer = 0;      
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());    
-
+	   
 	for (UINT i = 0; i < SwapChainBufferCount; i++)
 	{
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i])));
-		md3dDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
-		rtvHeapHandle.Offset(1, mRtvDescriptorSize);             
+		md3dDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, mHeapMng.GetCPUCurrentHandleStart(HeapType::RTV));            
 	}
 
 	D3D12_RESOURCE_DESC depthStencilDesc;
@@ -170,7 +165,8 @@ void DX12RHI::OnResize()
 	dsvDesc.Format = mDepthStencilFormat;
 	dsvDesc.Texture2D.MipSlice = 0;
 
-	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());   //创建用于资源访问的深度模板视图
+	TEST_dsvoffset = mHeapMng.GetDescNum(HeapType::DSV);
+	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, mHeapMng.GetCPUCurrentHandleStart(HeapType::DSV));   //创建用于资源访问的深度模板视图
 
 	//改变资源状态类型？
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
@@ -198,22 +194,19 @@ void DX12RHI::OnResize()
 	mScene->mCamera.UpdateProjMatrix(0.25f * glm::pi<float>(), TempWND->GetAspectRatio(), 1.0f, 100000.0f);
 }
 
-ID3D12Resource* DX12RHI::CurrentBackBuffer() const
+ID3D12Resource* DX12RHI::CurrentBackBuffer()
 {
 	return mSwapChainBuffer[mCurrentBackBuffer].Get();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::CurrentBackBufferView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::CurrentBackBufferView()
 {
-	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
-		mRtvHeap->GetCPUDescriptorHandleForHeapStart(),
-		mCurrentBackBuffer,
-		mRtvDescriptorSize);
+	return mHeapMng.GetHeapCPUHandlePos(HeapType::RTV, mCurrentBackBuffer);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::DepthStencilView() const
+D3D12_CPU_DESCRIPTOR_HANDLE DX12RHI::DepthStencilView()
 {
-	return mDsvHeap->GetCPUDescriptorHandleForHeapStart();
+	return mHeapMng.GetHeapCPUHandlePos(HeapType::DSV,TEST_dsvoffset);
 }
 
 ID3D12Device* DX12RHI::GetDevice()
@@ -265,6 +258,7 @@ void DX12RHI::SetRootSignature()
 void DX12RHI::Swapchain()
 {
 	CloseCmdList();
+
 	ThrowIfFailed(mSwapChain->Present(0, 0));
 	mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
 	
@@ -273,27 +267,16 @@ void DX12RHI::Swapchain()
 
 void DX12RHI::DrawInstance(Primitive* actor)
 {
-	auto Temp = dynamic_cast<DX12Primitive*>(actor);
-
-	ID3D12DescriptorHeap* descriptorHeaps[] = { Temp->GetHeap().Get() };
-	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-
+	auto* Temp = dynamic_cast<DX12Primitive*>(actor);
 	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
+	auto* Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
 
-	mCommandList->IASetVertexBuffers(0, 1, &TempMesh->VertexBufferView);
-	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
-	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	InputAssetInfo(actor->GetMesh());
 
 	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &actor->GetTransform().Translation, 0);
 	mCommandList->SetGraphicsRootConstantBufferView(1, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
-	
-
-	mCommandList->SetGraphicsRootDescriptorTable(3, Temp->GetHeap()->GetGPUDescriptorHandleForHeapStart());
-
-	ID3D12DescriptorHeap* descriptorHeaps1[] = { mShadowMap->SrvHeap.Get() };
-	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps1), descriptorHeaps1);
-
-	mCommandList->SetGraphicsRootDescriptorTable(4, mShadowMap->SrvHeap->GetGPUDescriptorHandleForHeapStart());
+	mCommandList->SetGraphicsRootDescriptorTable(2, mHeapMng.GetHeapGPUHandlePos(HeapType::CBV_SRV_UAV,Tex->DescOffset));
+	mCommandList->SetGraphicsRootDescriptorTable(3, mHeapMng.GetHeapGPUHandlePos(HeapType::CBV_SRV_UAV,mShadowMap->srvOffset));
 
 	mCommandList->DrawIndexedInstanced(
 		TempMesh->IndexCount,
@@ -318,27 +301,13 @@ void DX12RHI::CloseRtv()
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 }
 
-void DX12RHI::BuildShadowMap()
-{
-	
-}
-
-void DX12RHI::DrawShadow()
-{
-
-}
-
 void DX12RHI::DrawItemShadow(Primitive* actor)
 {
-	auto Temp = dynamic_cast<DX12Primitive*>(actor);
-	ID3D12DescriptorHeap* descriptorHeaps[] = { Temp->GetHeap().Get() };
-	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+	auto* Temp = dynamic_cast<DX12Primitive*>(actor);
 
 	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
 
-	mCommandList->IASetVertexBuffers(0, 1, &TempMesh->VertexBufferView);
-	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
-	mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	InputAssetInfo(actor->GetMesh());
 
 	glm::mat4 T(
 		0.5f, 0.0f, 0.0f, 0.0f,
@@ -365,10 +334,6 @@ void DX12RHI::DrawItemShadow(Primitive* actor)
 		TempMesh->IndexCount,
 		1, 0, 0, 0);
 }
-
-
-
-
 
 void DX12RHI::UpdateLight(const GameTimer& gt)
 {
@@ -400,58 +365,60 @@ void DX12RHI::UpdateLight(const GameTimer& gt)
 
 }
 
-
 void DX12RHI::BeginDrawShadow()
 {
 	ThrowIfFailed(mDirectCmdListAlloc->Reset());
 	OpenCmdList();
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { mShadowMap->SrvHeap.Get() };
-	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+	SetDescHeap(HeapType::CBV_SRV_UAV);
 
 	mCommandList->SetGraphicsRootSignature(mShadowRS.Get());
 
 	mCommandList->RSSetViewports(1, &mShadowMap->mViewport);
 	mCommandList->RSSetScissorRects(1, &mShadowMap->mScissorRect);
 
-	mCommandList->ClearDepthStencilView(mShadowMap->DsvHeap->GetCPUDescriptorHandleForHeapStart(),
+	mCommandList->ClearDepthStencilView(mHeapMng.GetHeapCPUHandlePos(HeapType::DSV,mShadowMap->dsvOffset),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-
-	mCommandList->OMSetRenderTargets(0, nullptr, false, &mShadowMap->DsvHeap->GetCPUDescriptorHandleForHeapStart());
+	mCommandList->OMSetRenderTargets(0, nullptr, false, &mHeapMng.GetHeapCPUHandlePos(HeapType::DSV,mShadowMap->dsvOffset));
 
 	mCommandList->SetPipelineState(mShadowPSO.Get());
 }
 
+void DX12RHI::InputAssetInfo(Mesh* mesh)
+{
+	auto* TempMesh = dynamic_cast<DX12Mesh*>(mesh);
+	mCommandList->IASetVertexBuffers(0, 1, &TempMesh->VertexBufferView);
+	mCommandList->IASetIndexBuffer(&TempMesh->IndexBufferView);
+	mCommandList->IASetPrimitiveTopology(TempMesh->mTopology);
+}
+
+void DX12RHI::SetDescHeap(HeapType ht)
+{
+	ID3D12DescriptorHeap* descriptorHeaps[] = { mHeapMng.GetHeap(ht) };
+	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+}
+
 void DX12RHI::SetCommonBuffer(Primitive* actor)
 {
-	auto Temp = dynamic_cast<DX12Primitive*>(actor);
-	
-	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-	cbvHeapDesc.NumDescriptors = 1000;
-	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbvHeapDesc.NodeMask = 0;
-
-	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc,
-		IID_PPV_ARGS(&Temp->CbvSrvUavHeap)));
-
+	auto* Temp = dynamic_cast<DX12Primitive*>(actor);
 	Temp->CB = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
-	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = Temp->GetCB()->Resource()->GetGPUVirtualAddress();
-	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(Temp->CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart());
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
+	auto* Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
 	srvDesc.Format = Tex->Resource->GetDesc().Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = Tex->Resource->GetDesc().MipLevels;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-	md3dDevice->CreateShaderResourceView(Tex->Resource.Get(), &srvDesc, hDescriptor);
-	hDescriptor.ptr += md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	md3dDevice->CreateShaderResourceView(Tex->Resource.Get(), &srvDesc, hDescriptor);
-}
 
+	Tex->DescOffset = mHeapMng.GetDescNum(HeapType::CBV_SRV_UAV);
+
+
+	md3dDevice->CreateShaderResourceView(Tex->Resource.Get(), &srvDesc, mHeapMng.GetCPUCurrentHandleStart(HeapType::CBV_SRV_UAV));
+	
+}
 
 void DX12RHI::BuildRootSignature()
 {
@@ -532,8 +499,6 @@ void DX12RHI::BuildPSO()
 		reinterpret_cast<BYTE*>(mShadowPS->GetBufferPointer()),
 		mShadowPS->GetBufferSize()
 	};
-
-	// Shadow map pass does not have a render target.
 	smapPsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 	smapPsoDesc.NumRenderTargets = 0;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&smapPsoDesc, IID_PPV_ARGS(&mShadowPSO)));
@@ -541,9 +506,11 @@ void DX12RHI::BuildPSO()
 
 void DX12RHI::CreateRtvAndDsvDescriptorHeap()
 {
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
+	mHeapMng.InitHeapMng(md3dDevice.Get());
+
+	/*D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
 	rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE(2);
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
@@ -551,11 +518,11 @@ void DX12RHI::CreateRtvAndDsvDescriptorHeap()
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
 	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE(3);
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
-		&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
+		&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));*/
 }
 
 void DX12RHI::CreateSwapChain()
@@ -630,7 +597,7 @@ void DX12RHI::FlushCommandQueue()
 void DX12RHI::BuildGeo(Primitive* actor)
 {
 	OpenCmdList();
-	auto Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
+	auto* Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
 		mCommandList.Get(), Tex->FileName.c_str(),
 		Tex->Resource, Tex->UploadHeap));

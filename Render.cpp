@@ -11,6 +11,7 @@ Render::Render()
 Render::~Render()
 {
 	delete mRHI;
+	mRHI = nullptr;
 }
 
 RHI* Render::GetRHI()
