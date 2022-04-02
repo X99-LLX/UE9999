@@ -5,6 +5,26 @@ class Mesh
 {
 public:
 	Mesh() {}
+	Mesh(Mesh* m)
+	{
+		MeshTex = m->MeshTex;
+		NumLod = m->NumLod;
+		NumVertices = m->NumVertices;
+		NumTriangles = m->NumTriangles;
+		NumIndices = m->NumIndices;
+		MeshName = m->MeshName;
+		VertexInfo = m->VertexInfo;
+		color = m->color;
+		Normal = m->Normal;
+		TexCoord = m->TexCoord;
+		IndexVector = m->IndexVector;
+		VertexByteSize = m->VertexByteSize;
+		VertexBufferByteSize = m->VertexBufferByteSize;
+		IndexBufferByteSize = m->IndexBufferByteSize;
+		BufferSize = m->BufferSize;
+		VertexCount = m->VertexCount;
+		IndexCount = m->IndexCount;
+	}
 	virtual ~Mesh() {}
 
 	UINT32 GetVertexByteStride() const { return VertexByteSize; }
@@ -26,7 +46,6 @@ public:
 	std::vector<glm::vec4> color;
 	std::vector<glm::vec4> Normal;
 	std::vector<glm::vec2> TexCoord;
-
 	std::vector<int> IndexVector;
 
 

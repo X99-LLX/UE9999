@@ -19,7 +19,7 @@ struct Light
 
 
 
-cbuffer cbPerObject : register(b0)
+cbuffer cbPerObject : register(b1)
 {
 	float4x4	Test;
 	float4x4	gTrans;

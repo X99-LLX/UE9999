@@ -1,10 +1,7 @@
 #pragma once
 #define Num_Heap 4
 #define Num_DESC 2048
-/*D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-		D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
-		D3D12_DESCRIPTOR_HEAP_TYPE_RTV
-		D3D12_DESCRIPTOR_HEAP_TYPE_DSV*/
+
 #include "Singleton.h"
 enum class HeapType
 {

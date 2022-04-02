@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CommonBuffer.h" />
+    <ClInclude Include="BasePassShader.h" />
     <ClInclude Include="DescHeapManager.h" />
     <ClInclude Include="DX12Mesh.h" />
+    <ClInclude Include="DX12Pipeline.h" />
     <ClInclude Include="DX12Primitive.h" />
+    <ClInclude Include="DX12Shader.h" />
     <ClInclude Include="DX12Texture.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="d3dUtil.h" />
@@ -34,13 +36,18 @@
     <ClInclude Include="GameLogic.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Pipeline.h" />
     <ClInclude Include="Primitive.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="ResourceManage.h" />
     <ClInclude Include="RHI.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneRender.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap.h" />
+    <ClInclude Include="ShadowPassShader.h" />
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StoWS.h" />
@@ -50,10 +57,12 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CommonBuffer.cpp" />
+    <ClCompile Include="BasePassShader.cpp" />
     <ClCompile Include="DescHeapManager.cpp" />
     <ClCompile Include="DX12Mesh.cpp" />
+    <ClCompile Include="DX12Pipeline.cpp" />
     <ClCompile Include="DX12Primitive.cpp" />
+    <ClCompile Include="DX12Shader.cpp" />
     <ClCompile Include="DX12Texture.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="d3dUtil.cpp" />
@@ -70,13 +79,18 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="Primitive.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="ResourceManage.cpp" />
     <ClCompile Include="RHI.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneRender.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
+    <ClCompile Include="ShadowPassShader.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

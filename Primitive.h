@@ -1,6 +1,5 @@
 #pragma once
 #include "Mesh.h"
-#include "CommonBuffer.h"
 
 class Primitive
 {
@@ -18,6 +17,7 @@ public:
 	glm::mat4 Scale3DTrans = glm::mat4(1.0f);
 	glm::mat4 RotateTrans = glm::mat4(1.0f);
 	glm::mat4 MVP = glm::mat4(1.0f);
+
 	Transform Trans;
 	
 };

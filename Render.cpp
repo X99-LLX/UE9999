@@ -29,50 +29,47 @@ void Render::BuildResource(std::vector<std::shared_ptr<Primitive>> RI)
 
 
 
-void Render::BeginDraw()
+
+
+
+void Render::UpdateRenderData(std::vector<std::shared_ptr<Primitive>> primitives)
+{
+	Scene* mScene = Engine::GetEngine()->GetScene();
+	for (auto actor : primitives)
+	{
+		mRHI->UpdateTrans(mScene, actor.get());
+		mRHI->UpdateLight(*Engine::GetEngine()->GetTimer());
+	}
+}
+
+void Render::DrawScene(std::vector<std::shared_ptr<Primitive>> primitives)
+{
+	mRHI->BeginFrame();
+	UpdateRenderData(primitives);
+	ShadowPass(primitives);
+	BasePass(primitives);
+	mRHI->EndFrame();
+}
+
+void Render::BasePass(std::vector<std::shared_ptr<Primitive>> primitives)
 {
 	mRHI->ResetViewportsAndScissorRects();
 	mRHI->OpenRtv();
 	mRHI->ClearRTVAndDSV();
 	mRHI->SetRTVAndDSV();
 	mRHI->SetRootSignature();
-}
-
-void Render::UpdatePrimitiveTrans(std::vector<std::shared_ptr<Primitive>> primitives)
-{
-	Scene* mScene = Engine::GetEngine()->GetScene();
-	for (auto actor : primitives)
-	{
-		mRHI->UpdateTrans(mScene, actor.get());
-	}
-}
-
-void Render::DrawScene(std::vector<std::shared_ptr<Primitive>> primitives)
-{
-	UpdatePrimitiveTrans(primitives);
-	ShadowPass(primitives);
-	ColorPass(primitives);
-}
-
-void Render::ColorPass(std::vector<std::shared_ptr<Primitive>> primitives)
-{
-	BeginDraw();
 	for (auto actor : primitives)
 	{
 		mRHI->DrawInstance(actor.get());
 	}
-	mRHI->CloseRtv();
-	mRHI->Swapchain();
 }
 
 void Render::ShadowPass(std::vector<std::shared_ptr<Primitive>> primitives)
 {
 	mRHI->BeginDrawShadow();
-	//test
-	mRHI->UpdateLight(*Engine::GetEngine()->GetTimer());
-
 	for (auto actor : primitives)
 	{
+		//mRHI->DrawInstance(actor.get());
 		mRHI->DrawItemShadow(actor.get());
 	}
 }

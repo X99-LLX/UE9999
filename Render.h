@@ -13,10 +13,10 @@ public:
 
 	
 private:
-	void ColorPass(std::vector<std::shared_ptr<Primitive>> primitives);
+	void BasePass(std::vector<std::shared_ptr<Primitive>> primitives);
 	void ShadowPass(std::vector<std::shared_ptr<Primitive>> primitives);
-	void BeginDraw();
-	void UpdatePrimitiveTrans(std::vector<std::shared_ptr<Primitive>> primitives);
+
+	void UpdateRenderData(std::vector<std::shared_ptr<Primitive>> primitives);
 	RHI* CreateRHI();
 
 private:

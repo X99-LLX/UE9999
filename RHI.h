@@ -2,6 +2,7 @@
 
 #include "Scene.h"
 #include "GameTimer.h"
+#include "SceneRender.h"
 
 class RHI 
 {
@@ -19,13 +20,20 @@ public:
 	virtual void SetRootSignature() = 0;
 	virtual void OpenRtv() = 0;
 	virtual void CloseRtv() = 0;
-	virtual void Swapchain() = 0;
 	virtual void DrawItemShadow(Primitive* actor) = 0;
 	virtual void UpdateLight(const GameTimer& gt) = 0;
 	virtual void BeginDrawShadow() = 0;
 
+	virtual Texture* CreateTexture(Texture* t) = 0;
+	/*virtual Material* CreateMaterial(Material* m) = 0;*/
+	virtual Mesh* CreateMesh(Mesh* m) = 0;
+	virtual Pipeline* CreatePipeline(Pipeline* p) = 0;
+	virtual Shader* CreateShader(Shader* s) = 0;
+	virtual Primitive* CreatePrimitive(Primitive* p) = 0;
 
 	//some test
+	virtual void BeginFrame() = 0;
+	virtual void EndFrame() = 0;
 	virtual void InputAssetInfo(Mesh* mesh) = 0;
 };
 

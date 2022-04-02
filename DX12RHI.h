@@ -32,7 +32,7 @@ public:
 	void ClearRTVAndDSV();
 	void SetRTVAndDSV();
 	void SetRootSignature();
-	void Swapchain();
+
 	void OpenRtv();
 	void CloseRtv();
 	void DrawItemShadow(Primitive* actor);
@@ -42,6 +42,9 @@ public:
 	//some test
 	void InputAssetInfo(Mesh* mesh);
 	void SetDescHeap(HeapType ht);
+	void BeginFrame();
+	void EndFrame();
+
 
 protected:
 	
@@ -50,7 +53,6 @@ protected:
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
 	void BuildPSO();
-	void CreateRtvAndDsvDescriptorHeap();
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
@@ -81,10 +83,6 @@ protected:
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;
 
-
-	bool m4xMsaaState = false;
-	UINT m4xMsaaQuality = 0;
-
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> mCommonPSO = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> mShadowPSO = nullptr;
 
@@ -95,6 +93,7 @@ protected:
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> mCommonRS = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> mShadowRS = nullptr;
+
 
 	std::unique_ptr<ShadowMap> mShadowMap = std::make_unique<ShadowMap>();
 

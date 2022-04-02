@@ -118,9 +118,6 @@
     <ClInclude Include="DX12Texture.h">
       <Filter>Engine\Resource\DX12Resource</Filter>
     </ClInclude>
-    <ClInclude Include="CommonBuffer.h">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClInclude>
@@ -132,6 +129,26 @@
     </ClInclude>
     <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="DescHeapManager.h" />
+    <ClInclude Include="ShadowPassShader.h" />
+    <ClInclude Include="BasePassShader.h" />
+    <ClInclude Include="Shader.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Pipeline.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Shader.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneRender.h">
+      <Filter>Engine\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Pipeline.h">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -197,9 +214,6 @@
     <ClCompile Include="DX12Texture.cpp">
       <Filter>Engine\Resource\DX12Resource</Filter>
     </ClCompile>
-    <ClCompile Include="CommonBuffer.cpp">
-      <Filter>Engine\Resource\GPUResource</Filter>
-    </ClCompile>
     <ClCompile Include="Mesh.cpp">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClCompile>
@@ -211,6 +225,26 @@
     </ClCompile>
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="DescHeapManager.cpp" />
+    <ClCompile Include="ShadowPassShader.cpp" />
+    <ClCompile Include="BasePassShader.cpp" />
+    <ClCompile Include="Shader.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipeline.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Pipeline.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Shader.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneRender.cpp">
+      <Filter>Engine\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Engine\Resource\GPUResource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CommonH.hlsli">
