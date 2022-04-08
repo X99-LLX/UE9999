@@ -26,9 +26,18 @@ void SceneRender::AddShader(std::string ShaderName, Shader* s)
 	mShaderPool.insert({ ShaderName,s });
 }
 
-void SceneRender::AddPrimitive(std::string PrimitiveName, Primitive* p)
+void SceneRender::AddPrimitive(Primitive* p)
 {
-	mPrimitivePool.insert({ PrimitiveName,p });
+	mPrimitivePool.push_back(p);
+}
+
+Material* SceneRender::GetMaterial(std::string MaterialName)
+{
+	if (mMaterialPool.find(MaterialName) != mMaterialPool.end())
+	{
+		return mMaterialPool.at(MaterialName);
+	}
+	return nullptr;
 }
 
 Mesh* SceneRender::GetMesh(std::string MeshName)
@@ -36,6 +45,33 @@ Mesh* SceneRender::GetMesh(std::string MeshName)
 	if (mMeshPool.find(MeshName) != mMeshPool.end())
 	{
 		return mMeshPool.at(MeshName);
+	}
+	return nullptr;
+}
+
+Shader* SceneRender::GetShader(std::string ShaderName)
+{
+	if (mShaderPool.find(ShaderName) != mShaderPool.end())
+	{
+		return mShaderPool.at(ShaderName);
+	}
+	return nullptr;
+}
+
+Pipeline* SceneRender::GetPipeline(std::string Pipelinename)
+{
+	if (mPipelinePool.find(Pipelinename) != mPipelinePool.end())
+	{
+		return mPipelinePool.at(Pipelinename);
+	}
+	return nullptr;
+}
+
+Texture* SceneRender::GetTexture(std::string TextureName)
+{
+	if (mTexturePool.find(TextureName) != mTexturePool.end())
+	{
+		return mTexturePool.at(TextureName);
 	}
 	return nullptr;
 }

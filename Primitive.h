@@ -5,20 +5,23 @@ class Primitive
 {
 public:
 	Primitive() {};
+	Primitive(Primitive* p)
+	{
+		MeshName = p->GetMeshName();
+		Trans = p->GetTransform();
+	}
 	virtual ~Primitive() {}
+
+	void SetWorldTrans(glm::mat4 wt) { WorldTrans = wt; }
+	void SetMeshName(std::string n) { MeshName = n; }
+
+	glm::mat4 GetWorldTrans() { return WorldTrans; }
 	Transform& GetTransform() { return Trans; }
-	Mesh* GetMesh() { return MeshBuffer.get(); }
-
-	std::string MeshName;
-
-	std::shared_ptr<Mesh> MeshBuffer;
-
-	glm::mat4 WorldTrans = glm::mat4(1.0f);
-	glm::mat4 Scale3DTrans = glm::mat4(1.0f);
-	glm::mat4 RotateTrans = glm::mat4(1.0f);
-	glm::mat4 MVP = glm::mat4(1.0f);
-
-	Transform Trans;
+	std::string GetMeshName() { return MeshName; }
 	
+protected:
+	glm::mat4 WorldTrans = glm::mat4(1.0f);
+	std::string MeshName;
+	Transform Trans;
 };
 

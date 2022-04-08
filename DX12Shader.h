@@ -36,28 +36,21 @@ class DX12Shader :
 {
 public:
 	DX12Shader() {}
-	DX12Shader(const std::string ShaderName, const std::wstring FilePath, std::string VS = "VS", std::string PS = "PS");
+	DX12Shader(Shader* s) : Shader(s) {}
+	~DX12Shader() {}
 
-	void SetRootSignature(Microsoft::WRL::ComPtr<ID3D12RootSignature>& RootSignature) { RootSignature = RootSignature; }
+	void SetRootSignature(Microsoft::WRL::ComPtr<ID3D12RootSignature>& RootSignature) { mRootSignature = RootSignature; }
 	void SetVS(Microsoft::WRL::ComPtr<ID3DBlob>& VS) { mVS = VS; }
 	void SetPS(Microsoft::WRL::ComPtr<ID3DBlob>& PS) { mPS = PS; }
-	void SetRasterizerState(D3D12_RASTERIZER_DESC RasterizerState) { PRasterizerState = RasterizerState; }
-	void SetDepthStencilState(D3D12_DEPTH_STENCIL_DESC DepthStencilState) { PDepthStencilState = DepthStencilState; }
-	void SetBlendState(D3D12_BLEND_DESC BlendState) { PBlendState = BlendState; }
 
-	void SetPSODesc(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc);
-	std::unordered_map<UINT, UINT> GetParamMap() { return ParamMap; }
-	std::vector<ShaderParameter> GetParams() { return Params; }
+	Microsoft::WRL::ComPtr<ID3DBlob> GetVS() { return mVS; }
+	Microsoft::WRL::ComPtr<ID3DBlob> GetPS() { return mPS; }
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> GetRootSignature() { return mRootSignature; }
 
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> GetRootSignature() { return RootSignature; }
+	std::vector<D3D12_INPUT_ELEMENT_DESC> InputLayOut;
 protected:
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> RootSignature;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature;
 	Microsoft::WRL::ComPtr<ID3DBlob> mVS;
 	Microsoft::WRL::ComPtr<ID3DBlob> mPS;
-	std::unordered_map<UINT, UINT> ParamMap;
-	std::vector<ShaderParameter> Params;
-	D3D12_RASTERIZER_DESC PRasterizerState;
-	D3D12_DEPTH_STENCIL_DESC PDepthStencilState;
-	D3D12_BLEND_DESC PBlendState;
 };
 

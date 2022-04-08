@@ -24,7 +24,7 @@ public:
 	{
 		return *mSingleton;
 	}
-	static T* GetSingletonPtr()
+	static T* Get()
 	{
 		return mSingleton;
 	}

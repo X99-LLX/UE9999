@@ -3,13 +3,7 @@
 #define Num_DESC 2048
 
 #include "Singleton.h"
-enum class HeapType
-{
-	CBV_SRV_UAV = 0,
-	SAMPLER = 1,
-	RTV = 2,
-	DSV = 3,
-};
+
 
 
 

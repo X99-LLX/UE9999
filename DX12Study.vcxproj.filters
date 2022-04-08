@@ -149,6 +149,7 @@
     <ClInclude Include="Pipeline.h">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClInclude>
+    <ClInclude Include="Light.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -245,6 +246,7 @@
     <ClCompile Include="Material.cpp">
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClCompile>
+    <ClCompile Include="Light.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CommonH.hlsli">

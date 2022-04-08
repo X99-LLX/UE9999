@@ -21,10 +21,10 @@ struct Light
 
 cbuffer cbPerObject : register(b1)
 {
-	float4x4	Test;
-	float4x4	gTrans;
+	float4x4	LightTVP;
+	float4x4	LightMVP;
 	float4x4	gWorld;
-	float4x4	gWorldViewProj;
+	float4x4	CameraMVP;
 	float4x4	gScale3D;
 	float4x4	gRotate;
 	float		gOffset;
@@ -73,7 +73,7 @@ VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	
-	vout.PosH = mul(float4(vin.PosL, 1.0f), gTrans);
+	vout.PosH = mul(float4(vin.PosL, 1.0f), LightMVP);
 
 	vout.Color = vin.Color;
 	vout.Normal = vin.Normal;

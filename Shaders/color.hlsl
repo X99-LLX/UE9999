@@ -12,13 +12,18 @@ float4	CameraLoc	:	register(b0);
 
 cbuffer cbPerObject : register(b1)
 {
-	float4x4	gTTrans;
-	float4x4	gTrans;
+	float4x4	LightTVP;
+	float4x4	LightMVP;
 	float4x4	gWorld;
-	float4x4	gWorldViewProj; 
+	float4x4	CameraMVP;
 	float4x4	gScale3D;
 	float4x4	gRotate;
 	float		gOffset;
+};
+
+cbuffer MatData : register(b2)
+{
+	
 };
 
 struct VertexIn
@@ -75,13 +80,13 @@ VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 
-	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
+	vout.PosH = mul(float4(vin.PosL, 1.0f), CameraMVP);
 
     vout.Color = vin.Color;
 	vout.Normal = mul(vin.Normal,gRotate);
 	vout.TexCoord = vin.TexCoord;
 
-	vout.ShadowPos = mul(mul(float4(vin.PosL, 1.0f), gWorld), gTTrans);
+	vout.ShadowPos = mul(mul(float4(vin.PosL, 1.0f), gWorld), LightTVP);
     return vout;
 }
 

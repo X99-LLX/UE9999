@@ -1,20 +1,32 @@
 #pragma once
 #include "Shader.h"
 
+enum class PsoType
+{
+	BasePSO,
+	ShadowPSO,
+};
+
 class Pipeline
 {
 public:
 	Pipeline() {}
-	Pipeline(Shader* Shader);
 	Pipeline(Pipeline* p)
 	{
-		PipelineShader = p->GetShader();
+		ShaderName = p->GetShaderName();
+		PsoName = p->GetPsoName();
 	}
 	virtual ~Pipeline();
+	void SetPsoName(std::string n) { PsoName = n; }
+	void SetShaderName(std::string n) { ShaderName = n; }
 
-	virtual Shader* GetShader() { return PipelineShader; }
-	virtual std::string GetShaderName() { return PipelineShader->GetShaderName(); }
+	std::string GetPsoName() { return PsoName; }
+	std::string GetShaderName() { return ShaderName; }
+
+	PsoType mType;
+
 protected:
-	Shader* PipelineShader;
+	std::string ShaderName;
+	std::string PsoName;
 };
 

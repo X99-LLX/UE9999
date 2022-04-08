@@ -37,7 +37,7 @@ bool Engine::Run()
 	MSG msg = { 0 };
 	mTimer.Reset();
 
-	TestRender.BuildResource(mScene.Actors1);
+	TestRender.BuildResource();
 
 	while (msg.message != WM_QUIT)
 	{
@@ -50,7 +50,7 @@ bool Engine::Run()
 		{
 			mTimer.Tick();
 			mWindow->GetInput()->Update();
-			TestRender.DrawScene(mScene.Actors1);
+			TestRender.TestDraw();
 		}
 	}
 	

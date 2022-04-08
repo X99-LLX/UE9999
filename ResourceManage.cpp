@@ -2,9 +2,7 @@
 #include "ResourceManage.h"
 #include "Engine.h"
 #include "StoWS.h"
-#include "DX12Primitive.h"
-#include "DX12Mesh.h"
-#include "DX12Texture.h"
+
 
 ResourceManage::~ResourceManage()
 {
@@ -20,6 +18,7 @@ bool ResourceManage::Init()
 
 void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Primitive>>& Actors)
 {
+	LoadTexture("jacket_diff");
 	std::string FilePath = "Data/" + MapName + ".dat";
 	std::ifstream fin(FilePath, std::ios::binary);
 
@@ -33,86 +32,110 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 
 	for (int i = 0; i < Num; i++)
 	{
-#ifdef _RHI_DX12
-		auto actorinfo = std::make_shared<DX12Primitive>();
-#endif
+
+		auto actorinfo = std::make_shared<Primitive>();
 		INT32 TempNum;
 		fin.read((char*)&actorinfo->GetTransform(), sizeof(int) * 10);
 		fin.read((char*)&TempNum, sizeof(int));
-		actorinfo->MeshName.resize(TempNum);
-		fin.read((char*)actorinfo->MeshName.data(), TempNum);
-		actorinfo->MeshBuffer = LoadMeshAsset(actorinfo->MeshName);
+		std::string name;
+		name.resize(TempNum);
+		fin.read((char*)name.data(), TempNum);
+		actorinfo->SetMeshName(name);
 		Actors.push_back(actorinfo);
+		LoadMeshAsset(actorinfo->GetMeshName());
+
 	}
 	fin.close();
 
-	LoadTexture("jacket_diff");
+	CreateShader("BaseShader", L"Shaders\\color.hlsl");
+	CreateShader("ShadowShader", L"Shaders\\Shadows.hlsl");
+	CreatePipeline("BaseShader", "BasePSO", PsoType::BasePSO);
+	CreatePipeline("ShadowShader", "ShadowPSO", PsoType::ShadowPSO);
+	CreateMaterial("BaseMaterial", "BasePSO");
 }
 
 Texture* ResourceManage::GetTexture(std::string name)
 {
-	return TextureAsset1.find(name)->second.get();
+	return TextureAsset.find(name)->second.get();
 }
 
-std::shared_ptr<Mesh> ResourceManage::LoadMeshAsset(std::string filename)
+void ResourceManage::LoadMeshAsset(std::string filename)
 {
 	filename = filename.erase(filename.length() - 1, 1);
 	std::string FilePath = "Data/" + filename + ".dat";
 	std::ifstream fin(FilePath, std::ios::binary);
-	if (!fin.is_open())
+
+	if (MeshAsset.find(filename) == MeshAsset.end())
 	{
-		return nullptr;
-	}
-	if (MeshAsset1.find(filename) == MeshAsset1.end())
-	{
-#ifdef _RHI_DX12
-		auto meshinfo = std::make_shared<DX12Mesh>();
-#endif
+		int test;
+		auto meshinfo = std::make_shared<Mesh>();
 		INT32 Num;
 		fin.read((char*)&Num, sizeof(int));
-		meshinfo->MeshName.resize(Num);
-		fin.read((char*)meshinfo->MeshName.data(), Num);
-		fin.read((char*)&meshinfo->NumLod, sizeof(int));
-		fin.read((char*)&meshinfo->NumVertices, sizeof(int));
-		fin.read((char*)&meshinfo->NumTriangles, sizeof(int));
-		fin.read((char*)&meshinfo->NumIndices, sizeof(int));
+		std::string name;
+		name.resize(Num);
+		fin.read((char*)name.data(), Num);
+		meshinfo->SetName(name);
+		fin.read((char*)&test, sizeof(int));
+		fin.read((char*)&test, sizeof(int));
+		fin.read((char*)&test, sizeof(int));
+		fin.read((char*)&test, sizeof(int));
 		fin.read((char*)&Num, sizeof(int));
-		meshinfo->IndexVector.resize(Num);
-		fin.read((char*)meshinfo->IndexVector.data(), sizeof(int) * Num);
+		MeshVertexInfo temp = meshinfo->GetVertexinfo();
+		temp.mIndex.resize(Num);
+		fin.read((char*)temp.mIndex.data(), sizeof(int) * Num);
 		fin.read((char*)&Num, sizeof(int));
-		meshinfo->VertexInfo.resize(Num);
-		fin.read((char*)meshinfo->VertexInfo.data(), sizeof(glm::vec3) * Num);
+		temp.mVertex.resize(Num);
+		fin.read((char*)temp.mVertex.data(), sizeof(glm::vec3) * Num);
 		fin.read((char*)&Num, sizeof(int));
-		meshinfo->Normal.resize(Num);
-		fin.read((char*)meshinfo->Normal.data(), sizeof(glm::vec4) * Num);
+		temp.mNormal.resize(Num);
+		fin.read((char*)temp.mNormal.data(), sizeof(glm::vec4) * Num);
 		fin.read((char*)&Num, sizeof(int));
-		meshinfo->TexCoord.resize(Num);
-		fin.read((char*)meshinfo->TexCoord.data(), sizeof(glm::vec2) * Num);
+		temp.mTexCoord.resize(Num);
+		fin.read((char*)temp.mTexCoord.data(), sizeof(glm::vec2) * Num);
 		fin.close();
-
-		meshinfo->MeshTex = std::make_shared<DX12Texture>("jacket_diff", L"Textures/jacket_diff.dds");
-
-		MeshAsset1.insert({ filename ,meshinfo });
-		return meshinfo;
-	}
-	else
-	{
-		return MeshAsset1.find(filename)->second;
+		meshinfo->SetMeshInfo(temp);
+		meshinfo->SetMaterialName("BaseMaterial");
+		MeshAsset.insert({ filename ,meshinfo });
 	}
 }
 
 void ResourceManage::ClearAsset()
 {
-	MeshAsset1.clear();
-	TextureAsset1.clear();
+	MeshAsset.clear();
+	TextureAsset.clear();
+	MaterialAsset.clear();
 }
 
 void ResourceManage::LoadTexture(std::string Name)
 {
-#ifdef _RHI_DX12
-	auto Tex = std::make_shared<DX12Texture>();
-	Tex->TextureName = Name;
-	Tex->FileName = L"Textures/" + SToWS(Name) + L".dds";
-	TextureAsset1.insert({ Name, Tex });
-#endif
+	auto Tex = std::make_shared<Texture>();
+	Tex->SetName(Name);
+	Tex->SetPath(L"Textures/" + SToWS(Name) + L".dds");
+	TextureAsset.insert({ Name, Tex });
+}
+
+void ResourceManage::CreateMaterial(std::string materialname, std::string pipelinename)
+{
+	auto material = std::make_shared<Material>();
+	material->SetName(materialname);
+	material->SetPipeline(pipelinename);
+	material->AddTexture("jacket_diff");
+	MaterialAsset.insert({ materialname,material });
+}
+
+void ResourceManage::CreatePipeline(std::string shadername, std::string PsoName, PsoType pt)
+{
+	auto pipeline = std::make_shared<Pipeline>();
+	pipeline->SetShaderName(shadername);
+	pipeline->SetPsoName(PsoName);
+	pipeline->mType = pt;
+	PipelineAsset.insert({ PsoName,pipeline });
+}
+
+void ResourceManage::CreateShader(std::string shadername, std::wstring path)
+{
+	auto shader = std::make_shared<Shader>();
+	shader->SetName(shadername);
+	shader->SetPath(path);
+	ShaderAsset.insert({ shadername,shader });
 }

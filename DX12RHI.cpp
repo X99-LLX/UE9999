@@ -2,10 +2,11 @@
 #include "DX12RHI.h"
 #include "Engine.h"
 
+#include "DX12Pipeline.h"
 #include "DX12Texture.h"
 #include "DX12Mesh.h"
 #include "DX12Primitive.h"
-
+#include "DX12Shader.h"
 
 DX12RHI::DX12RHI()
 {
@@ -46,7 +47,6 @@ bool DX12RHI::Init()
 	ThrowIfFailed(md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE,
 		IID_PPV_ARGS(&mFence)));
 
-
 	//检查是否支持 4X MSAA
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
 	msQualityLevels.Format = mBackBufferFormat;
@@ -57,57 +57,15 @@ bool DX12RHI::Init()
 		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
 		&msQualityLevels,
 		sizeof(msQualityLevels)));
-
-
-
 	CreateCommandObjects();
 	CreateSwapChain();
 	mHeapMng.InitHeapMng(md3dDevice.Get());
 	OnResize();
-	
-	BuildShadersAndInputLayout();
-	BuildRootSignature();
-	BuildPSO();
-	
+	BuildInputLayout();
 	FlushCommandQueue();
-
-
 	mShadowMap->SetOffset(mHeapMng.GetDescNum(HeapType::CBV_SRV_UAV), mHeapMng.GetDescNum(HeapType::DSV));
 	mShadowMap->Init(md3dDevice.Get(),mHeapMng.GetCPUCurrentHandleStart(HeapType::CBV_SRV_UAV),mHeapMng.GetCPUCurrentHandleStart(HeapType::DSV));
-	
 	return true;
-}
-
-void DX12RHI::UpdateTrans(Scene* mScene, Primitive* actor)
-{
-	mScene->mCamera.UpdateViewMatrix();
-	
-	actor->WorldTrans = glm::translate(glm::mat4(1.0f), actor->GetTransform().Translation);
-	actor->Scale3DTrans = glm::scale(glm::mat4(1.0f), actor->GetTransform().Scale3D);
-
-	actor->RotateTrans = glm::mat4_cast(glm::qua<float>(actor->GetTransform().Rotation.w, actor->GetTransform().Rotation.x,
-		actor->GetTransform().Rotation.y, actor->GetTransform().Rotation.z));
-	glm::mat4 worldViewProj =  mScene->mCamera.GetProj() * mScene->mCamera.GetView()
-		* actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans;
-	actor->MVP = worldViewProj;
-
-	glm::mat4 T(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
-
-	auto* Temp = dynamic_cast<DX12Primitive*>(actor);
-	ConstantBuffer objConstants;
-	objConstants.TTrans = glm::transpose(T * mLightProj * mLightView);
-	objConstants.Tans = glm::transpose(mLightProj * mLightView * actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans);
-	objConstants.World = glm::transpose(actor->WorldTrans * actor->RotateTrans * actor->Scale3DTrans);
-	objConstants.MVP = glm::transpose(actor->MVP);
-	objConstants.Scale3D = actor->Scale3DTrans;
-	objConstants.Rotate = actor->RotateTrans;
-	objConstants.Offset = Engine::GetEngine()->GetTimer()->TotalTime();
-
-	Temp->GetCB()->CopyData(0, objConstants);
 }
  
 void DX12RHI::OnResize()
@@ -230,48 +188,45 @@ void DX12RHI::CloseCmdList()
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 }
 
-void DX12RHI::ResetViewportsAndScissorRects()
+void DX12RHI::ResetViewportsAndScissorRects(RtType rt)
 {
-	mCommandList->RSSetViewports(1, &mScreenViewport);
-	mCommandList->RSSetScissorRects(1, &mScissorRect);
+	if (rt == RtType::BaseRt)
+	{
+		mCommandList->RSSetViewports(1, &mScreenViewport);
+		mCommandList->RSSetScissorRects(1, &mScissorRect);
+	}
+	else
+	{
+		mCommandList->RSSetViewports(1, &mShadowMap->mViewport);
+		mCommandList->RSSetScissorRects(1, &mShadowMap->mScissorRect);
+	}
 }
 
-void DX12RHI::ClearRTVAndDSV()
+void DX12RHI::SetRTVAndDSV(RtType rt)
 {
-	float BackColor[4] = { 1.000000000f, 0.713725507f, 0.756862819f, 1.000000000f };
-	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), BackColor, 0, nullptr);
-	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	if (rt == RtType::BaseRt)
+	{
+		float BackColor[4] = { 1.000000000f, 0.713725507f, 0.756862819f, 1.000000000f };
+		mCommandList->ClearRenderTargetView(CurrentBackBufferView(), BackColor, 0, nullptr);
+		mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+		mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+	}
+	else
+	{
+		mCommandList->ClearDepthStencilView(mHeapMng.GetHeapCPUHandlePos(HeapType::DSV, mShadowMap->dsvOffset),
+			D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+		mCommandList->OMSetRenderTargets(0, nullptr, false, &mHeapMng.GetHeapCPUHandlePos(HeapType::DSV, mShadowMap->dsvOffset));
+	}
 }
 
-void DX12RHI::SetRTVAndDSV()
+void DX12RHI::SetRootSignature(Shader* s)
 {
-	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+	auto ds = dynamic_cast<DX12Shader*>(s);
+	auto rs = ds->GetRootSignature();
+	mCommandList->SetGraphicsRootSignature(rs.Get());
 }
 
-void DX12RHI::SetRootSignature()
-{
-	mCommandList->SetGraphicsRootSignature(mCommonRS.Get());
-	mCommandList->SetPipelineState(mCommonPSO.Get());
-}
-
-void DX12RHI::DrawInstance(Primitive* actor)
-{
-	auto* Temp = dynamic_cast<DX12Primitive*>(actor);
-	auto* Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
-
-	InputAssetInfo(actor->GetMesh());
-
-	mCommandList->SetGraphicsRoot32BitConstants(0, 3, &actor->GetTransform().Translation, 0);
-	mCommandList->SetGraphicsRootConstantBufferView(1, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
-	mCommandList->SetGraphicsRootDescriptorTable(2, mHeapMng.GetHeapGPUHandlePos(HeapType::CBV_SRV_UAV,Tex->DescOffset));
-	mCommandList->SetGraphicsRootDescriptorTable(3, mHeapMng.GetHeapGPUHandlePos(HeapType::CBV_SRV_UAV,mShadowMap->srvOffset));
-
-	mCommandList->DrawIndexedInstanced(
-		actor->GetMesh()->IndexCount,
-		1, 0, 0, 0);
-}
-
-void DX12RHI::OpenRtv()
+void DX12RHI::ChangeResState()
 {
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
@@ -289,55 +244,17 @@ void DX12RHI::CloseRtv()
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 }
 
-void DX12RHI::DrawItemShadow(Primitive* actor)
-{
-	auto* Temp = dynamic_cast<DX12Primitive*>(actor);
-	InputAssetInfo(actor->GetMesh());
-	mCommandList->SetGraphicsRootConstantBufferView(1, Temp->GetCB()->Resource()->GetGPUVirtualAddress());
-
-	mCommandList->DrawIndexedInstanced(
-		actor->GetMesh()->IndexCount,
-		1, 0, 0, 0);
-}
-
-void DX12RHI::UpdateLight(const GameTimer& gt)
-{
-	glm::vec3 lightPos = { -2000.0f,0.0f,1500.0f };
-	glm::vec3 targetPos = { 1.0f,0.0f,-0.7f };
-	glm::vec3 lightUp = glm::vec3(0.0f, 0.0f, 1.0f);
-
-	int a = gt.TotalTime();
-	
-	lightPos = glm::vec4(lightPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a / 2 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-	targetPos = glm::vec4(targetPos, 0.0f) * glm::rotate(glm::mat4(1.0f), a / 2 * glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-	glm::mat4 lightView = glm::lookAtLH(lightPos, lightPos + targetPos, lightUp);
-
-	glm::vec3 LS = d3dUtil::Vector3TransformCoord(targetPos, lightView);
-
-	float Radius = 2500;
-	
-	float l = LS.x - Radius;
-	float b = LS.y - Radius;
-	float n = LS.z - Radius;
-	float r = LS.x + Radius;
-	float t = LS.y + Radius;
-	float f = LS.z + Radius;
-
-	glm::mat4 lightProj = glm::orthoLH_ZO(l, r, b, t, n, f);
-
-	mLightView = lightView;
-	mLightProj = lightProj;
-
-}
-
 void DX12RHI::BeginDrawShadow()
 {
 	mCommandList->SetGraphicsRootSignature(mShadowRS.Get());
+
 	mCommandList->RSSetViewports(1, &mShadowMap->mViewport);
 	mCommandList->RSSetScissorRects(1, &mShadowMap->mScissorRect);
+
 	mCommandList->ClearDepthStencilView(mHeapMng.GetHeapCPUHandlePos(HeapType::DSV,mShadowMap->dsvOffset),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 	mCommandList->OMSetRenderTargets(0, nullptr, false, &mHeapMng.GetHeapCPUHandlePos(HeapType::DSV,mShadowMap->dsvOffset));
+	
 	mCommandList->SetPipelineState(mShadowPSO.Get());
 }
 
@@ -357,7 +274,7 @@ void DX12RHI::SetDescHeap(HeapType ht)
 
 void DX12RHI::BeginFrame()
 {
-	ThrowIfFailed(mDirectCmdListAlloc->Reset());
+	//ThrowIfFailed(mDirectCmdListAlloc->Reset());
 	OpenCmdList();
 	SetDescHeap(HeapType::CBV_SRV_UAV);
 }
@@ -375,52 +292,179 @@ void DX12RHI::EndFrame()
 	FlushCommandQueue();
 }
 
-
-
-void DX12RHI::SetCommonBuffer(Primitive* actor)
+void DX12RHI::BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht)
 {
-	auto* Temp = dynamic_cast<DX12Primitive*>(actor);
-	Temp->CB = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
+	//must fix ,write first
+	if (ht == HeapType::SAMPLER)
+	{
+		mCommandList->SetGraphicsRootDescriptorTable(4, mHeapMng.GetHeapGPUHandlePos(HeapType::CBV_SRV_UAV, mShadowMap->srvOffset));
+	}
+	else
+	{
+		mCommandList->SetGraphicsRootDescriptorTable(Slot, mHeapMng.GetHeapGPUHandlePos(ht, HandleOffset));
+	}
+}
 
+void DX12RHI::BindDataConstantBuffer(UINT32 Slot, UINT32 Address)
+{
+	mCommandList->SetGraphicsRootConstantBufferView(1, Address);
+}
+
+void DX12RHI::Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset)
+{
+	mCommandList->SetGraphicsRoot32BitConstants(Slot, num, data, offset);
+}
+
+void DX12RHI::DrawMesh(UINT32 IndexCount)
+{
+	mCommandList->DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
+}
+
+Texture* DX12RHI::CreateTexture(Texture* t)
+{
+	auto Tex = new DX12Texture(t);
+	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
+		mCommandList.Get(), Tex->GetPath().c_str(),
+		Tex->GetResource(), Tex->GetUploader()));
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	auto* Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
-	srvDesc.Format = Tex->Resource->GetDesc().Format;
+	srvDesc.Format = Tex->GetResource()->GetDesc().Format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = Tex->Resource->GetDesc().MipLevels;
+	srvDesc.Texture2D.MipLevels = Tex->GetResource()->GetDesc().MipLevels;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-	Tex->DescOffset = mHeapMng.GetDescNum(HeapType::CBV_SRV_UAV);
-
-
-	md3dDevice->CreateShaderResourceView(Tex->Resource.Get(), &srvDesc, mHeapMng.GetCPUCurrentHandleStart(HeapType::CBV_SRV_UAV));
+	Tex->SetViewOffset(mHeapMng.GetDescNum(HeapType::CBV_SRV_UAV));
+	md3dDevice->CreateShaderResourceView(Tex->GetResource().Get(), &srvDesc, mHeapMng.GetCPUCurrentHandleStart(HeapType::CBV_SRV_UAV));
 	
+	return Tex;
+
 }
 
-void DX12RHI::BuildRootSignature()
+Mesh* DX12RHI::CreateMesh(Mesh* m)
 {
-	ThrowIfFailed(md3dDevice->CreateRootSignature(
-		0,
-		mCommonVS->GetBufferPointer(),
-		mCommonVS->GetBufferSize(),
-		IID_PPV_ARGS(&mCommonRS)));
+	auto mesh = new DX12Mesh(m);
+	std::vector<int> indices;
+	std::vector<Vertex> vertices;
+	MeshVertexInfo Vectexs = mesh->GetVertexinfo();
 
-	ThrowIfFailed(md3dDevice->CreateRootSignature(
-		0,
-		mShadowVS->GetBufferPointer(),
-		mShadowVS->GetBufferSize(),
-		IID_PPV_ARGS(&mShadowRS)));
+	for (int i = 0; i < Vectexs.mVertex.size(); i++)
+	{
+		vertices.push_back({ Vectexs.mVertex[i],glm::vec4(1.0f),Vectexs.mNormal[i] ,Vectexs.mTexCoord[i] });
+	}
+
+	indices.insert(indices.end(), Vectexs.mIndex.begin(), Vectexs.mIndex.end());
+
+	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+	const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
+
+	mesh->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+		mCommandList.Get(), vertices.data(), vbByteSize, mesh->BufferUploader);
+	mesh->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+		mCommandList.Get(), indices.data(), ibByteSize, mesh->BufferUploader);
+
+	mesh->IndexCount = (UINT32)indices.size();
+
+	D3D12_VERTEX_BUFFER_VIEW vbv;
+	vbv.BufferLocation = mesh->VertexBufferGPU->GetGPUVirtualAddress();
+	vbv.StrideInBytes = sizeof(Vertex);
+	vbv.SizeInBytes = vbByteSize;
+	mesh->VertexBufferView = vbv;
+
+	D3D12_INDEX_BUFFER_VIEW ibv;
+	ibv.BufferLocation = mesh->IndexBufferGPU->GetGPUVirtualAddress();
+	ibv.Format = mesh->IndexFormat;
+	ibv.SizeInBytes = ibByteSize;
+	mesh->IndexBufferView = ibv;
+	return mesh;
 }
 
-void DX12RHI::BuildShadersAndInputLayout()
+Pipeline* DX12RHI::CreatePipeline(Pipeline* p)
 {
-	mCommonVS = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	mCommonPS = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	auto Pso = new DX12Pipeline(p);
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	auto il = SceneRender::Get()->GetShader(Pso->GetShaderName());
+	auto dxil = dynamic_cast<DX12Shader*>(il);
 
-	mShadowVS = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "VS", "vs_5_0");
-	mShadowPS = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "PS", "ps_5_0");
+	psoDesc.InputLayout = { dxil->InputLayOut.data(), (UINT)dxil->InputLayOut.size() };
+	psoDesc.pRootSignature = dxil->GetRootSignature().Get();
+	psoDesc.VS =
+	{
+		reinterpret_cast<BYTE*>(dxil->GetVS()->GetBufferPointer()),
+		dxil->GetVS()->GetBufferSize()
+	};
+	psoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(dxil->GetPS()->GetBufferPointer()),
+		dxil->GetPS()->GetBufferSize()
+	};
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.FrontCounterClockwise = true;
+	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = mBackBufferFormat;
+	psoDesc.SampleDesc.Count = false ? 4 : 1;
+	psoDesc.SampleDesc.Quality = false ? (0 - 1) : 0;
+	psoDesc.DSVFormat = mDepthStencilFormat;
 
+	if (Pso->mType == PsoType::ShadowPSO)
+	{
+		psoDesc.RasterizerState.DepthBias = 5000000000;
+		psoDesc.RasterizerState.DepthBiasClamp = 0.0f;
+		psoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
+		psoDesc.pRootSignature = mShadowRS.Get();
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+		psoDesc.NumRenderTargets = 0;
+	}
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> TempPso;
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&TempPso)));
+	Pso->SetPipeline(TempPso);
+	return Pso;
+}
+
+Shader* DX12RHI::CreateShader(Shader* s)
+{
+	auto shader = new DX12Shader(s);
+	auto a = s->GetShaderFilePath();
+	auto vs = d3dUtil::CompileShader(s->GetShaderFilePath(), nullptr, "VS", "vs_5_0");
+	auto ps = d3dUtil::CompileShader(s->GetShaderFilePath(), nullptr, "PS", "ps_5_0");
+	shader->SetVS(vs);
+	shader->SetPS(ps);
+
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> TempRS;
+
+	ThrowIfFailed(md3dDevice->CreateRootSignature(
+		0,
+		shader->GetVS()->GetBufferPointer(),
+		shader->GetVS()->GetBufferSize(),
+		IID_PPV_ARGS(&TempRS)));
+
+	shader->SetRootSignature(TempRS);
+	shader->InputLayOut = mInputLayout;
+	return shader;
+}
+
+Primitive* DX12RHI::CreatePrimitive(Primitive* p)
+{
+	auto primitive = new DX12Primitive(p);
+	auto cb = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
+	primitive->SetCB(cb);
+	return primitive;
+}
+
+void DX12RHI::SetPSO(Pipeline* pl)
+{
+	auto DXpl = dynamic_cast<DX12Pipeline*>(pl);
+	auto pso = DXpl->GetPipelineState();
+	mCommandList->SetPipelineState(pso.Get());
+}
+
+void DX12RHI::BuildInputLayout()
+{
 	mInputLayout =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -479,8 +523,6 @@ void DX12RHI::BuildPSO()
 	smapPsoDesc.NumRenderTargets = 0;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&smapPsoDesc, IID_PPV_ARGS(&mShadowPSO)));
 }
-
-
 
 void DX12RHI::CreateSwapChain()
 {
@@ -551,51 +593,5 @@ void DX12RHI::FlushCommandQueue()
 	}
 }
 
-void DX12RHI::BuildGeo(Primitive* actor)
-{
-	OpenCmdList();
-	auto* Tex = dynamic_cast<DX12Texture*>(actor->GetMesh()->MeshTex.get());
-	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
-		mCommandList.Get(), Tex->FileName.c_str(),
-		Tex->Resource, Tex->UploadHeap));
-	std::vector<int> indices;
-	std::vector<Vertex> vertices;
-	SetCommonBuffer(actor);
-	auto* TempMesh = dynamic_cast<DX12Mesh*>(actor->GetMesh());
-	
-	for (int i = 0; i < TempMesh->NumVertices; i++)
-	{
-		vertices.push_back({ TempMesh->VertexInfo[i],glm::vec4(1.0f),TempMesh->Normal[i] ,TempMesh->TexCoord[i]});
-	}
 
-	indices.insert(indices.end(), TempMesh->IndexVector.begin(), TempMesh->IndexVector.end());
-
-	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-	const UINT ibByteSize = (UINT)indices.size() * sizeof(int);
-
-	TempMesh->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), vertices.data(), vbByteSize, TempMesh->BufferUploader);
-	TempMesh->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), indices.data(), ibByteSize, TempMesh->BufferUploader);
-
-	TempMesh->VertexByteSize = sizeof(Vertex);
-	TempMesh->VertexBufferByteSize = vbByteSize;
-	TempMesh->IndexBufferByteSize = ibByteSize;
-	TempMesh->IndexCount = (UINT)indices.size();
-
-	D3D12_VERTEX_BUFFER_VIEW vbv;
-	vbv.BufferLocation = TempMesh->VertexBufferGPU->GetGPUVirtualAddress();
-	vbv.StrideInBytes = TempMesh->VertexByteSize;
-	vbv.SizeInBytes = TempMesh->VertexBufferByteSize;
-	TempMesh->VertexBufferView = vbv;
-
-	D3D12_INDEX_BUFFER_VIEW ibv;
-	ibv.BufferLocation = TempMesh->IndexBufferGPU->GetGPUVirtualAddress();
-	ibv.Format = TempMesh->IndexFormat;
-	ibv.SizeInBytes = TempMesh->IndexBufferByteSize;
-	TempMesh->IndexBufferView = ibv;
-
-	CloseCmdList();
-	FlushCommandQueue();
-}
 

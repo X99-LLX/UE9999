@@ -4,25 +4,35 @@
 #include "GameTimer.h"
 #include "SceneRender.h"
 
+
+/// <summary>  TEST
+enum class RtType
+{
+	BaseRt,
+	ShadowRt,
+};
+/// </summary>
+
 class RHI 
 {
 public:
 	virtual ~RHI();
 
 	virtual bool Init() = 0;
-	virtual void UpdateTrans(Scene* mScene, Primitive* actor) = 0;
-	virtual void DrawInstance(Primitive* actor) = 0;
-	virtual void BuildGeo(Primitive* actor) = 0;
+
+
 	
-	virtual void ResetViewportsAndScissorRects() = 0;
-	virtual void ClearRTVAndDSV() = 0;
-	virtual void SetRTVAndDSV() = 0;
-	virtual void SetRootSignature() = 0;
-	virtual void OpenRtv() = 0;
+	
+
+	
+	
+	virtual void ChangeResState() = 0;
 	virtual void CloseRtv() = 0;
-	virtual void DrawItemShadow(Primitive* actor) = 0;
-	virtual void UpdateLight(const GameTimer& gt) = 0;
+
 	virtual void BeginDrawShadow() = 0;
+
+	virtual void SetPSO(Pipeline* pl) = 0;
+
 
 	virtual Texture* CreateTexture(Texture* t) = 0;
 	/*virtual Material* CreateMaterial(Material* m) = 0;*/
@@ -35,5 +45,18 @@ public:
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;
 	virtual void InputAssetInfo(Mesh* mesh) = 0;
+	virtual void SetRootSignature(Shader* s) = 0;
+	virtual void OpenCmdList() = 0;
+	virtual void CloseCmdList() = 0;
+
+	//±ØÐë¸ÄµÄ
+	virtual void SetRTVAndDSV(RtType rt) = 0;
+	virtual void ResetViewportsAndScissorRects(RtType rt) = 0;
+
+	virtual void BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht) = 0;
+	virtual void BindDataConstantBuffer(UINT32 Slot, UINT32 Address) = 0;
+	virtual void Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset) = 0;
+	virtual void DrawMesh(UINT32 IndexCount) = 0;
+
 };
 

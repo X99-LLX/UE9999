@@ -15,9 +15,7 @@ public:
 	~DX12RHI();
 
 	bool Init();
-	void UpdateTrans(Scene* mScene, Primitive* actor);
-	void DrawInstance(Primitive* actor);
-	void BuildGeo(Primitive* actor);
+
 
 
 	void OnResize();
@@ -28,15 +26,16 @@ public:
 	ID3D12GraphicsCommandList* GetCmdList();
 	void OpenCmdList();
 	void CloseCmdList();
-	void ResetViewportsAndScissorRects();
-	void ClearRTVAndDSV();
-	void SetRTVAndDSV();
-	void SetRootSignature();
 
-	void OpenRtv();
+	void ResetViewportsAndScissorRects(RtType rt);
+	void SetRTVAndDSV(RtType rt);
+
+
+	void SetRootSignature(Shader* s);
+
+	void ChangeResState();
 	void CloseRtv();
-	void DrawItemShadow(Primitive* actor);
-	void UpdateLight(const GameTimer& gt);
+
 	void BeginDrawShadow();
 
 	//some test
@@ -44,14 +43,22 @@ public:
 	void SetDescHeap(HeapType ht);
 	void BeginFrame();
 	void EndFrame();
+	void BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht);
+	//void BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht);
+	void BindDataConstantBuffer(UINT32 Slot, UINT32 Address);
+	void Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset);
+	void DrawMesh(UINT32 IndexCount);
 
+	Texture* CreateTexture(Texture* t);
+	Mesh* CreateMesh(Mesh* m);
+	Pipeline* CreatePipeline(Pipeline* p);
+	Shader* CreateShader(Shader* s);
+	Primitive* CreatePrimitive(Primitive* p);
 
+	void SetPSO(Pipeline* pl);
 protected:
 	
-	void SetCommonBuffer(Primitive* actor);
-
-	void BuildRootSignature();
-	void BuildShadersAndInputLayout();
+	void BuildInputLayout();
 	void BuildPSO();
 	void CreateSwapChain();
 	void CreateCommandObjects();

@@ -5,9 +5,11 @@
 #include "Pipeline.h"
 #include "Shader.h"
 #include "Primitive.h"
+#include "Singleton.h"
 
-class SceneRender
+class SceneRender : public Singleton<SceneRender>
 {
+public:
 	SceneRender() {}
 	~SceneRender() {}
 	void AddTexture(std::string TexName, Texture* t);
@@ -15,16 +17,20 @@ class SceneRender
 	void AddMesh(std::string MeshName, Mesh* m);
 	void AddPipeline(std::string PipelineName, Pipeline* p);
 	void AddShader(std::string ShaderName, Shader* s);
-	void AddPrimitive(std::string PrimitiveName, Primitive* p);
+	void AddPrimitive(Primitive* p);
 
-	std::unordered_map<std::string, Primitive*> GetPrimitive() { return mPrimitivePool; }
+	std::vector<Primitive*> GetPrimitive() { return mPrimitivePool; }
+	Material* GetMaterial(std::string MaterialName);
 	Mesh* GetMesh(std::string MeshName);
+	Shader* GetShader(std::string ShaderName);
+	Pipeline* GetPipeline(std::string Pipelinename);
+	Texture* GetTexture(std::string TextureName);
 protected:
 	std::unordered_map<std::string, Texture*> mTexturePool;
 	std::unordered_map<std::string, Material*> mMaterialPool;
 	std::unordered_map<std::string, Mesh*> mMeshPool;
 	std::unordered_map<std::string, Pipeline*> mPipelinePool;
 	std::unordered_map<std::string, Shader*> mShaderPool;
-	std::unordered_map<std::string, Primitive*> mPrimitivePool;
+	std::vector<Primitive*> mPrimitivePool;
 };
 

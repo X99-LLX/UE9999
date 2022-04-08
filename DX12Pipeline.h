@@ -5,9 +5,10 @@ class DX12Pipeline :
 {
 public:
 	DX12Pipeline() {}
-	DX12Pipeline(Shader* Shader);
+	DX12Pipeline(Pipeline* p) : Pipeline(p) {}
 	virtual ~DX12Pipeline();
-	void SetPipelineState(Microsoft::WRL::ComPtr<ID3D12PipelineState> PSO) { PipelineState = PSO; }
+
+	void SetPipeline(Microsoft::WRL::ComPtr<ID3D12PipelineState> PSO) { PipelineState = PSO; }
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> GetPipelineState() { return PipelineState; }
 
 private:

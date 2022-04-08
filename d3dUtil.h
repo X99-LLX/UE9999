@@ -155,34 +155,6 @@ public:
     int LineNumber = -1;
 };
 
-// Defines a subrange of geometry in a MeshGeometry.  This is for when multiple
-// geometries are stored in one vertex and index buffer.  It provides the offsets
-// and data needed to draw a subset of geometry stores in the vertex and index 
-// buffers so that we can implement the technique described by Figure 6.3.
-
-
-struct Light
-{
-    glm::vec3 Strength = { 0.5f, 0.5f, 0.5f };
-    float FalloffStart = 1.0f;                          // point/spot light only
-    glm::vec3 Direction = { 0.0f, -1.0f, 0.0f };// directional/spot light only
-    float FalloffEnd = 10.0f;                           // point/spot light only
-    glm::vec3 Position = { 0.0f, 0.0f, 0.0f };  // point/spot light only
-    float SpotPower = 64.0f;                            // spot light only
-};
-
-#define MaxLights 16
-
-struct MaterialConstants
-{
-    glm::vec4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glm::vec3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
-    float Roughness = 0.25f;
-
-    // Used in texture mapping.
-    glm::mat4 MatTransform = glm::mat4(1.0f);
-};
-
 
 
 
@@ -196,10 +168,10 @@ struct Vertex
 
 struct ConstantBuffer
 {
-    glm::mat4 TTrans = glm::mat4(1.0f);
-    glm::mat4 Tans = glm::mat4(1.0f);
+    glm::mat4 LightTVP = glm::mat4(1.0f);
+    glm::mat4 LightMVP = glm::mat4(1.0f);
     glm::mat4 World = glm::mat4(1.0f);
-	glm::mat4 MVP = glm::mat4(1.0f);
+	glm::mat4 CameraMVP = glm::mat4(1.0f);
 	glm::mat4 Scale3D = glm::mat4(1.0f);
 	glm::mat4 Rotate = glm::mat4(1.0f);
 	float Offset = 0;
@@ -212,39 +184,24 @@ struct Transform
 	glm::vec3 Scale3D = glm::vec3(1.0f);
 };
 
-struct scenebounds
+struct MeshVertexInfo 
 {
-	glm::vec3 Center;            
-	float Radius;               
-};
-
-struct PassConstants
-{
-    glm::mat4 View = glm::mat4(1.0f);
-    glm::mat4 Proj = glm::mat4(1.0f);
-    glm::mat4 ViewProj = glm::mat4(1.0f);
-    glm::mat4 ShadowTransform = glm::mat4(1.0f);
-
-    glm::vec3 EyePosW = glm::vec3(0.0f);
-	float cbPerObjectPad1 = 0.0f;
-	glm::vec2 RenderTargetSize = { 0.0f, 0.0f };
-
-	float NearZ = 0.0f;
-	float FarZ = 0.0f;
-	float TotalTime = 0.0f;
-	float DeltaTime = 0.0f;
-
-	glm::vec4 AmbientLight = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-	// Indices [0, NUM_DIR_LIGHTS) are directional lights;
-	// indices [NUM_DIR_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHTS) are point lights;
-	// indices [NUM_DIR_LIGHTS+NUM_POINT_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHT+NUM_SPOT_LIGHTS)
-	// are spot lights for a maximum of MaxLights per object.
-	Light Lights;
+    std::vector<glm::vec3>  mVertex;
+    std::vector<glm::vec4>  mNormal;
+    std::vector<glm::vec2>  mTexCoord;
+    std::vector<int>        mIndex;
 };
 
 
 
+
+enum class HeapType
+{
+	CBV_SRV_UAV = 0,
+	SAMPLER = 1,
+	RTV = 2,
+	DSV = 3,
+};
 
 #ifndef ThrowIfFailed
 #define ThrowIfFailed(x)                                              \
