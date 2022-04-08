@@ -188,12 +188,27 @@ struct MeshVertexInfo
 {
     std::vector<glm::vec3>  mVertex;
     std::vector<glm::vec4>  mNormal;
+    std::vector<glm::vec4>  mTangent;
     std::vector<glm::vec2>  mTexCoord;
     std::vector<int>        mIndex;
 };
 
+struct MatData
+{
+	glm::vec4 BaseColor = glm::vec4(1.0f);
+	glm::vec3 FresnelR0 = glm::vec3(1.0f);
+	float Metallic = 0.05;
+	float Specular = 0;
+	float Roughness = 0.2;
+};
 
-
+struct LightData
+{
+	glm::vec3 LightDirection;
+	float LightIntensity = 10.0f;
+	glm::vec3 LightColor = glm::vec3(1.0f);
+	float LightRadius = 3000.0f;
+};
 
 enum class HeapType
 {

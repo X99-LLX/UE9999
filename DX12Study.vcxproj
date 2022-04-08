@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="BasePassShader.h" />
     <ClInclude Include="DescHeapManager.h" />
+    <ClInclude Include="DX12Material.h" />
     <ClInclude Include="DX12Mesh.h" />
     <ClInclude Include="DX12Pipeline.h" />
     <ClInclude Include="DX12Primitive.h" />
@@ -60,6 +61,7 @@
   <ItemGroup>
     <ClCompile Include="BasePassShader.cpp" />
     <ClCompile Include="DescHeapManager.cpp" />
+    <ClCompile Include="DX12Material.cpp" />
     <ClCompile Include="DX12Mesh.cpp" />
     <ClCompile Include="DX12Pipeline.cpp" />
     <ClCompile Include="DX12Primitive.cpp" />
@@ -110,6 +112,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="BRDF.hlsli" />
     <None Include="CommonH.hlsli" />
     <None Include="ShadowH.hlsli" />
   </ItemGroup>

@@ -12,6 +12,7 @@ public:
 
 	std::vector<std::shared_ptr<Primitive>> mPrimitives;
 	Camera mCamera;
-	Light mLight;
+
+	std::shared_ptr<Light> mLight = nullptr;
 };
 

@@ -54,7 +54,8 @@ public:
 	std::shared_ptr<Pipeline> CreatePipeline(Pipeline* p);
 	std::shared_ptr<Shader> CreateShader(Shader* s);
 	std::shared_ptr<Primitive> CreatePrimitive(Primitive* p);
-
+	std::shared_ptr<Material> CreateMaterial(Material* m);
+	std::shared_ptr<Light> CreateLight();
 	void SetPSO(Pipeline* pl);
 
 	void ReSetCmdAlloc();

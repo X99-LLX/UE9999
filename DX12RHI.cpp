@@ -7,6 +7,7 @@
 #include "DX12Mesh.h"
 #include "DX12Primitive.h"
 #include "DX12Shader.h"
+#include "DX12Material.h"
 
 DX12RHI::DX12RHI()
 {
@@ -298,7 +299,7 @@ void DX12RHI::BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht)
 	//must fix ,write first
 	if (ht == HeapType::SAMPLER)
 	{
-		mCommandList->SetGraphicsRootDescriptorTable(4, mHeapMng.GetHeapGPUHandlePos(HeapType::CBV_SRV_UAV, mShadowMap->srvOffset));
+		mCommandList->SetGraphicsRootDescriptorTable(5, mHeapMng.GetHeapGPUHandlePos(HeapType::CBV_SRV_UAV, mShadowMap->srvOffset));
 	}
 	else
 	{
@@ -308,7 +309,7 @@ void DX12RHI::BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht)
 
 void DX12RHI::BindDataConstantBuffer(UINT32 Slot, UINT32 Address)
 {
-	mCommandList->SetGraphicsRootConstantBufferView(1, Address);
+	mCommandList->SetGraphicsRootConstantBufferView(Slot, Address);
 }
 
 void DX12RHI::Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset)
@@ -350,7 +351,7 @@ std::shared_ptr<Mesh> DX12RHI::CreateMesh(Mesh* m)
 
 	for (int i = 0; i < Vectexs.mVertex.size(); i++)
 	{
-		vertices.push_back({ Vectexs.mVertex[i],glm::vec4(1.0f),Vectexs.mNormal[i] ,Vectexs.mTexCoord[i] });
+		vertices.push_back({ Vectexs.mVertex[i],Vectexs.mTangent[i],Vectexs.mNormal[i] ,Vectexs.mTexCoord[i] });
 	}
 
 	indices.insert(indices.end(), Vectexs.mIndex.begin(), Vectexs.mIndex.end());
@@ -455,6 +456,21 @@ std::shared_ptr<Primitive> DX12RHI::CreatePrimitive(Primitive* p)
 	auto cb = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
 	primitive->SetCB(cb);
 	return primitive;
+}
+
+std::shared_ptr<Material> DX12RHI::CreateMaterial(Material* m)
+{
+	auto material = std::make_shared <DX12Material>(m);
+	auto cb = std::make_shared<UploadBuffer<MatData>>(md3dDevice.Get(), 1, true);
+	material->SetCB(cb);
+	return material;
+}
+
+std::shared_ptr<Light> DX12RHI::CreateLight()
+{
+	auto light = std::make_shared <Light>();
+	light->CB = std::make_shared<UploadBuffer<LightData>>(md3dDevice.Get(), 1, true);
+	return light;
 }
 
 void DX12RHI::SetPSO(Pipeline* pl)

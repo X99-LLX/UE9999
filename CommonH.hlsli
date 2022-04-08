@@ -4,8 +4,10 @@
 	"RootConstants(b0, num32BitConstants = 4), "\
 	"CBV(b1, visibility = SHADER_VISIBILITY_VERTEX), "\
 	"CBV(b2, visibility = SHADER_VISIBILITY_PIXEL), "\
+	"CBV(b3, visibility = SHADER_VISIBILITY_PIXEL), "\
 	"DescriptorTable(SRV(t0, numDescriptors = 1), visibility = SHADER_VISIBILITY_PIXEL), "\
 	"DescriptorTable(SRV(t1, numDescriptors = 1), visibility = SHADER_VISIBILITY_PIXEL), "\
+	"DescriptorTable(SRV(t2, numDescriptors = 1), visibility = SHADER_VISIBILITY_PIXEL), "\
 	"StaticSampler(s0," \
 		"addressU = TEXTURE_ADDRESS_WRAP," \
 		"addressV = TEXTURE_ADDRESS_WRAP," \

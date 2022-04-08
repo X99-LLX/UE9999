@@ -10,7 +10,7 @@ bool Scene::Init()
 {
 	
 	mCamera.Init();
-	mLight.Init();
+	mLight->Init();
 	return true;
 }
 

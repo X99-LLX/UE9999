@@ -23,11 +23,13 @@ public:
 	virtual void BeginDrawShadow() = 0;
 	virtual void SetPSO(Pipeline* pl) = 0;
 	virtual std::shared_ptr<Texture> CreateTexture(Texture* t) = 0;
-	/*virtual Material* CreateMaterial(Material* m) = 0;*/
+	virtual std::shared_ptr<Material> CreateMaterial(Material* m) = 0;
 	virtual std::shared_ptr<Mesh> CreateMesh(Mesh* m) = 0;
 	virtual std::shared_ptr<Pipeline> CreatePipeline(Pipeline* p) = 0;
 	virtual std::shared_ptr<Shader> CreateShader(Shader* s) = 0;
 	virtual std::shared_ptr<Primitive> CreatePrimitive(Primitive* p) = 0;
+
+	virtual std::shared_ptr<Light> CreateLight() = 0;
 	//some test
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;

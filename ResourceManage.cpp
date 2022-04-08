@@ -19,6 +19,7 @@ bool ResourceManage::Init()
 void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Primitive>>& Actors)
 {
 	LoadTexture("jacket_diff");
+	LoadTexture("jacket_norm");
 	std::string FilePath = "Data/" + MapName + ".dat";
 	std::ifstream fin(FilePath, std::ios::binary);
 
@@ -90,6 +91,9 @@ void ResourceManage::LoadMeshAsset(std::string filename)
 		temp.mNormal.resize(Num);
 		fin.read((char*)temp.mNormal.data(), sizeof(glm::vec4) * Num);
 		fin.read((char*)&Num, sizeof(int));
+		temp.mTangent.resize(Num);
+		fin.read((char*)temp.mTangent.data(), sizeof(glm::vec4) * Num);
+		fin.read((char*)&Num, sizeof(int));
 		temp.mTexCoord.resize(Num);
 		fin.read((char*)temp.mTexCoord.data(), sizeof(glm::vec2) * Num);
 		fin.close();
@@ -120,6 +124,7 @@ void ResourceManage::CreateMaterial(std::string materialname, std::string pipeli
 	material->SetName(materialname);
 	material->SetPipeline(pipelinename);
 	material->AddTexture("jacket_diff");
+	material->AddTexture("jacket_norm");
 	MaterialAsset.insert({ materialname,material });
 }
 

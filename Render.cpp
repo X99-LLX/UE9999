@@ -6,6 +6,7 @@
 #include "DX12RHI.h"
 #include "DX12Primitive.h"
 #include "DX12Texture.h"
+#include "DX12Material.h"
 #endif 
 
 
@@ -41,7 +42,7 @@ void Render::BuildResource()
 	}
 	for (auto material : resmng->MaterialAsset)
 	{
-		auto m = material.second;
+		auto m = mRHI->CreateMaterial(material.second.get());
 		mSceneRender.AddMaterial(m->GetName(), m);
 	}
 	for (auto texture : resmng->TextureAsset)
@@ -60,12 +61,10 @@ void Render::BuildResource()
 		auto p = mRHI->CreatePrimitive(prim.get());
 		mSceneRender.AddPrimitive(p);
 	}
+	scene->mLight = mRHI->CreateLight();
+	scene->mLight->CB->CopyData(0, scene->mLight->mLightData);
 	mRHI->CloseCmdList();
 }
-
-
-
-
 
 void Render::UpdateRenderData()
 {
@@ -73,14 +72,13 @@ void Render::UpdateRenderData()
 	{
 		UpdatePrimitiveMVP(pri.get());
 	}
+
 }
-
-
 
 void Render::UpdatePrimitiveMVP(Primitive* p)
 {
 	auto mCamera = Engine::GetEngine()->GetScene()->mCamera;
-	auto mLight = Engine::GetEngine()->GetScene()->mLight;
+	auto mLight = Engine::GetEngine()->GetScene()->mLight.get();
 	mCamera.UpdateViewMatrix();
 	auto& Trans = p->GetTransform();
 	auto world = glm::translate(glm::mat4(1.0f), Trans.Translation);
@@ -88,8 +86,8 @@ void Render::UpdatePrimitiveMVP(Primitive* p)
 		Trans.Rotation.y, Trans.Rotation.z));
 	auto scale = glm::scale(glm::mat4(1.0f), Trans.Scale3D);
 	auto cmvp = mCamera.GetProj() * mCamera.GetView() * world * rotate * scale;
-	auto ltvp = lightT * mLight.GetProj() * mLight.GetView();
-	auto lmvp = mLight.GetProj() * mLight.GetView() * world * rotate * scale;
+	auto ltvp = lightT * mLight->GetProj() * mLight->GetView();
+	auto lmvp = mLight->GetProj() * mLight->GetView() * world * rotate * scale;
 	world = world * rotate * scale;
 
 	ConstantBuffer ocb;
@@ -105,7 +103,6 @@ void Render::UpdatePrimitiveMVP(Primitive* p)
 #endif
 }
 
-
 void Render::TestDraw()
 {
 	//³¢ÊÔ»æÖÆ
@@ -115,7 +112,6 @@ void Render::TestDraw()
 	BasePass();
 	mRHI->EndFrame();
 }
-
 
 void Render::BasePass()
 {
@@ -130,25 +126,39 @@ void Render::BasePass()
 		auto Pipeline = mSceneRender.GetPipeline(Material->GetPipelineName());
 		auto Shader = mSceneRender.GetShader(Pipeline->GetShaderName());
 		auto Texture = mSceneRender.GetTexture(Material->GetTextures().at(0));
+		auto NorTex = mSceneRender.GetTexture(Material->GetTextures().at(1));
 		mRHI->SetRootSignature(Shader.get());
 		mRHI->SetPSO(Pipeline.get());
 		mRHI->InputAssetInfo(Mesh.get());
-#ifdef _RHI_DX12
+#ifdef _RHI_DX12   //bind res
 		auto camera = Engine::GetEngine()->GetScene()->mCamera.GetCameraPos();
 		mRHI->Bind32BitConstants(0, 3, &camera, 0);
 		auto dp = dynamic_cast<DX12Primitive*>(actor.get());
 		auto address = dp->GetCB()->Resource()->GetGPUVirtualAddress();
 		mRHI->BindDataConstantBuffer(1, address);
+
+		auto dm = dynamic_cast<DX12Material*>(Material.get());
+		auto& test = dm->GetMatData();
+		dm->GetCB()->CopyData(0, test);
+		auto address1 = dm->GetCB()->Resource()->GetGPUVirtualAddress();
+		mRHI->BindDataConstantBuffer(2, address1);
+
+		auto light = Engine::GetEngine()->GetScene()->mLight;
+		auto address2 = light->CB->Resource()->GetGPUVirtualAddress();
+		mRHI->BindDataConstantBuffer(3, address2);
+
 		auto dt = dynamic_cast<DX12Texture*>(Texture.get());
-		mRHI->BindDataTable(3, dt->GetViewOffset(), HeapType::CBV_SRV_UAV);
+		auto dnt = dynamic_cast<DX12Texture*>(NorTex.get());
+		mRHI->BindDataTable(4, dt->GetViewOffset(), HeapType::CBV_SRV_UAV);
+		mRHI->BindDataTable(6, dnt->GetViewOffset(), HeapType::CBV_SRV_UAV);
 		//must fix ,write first
 		mRHI->BindDataTable(0, 0, HeapType::SAMPLER);
+
 #endif 
 		auto indexCount = Mesh->IndexCount;
 		mRHI->DrawMesh(indexCount);
 	}
 }
-
 
 void Render::ShadowPass()
 {
@@ -172,9 +182,6 @@ void Render::ShadowPass()
 		mRHI->DrawMesh(indexCount);
 	}
 }
-
-
-
 
 RHI* Render::CreateRHI()
 {

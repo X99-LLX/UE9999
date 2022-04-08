@@ -1,8 +1,11 @@
 #include "CommonH.hlsli"
+#include "BRDF.hlsli"
 
 Texture2D	gDiffuseMap	:	register(t0);
 
 Texture2D	gShadowMap	:	register(t1);
+
+Texture2D	gNormalMap	:	register(t2);
 
 SamplerState	gSamLinear	:	register(s0);
 
@@ -23,13 +26,25 @@ cbuffer cbPerObject : register(b1)
 
 cbuffer MatData : register(b2)
 {
-	
+	float4		gBaseColor;
+	float3		gFresnelRO;
+	float		gMetallic;
+	float		gSpecular;
+	float		gRoughness;
+};
+
+cbuffer LightData : register(b3)
+{
+	float3		gLightPosition;
+	float		gLightIntensity;
+	float3		gLightColor;
+	float		gLightRadius;
 };
 
 struct VertexIn
 {
 	float3 PosL			: POSITION;
-    float4 Color		: COLOR;
+    float4 Tangent		: COLOR;
 	float4 Normal		: NORMAL;
 	float2 TexCoord		: TEXCOORD;
 };
@@ -37,10 +52,11 @@ struct VertexIn
 struct VertexOut
 {
 	float4 PosH			: SV_POSITION;
-    float4 Color		: COLOR;
-	float4 Normal		: NORMAL;
+    float3 Tangent		: COLOR;
+	float3 Normal		: NORMAL;
 	float2 TexCoord		: TEXCOORD;
 	float4 ShadowPos	: SHADOWPOS;
+	float3 WorldPos		: POSITION1;
 };
 
 float CalcShadowFactor(float4 shadowPosH)
@@ -71,9 +87,6 @@ float CalcShadowFactor(float4 shadowPosH)
 	return percentLit / 9.0f;
 }
 
-
-
-
 [RootSignature(Color_RootSig)]
 
 VertexOut VS(VertexIn vin)
@@ -82,21 +95,72 @@ VertexOut VS(VertexIn vin)
 
 	vout.PosH = mul(float4(vin.PosL, 1.0f), CameraMVP);
 
-    vout.Color = vin.Color;
-	vout.Normal = mul(vin.Normal,gRotate);
+	vout.Tangent = mul(normalize(vin.Tangent.xyz), (float3x3)gWorld);
+	vout.Normal = mul(float4(vin.Normal.xyz, 0), gWorld).xyz;
 	vout.TexCoord = vin.TexCoord;
 
 	vout.ShadowPos = mul(mul(float4(vin.PosL, 1.0f), gWorld), LightTVP);
+
+	vout.WorldPos = mul(float4(vin.PosL, 1.0f), gWorld);
+
     return vout;
 }
 
 float4 PS(VertexOut pin) : SV_Target
 {
-	float4 diffuseAlbedo = gDiffuseMap.Sample(gSamLinear  , pin.TexCoord);
+	float4 Output = 0.0f;
+
+	float4 BaseColor = gDiffuseMap.Sample(gSamLinear  , pin.TexCoord);
+	BaseColor.rgb *= gBaseColor.rgb;
 
 	float Shadow = CalcShadowFactor(pin.ShadowPos);
 
-    return pow(diffuseAlbedo * (Shadow + 0.1), 1 / 2.2f);
+	float4 NormalMapSample = gNormalMap.Sample(gSamLinear, pin.TexCoord);
+
+	float3 bumpedNormalW = NormalSampleToWorldSpace(NormalMapSample.rgb, pin.Normal, pin.Tangent);
+
+	BaseColor.rgb *= gBaseColor.rgb;
+
+	float Roughness = gRoughness;
+	float Metallic = gMetallic;
+	float F0 = 0.04f;
+	float AO = 20.0f;
+	F0 = lerp(F0.rrr, BaseColor.rgb, Metallic);
+
+	{
+		float3 PointLightPos = gLightPosition;
+		float LightRadius = gLightRadius;
+		float LightStrenth = gLightIntensity;
+
+		float3 WPos = pin.WorldPos;
+		float FallOff = distance(PointLightPos, WPos);
+		FallOff = LightRadius / (FallOff * FallOff);
+		float3 V = normalize(CameraLoc.xyz - pin.WorldPos);
+		float3 N = bumpedNormalW;
+		float3 L = normalize(PointLightPos - WPos);
+		float3 H = normalize(V + L);
+		float3 R = -reflect(V, N);
+
+		float NoL = saturate(dot(L, N));
+		float NoH = saturate(dot(N, H));
+		float NoV = saturate(dot(N, V));
+		float VoH = saturate(dot(V, H));
+		float NoR = saturate(dot(N, R));
+
+		float3 Diffuse = Diffuse_Burley(BaseColor.rgb, Roughness, NoV, NoL, NoH);
+
+		float a2 = Roughness * Roughness * Roughness * Roughness;
+		float D = D_GGX(a2, NoH);
+		float G = Vis_SmithJointApprox(a2, NoV, NoL);
+		float F = FSchlick(VoH, F0);
+		float3 Specular = D * G * F;
+		Output.rgb += (Diffuse + Specular) * NoL * Shadow * (FallOff * LightStrenth) * 300;
+	}
+
+	Output.rgb += 0.03f * BaseColor.rgb * AO;
+	//return Output;
+
+    return pow(Output, 1 / 1.2f);
 }
 
 

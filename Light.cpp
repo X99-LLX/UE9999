@@ -1,10 +1,21 @@
 #include "stdafx.h"
 #include "Light.h"
 
-void Light::Init()
+Light::Light()
 {
 	UpdateView();
 	UpdateProj();
+	mLightData.LightDirection = mPosition;
+}
+
+void Light::Init()
+{
+	
+}
+
+void Light::UpdatePos()
+{
+
 }
 
 void Light::UpdateView()

@@ -150,6 +150,7 @@
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClInclude>
     <ClInclude Include="Light.h" />
+    <ClInclude Include="DX12Material.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -247,12 +248,16 @@
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClCompile>
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="DX12Material.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CommonH.hlsli">
       <Filter>Other</Filter>
     </None>
     <None Include="ShadowH.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="BRDF.hlsli">
       <Filter>Other</Filter>
     </None>
   </ItemGroup>
