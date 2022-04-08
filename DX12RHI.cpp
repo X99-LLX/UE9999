@@ -186,6 +186,7 @@ void DX12RHI::CloseCmdList()
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	FlushCommandQueue();
 }
 
 void DX12RHI::ResetViewportsAndScissorRects(RtType rt)
@@ -274,7 +275,7 @@ void DX12RHI::SetDescHeap(HeapType ht)
 
 void DX12RHI::BeginFrame()
 {
-	//ThrowIfFailed(mDirectCmdListAlloc->Reset());
+	ThrowIfFailed(mDirectCmdListAlloc->Reset());
 	OpenCmdList();
 	SetDescHeap(HeapType::CBV_SRV_UAV);
 }
@@ -320,9 +321,9 @@ void DX12RHI::DrawMesh(UINT32 IndexCount)
 	mCommandList->DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
 }
 
-Texture* DX12RHI::CreateTexture(Texture* t)
+std::shared_ptr<Texture> DX12RHI::CreateTexture(Texture* t)
 {
-	auto Tex = new DX12Texture(t);
+	auto Tex = std::make_shared<DX12Texture>(t);
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice.Get(),
 		mCommandList.Get(), Tex->GetPath().c_str(),
 		Tex->GetResource(), Tex->GetUploader()));
@@ -340,9 +341,9 @@ Texture* DX12RHI::CreateTexture(Texture* t)
 
 }
 
-Mesh* DX12RHI::CreateMesh(Mesh* m)
+std::shared_ptr<Mesh> DX12RHI::CreateMesh(Mesh* m)
 {
-	auto mesh = new DX12Mesh(m);
+	auto mesh = std::make_shared<DX12Mesh>(m);
 	std::vector<int> indices;
 	std::vector<Vertex> vertices;
 	MeshVertexInfo Vectexs = mesh->GetVertexinfo();
@@ -378,13 +379,13 @@ Mesh* DX12RHI::CreateMesh(Mesh* m)
 	return mesh;
 }
 
-Pipeline* DX12RHI::CreatePipeline(Pipeline* p)
+std::shared_ptr<Pipeline> DX12RHI::CreatePipeline(Pipeline* p)
 {
-	auto Pso = new DX12Pipeline(p);
+	auto Pso = std::make_shared<DX12Pipeline>(p);
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
 	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	auto il = SceneRender::Get()->GetShader(Pso->GetShaderName());
-	auto dxil = dynamic_cast<DX12Shader*>(il);
+	auto dxil = dynamic_cast<DX12Shader*>(il.get());
 
 	psoDesc.InputLayout = { dxil->InputLayOut.data(), (UINT)dxil->InputLayOut.size() };
 	psoDesc.pRootSignature = dxil->GetRootSignature().Get();
@@ -426,9 +427,9 @@ Pipeline* DX12RHI::CreatePipeline(Pipeline* p)
 	return Pso;
 }
 
-Shader* DX12RHI::CreateShader(Shader* s)
+std::shared_ptr<Shader> DX12RHI::CreateShader(Shader* s)
 {
-	auto shader = new DX12Shader(s);
+	auto shader = std::make_shared<DX12Shader>(s);
 	auto a = s->GetShaderFilePath();
 	auto vs = d3dUtil::CompileShader(s->GetShaderFilePath(), nullptr, "VS", "vs_5_0");
 	auto ps = d3dUtil::CompileShader(s->GetShaderFilePath(), nullptr, "PS", "ps_5_0");
@@ -448,9 +449,9 @@ Shader* DX12RHI::CreateShader(Shader* s)
 	return shader;
 }
 
-Primitive* DX12RHI::CreatePrimitive(Primitive* p)
+std::shared_ptr<Primitive> DX12RHI::CreatePrimitive(Primitive* p)
 {
-	auto primitive = new DX12Primitive(p);
+	auto primitive = std::make_shared <DX12Primitive>(p);
 	auto cb = std::make_shared<UploadBuffer<ConstantBuffer>>(md3dDevice.Get(), 1, true);
 	primitive->SetCB(cb);
 	return primitive;
@@ -461,6 +462,11 @@ void DX12RHI::SetPSO(Pipeline* pl)
 	auto DXpl = dynamic_cast<DX12Pipeline*>(pl);
 	auto pso = DXpl->GetPipelineState();
 	mCommandList->SetPipelineState(pso.Get());
+}
+
+void DX12RHI::ReSetCmdAlloc()
+{
+	ThrowIfFailed(mDirectCmdListAlloc->Reset());
 }
 
 void DX12RHI::BuildInputLayout()

@@ -12,7 +12,7 @@ public:
 		PipelineName = m->GetPipelineName();
 		Textures = m->GetTextures();
 	}
-	~Material() {}
+	virtual ~Material() {}
 	void SetName(std::string n) { MaterialName = n; }
 	void SetPipeline(std::string p) { PipelineName = p; }
 	void AddTexture(std::string t) { Textures.push_back(t); }

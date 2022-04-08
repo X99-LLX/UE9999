@@ -49,13 +49,15 @@ public:
 	void Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset);
 	void DrawMesh(UINT32 IndexCount);
 
-	Texture* CreateTexture(Texture* t);
-	Mesh* CreateMesh(Mesh* m);
-	Pipeline* CreatePipeline(Pipeline* p);
-	Shader* CreateShader(Shader* s);
-	Primitive* CreatePrimitive(Primitive* p);
+	std::shared_ptr<Texture> CreateTexture(Texture* t);
+	std::shared_ptr<Mesh> CreateMesh(Mesh* m);
+	std::shared_ptr<Pipeline> CreatePipeline(Pipeline* p);
+	std::shared_ptr<Shader> CreateShader(Shader* s);
+	std::shared_ptr<Primitive> CreatePrimitive(Primitive* p);
 
 	void SetPSO(Pipeline* pl);
+
+	void ReSetCmdAlloc();
 protected:
 	
 	void BuildInputLayout();

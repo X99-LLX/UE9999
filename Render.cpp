@@ -41,7 +41,7 @@ void Render::BuildResource()
 	}
 	for (auto material : resmng->MaterialAsset)
 	{
-		auto m = material.second.get();
+		auto m = material.second;
 		mSceneRender.AddMaterial(m->GetName(), m);
 	}
 	for (auto texture : resmng->TextureAsset)
@@ -71,7 +71,7 @@ void Render::UpdateRenderData()
 {
 	for (auto pri : mSceneRender.GetPrimitive())
 	{
-		UpdatePrimitiveMVP(pri);
+		UpdatePrimitiveMVP(pri.get());
 	}
 }
 
@@ -130,16 +130,16 @@ void Render::BasePass()
 		auto Pipeline = mSceneRender.GetPipeline(Material->GetPipelineName());
 		auto Shader = mSceneRender.GetShader(Pipeline->GetShaderName());
 		auto Texture = mSceneRender.GetTexture(Material->GetTextures().at(0));
-		mRHI->SetRootSignature(Shader);
-		mRHI->SetPSO(Pipeline);
-		mRHI->InputAssetInfo(Mesh);
+		mRHI->SetRootSignature(Shader.get());
+		mRHI->SetPSO(Pipeline.get());
+		mRHI->InputAssetInfo(Mesh.get());
 #ifdef _RHI_DX12
 		auto camera = Engine::GetEngine()->GetScene()->mCamera.GetCameraPos();
 		mRHI->Bind32BitConstants(0, 3, &camera, 0);
-		auto dp = dynamic_cast<DX12Primitive*>(actor);
+		auto dp = dynamic_cast<DX12Primitive*>(actor.get());
 		auto address = dp->GetCB()->Resource()->GetGPUVirtualAddress();
 		mRHI->BindDataConstantBuffer(1, address);
-		auto dt = dynamic_cast<DX12Texture*>(Texture);
+		auto dt = dynamic_cast<DX12Texture*>(Texture.get());
 		mRHI->BindDataTable(3, dt->GetViewOffset(), HeapType::CBV_SRV_UAV);
 		//must fix ,write first
 		mRHI->BindDataTable(0, 0, HeapType::SAMPLER);
@@ -160,11 +160,11 @@ void Render::ShadowPass()
 		auto Mesh = mSceneRender.GetMesh(actor->GetMeshName());
 		auto Pipeline = mSceneRender.GetPipeline("ShadowPSO");
 		auto Shader = mSceneRender.GetShader("ShadowShader");
-		mRHI->SetRootSignature(Shader);
-		mRHI->SetPSO(Pipeline);
-		mRHI->InputAssetInfo(Mesh);
+		mRHI->SetRootSignature(Shader.get());
+		mRHI->SetPSO(Pipeline.get());
+		mRHI->InputAssetInfo(Mesh.get());
 #ifdef _RHI_DX12
-		auto dp = dynamic_cast<DX12Primitive*>(actor);
+		auto dp = dynamic_cast<DX12Primitive*>(actor.get());
 		auto address = dp->GetCB()->Resource()->GetGPUVirtualAddress();
 		mRHI->BindDataConstantBuffer(1, address);
 #endif 

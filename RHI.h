@@ -17,30 +17,17 @@ class RHI
 {
 public:
 	virtual ~RHI();
-
 	virtual bool Init() = 0;
-
-
-	
-	
-
-	
-	
 	virtual void ChangeResState() = 0;
 	virtual void CloseRtv() = 0;
-
 	virtual void BeginDrawShadow() = 0;
-
 	virtual void SetPSO(Pipeline* pl) = 0;
-
-
-	virtual Texture* CreateTexture(Texture* t) = 0;
+	virtual std::shared_ptr<Texture> CreateTexture(Texture* t) = 0;
 	/*virtual Material* CreateMaterial(Material* m) = 0;*/
-	virtual Mesh* CreateMesh(Mesh* m) = 0;
-	virtual Pipeline* CreatePipeline(Pipeline* p) = 0;
-	virtual Shader* CreateShader(Shader* s) = 0;
-	virtual Primitive* CreatePrimitive(Primitive* p) = 0;
-
+	virtual std::shared_ptr<Mesh> CreateMesh(Mesh* m) = 0;
+	virtual std::shared_ptr<Pipeline> CreatePipeline(Pipeline* p) = 0;
+	virtual std::shared_ptr<Shader> CreateShader(Shader* s) = 0;
+	virtual std::shared_ptr<Primitive> CreatePrimitive(Primitive* p) = 0;
 	//some test
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;
@@ -57,6 +44,7 @@ public:
 	virtual void BindDataConstantBuffer(UINT32 Slot, UINT32 Address) = 0;
 	virtual void Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset) = 0;
 	virtual void DrawMesh(UINT32 IndexCount) = 0;
+	virtual void ReSetCmdAlloc() = 0;
 
 };
 

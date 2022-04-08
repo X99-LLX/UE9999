@@ -9,18 +9,14 @@ public:
 	RHI* GetRHI();
 	void BuildResource();
 	
-	void DrawScene(std::vector<std::shared_ptr<Primitive>> primitives);
 
 	
 	//test
 	void TestDraw();
 
 private:
-	void BasePass(std::vector<std::shared_ptr<Primitive>> primitives);
-	void ShadowPass(std::vector<std::shared_ptr<Primitive>> primitives);
 
 	RHI* CreateRHI();
-
 	//test
 	void UpdateRenderData();
 	void UpdatePrimitiveMVP(Primitive* p);
