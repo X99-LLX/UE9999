@@ -50,7 +50,7 @@ public:
 	void DrawMesh(UINT32 IndexCount);
 
 	std::shared_ptr<Texture> CreateTexture(Texture* t);
-	std::shared_ptr<Mesh> CreateMesh(Mesh* m);
+	std::shared_ptr<Mesh> CreateMesh(std::shared_ptr<Mesh> m);
 	std::shared_ptr<Pipeline> CreatePipeline(Pipeline* p);
 	std::shared_ptr<Shader> CreateShader(Shader* s);
 	std::shared_ptr<Primitive> CreatePrimitive(Primitive* p);

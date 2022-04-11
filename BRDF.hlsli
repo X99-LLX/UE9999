@@ -42,6 +42,26 @@ SurfaceInfo GetSurfaceInfo(float4 BaseColor, float4 PhysicalDesc)
     return surfaceInfo;
 }
 
+SurfaceInfo GetSurfaceInfo(float4 BaseColor, float Metallic, float Roughness)
+{
+    SurfaceInfo surfaceInfo;
+
+    float metallic = Metallic;
+
+    float3 noMetalF0 = float3(0.04, 0.04, 0.04);
+
+    surfaceInfo.PerceptualRoughness = Roughness;
+
+    surfaceInfo.DiffuseColor = BaseColor.rgb * (float3(1.0, 1.0, 1.0) - noMetalF0) * (1.0 - metallic);
+
+    surfaceInfo.F0 = lerp(noMetalF0, BaseColor.rgb, metallic);
+    float reflectance = max(max(surfaceInfo.F0.r, surfaceInfo.F0.g), surfaceInfo.F0.b);
+
+    surfaceInfo.F90 = clamp(reflectance * 50.0, 0.0, 1.0) * float3(1.0, 1.0, 1.0);
+
+    return surfaceInfo;
+}
+
 // Lambertian Diffuse
 float3 LambertianDiffuse(float3 DiffuseColor)
 {
@@ -111,14 +131,34 @@ float3 NormalSampleToWorldSpace(float3 normalMapSample, float3 unitNormalW, floa
 {
     float3 normalT = 2.0f * normalMapSample - 1.0f;
 
-    float3 N = normalize(unitNormalW);
-    float3 T = normalize(tangentW - dot(tangentW, N) * N);
-    float3 B = normalize(cross(N, T));
+    //    float3 N = normalize(unitNormalW);
+    //    float3 T = normalize(tangentW - dot(tangentW, N) * N);
+    //    float3 B = normalize(cross(N, T));
+
+    float3 N = unitNormalW;
+    float3 T = normalize(tangentW - N * tangentW * N);
+    float3 B = cross(N, T);
 
     float3x3 TBN = float3x3(T, B, N);
 
-    float3 bumpedNormalW = mul(normalT, TBN);
-    return bumpedNormalW;
+    float3 NormalW = normalize(mul(normalT, TBN));
+
+    return NormalW;
+}
+
+float3 NormalSampleToWorldSpace(float3 normalMapSample, float3 unitNormalW, float3 tangentW, float3 tangentY)
+{
+    float3 normalT = 2.0f * normalMapSample - 1.0f;
+
+    float3 N = unitNormalW;
+    float3 T = tangentW;
+    float3 B = tangentY;
+
+    float3x3 TBN = float3x3(T, B, N);
+
+    float3 NormalW = normalize(mul(normalT, TBN));
+
+    return NormalW;
 }
 
 void BRDF(AngularInfo angularInfo, SurfaceInfo surfaceInfo, out float3 diffuseContrib, out float3 specContrib)
@@ -127,15 +167,14 @@ void BRDF(AngularInfo angularInfo, SurfaceInfo surfaceInfo, out float3 diffuseCo
     specContrib = float3(0.0, 0.0, 0.0);
 
     float AlphaRoughness = surfaceInfo.PerceptualRoughness * surfaceInfo.PerceptualRoughness;
-    float a2 = AlphaRoughness * AlphaRoughness;
-    float3 F = F_Schlick(angularInfo.VdotH, surfaceInfo.F0, surfaceInfo.F90);
-    float D = D_GGX(a2, angularInfo.NdotH);
 
-    float Vis = SmithGGXVisibilityCorrelated(angularInfo.NdotL, angularInfo.NdotV, AlphaRoughness);
-    //    float Vis = Vis_SmithJointApprox(a2, angularInfo.NdotV, angularInfo.NdotL);
+    float3 F = F_Schlick(angularInfo.VdotH, surfaceInfo.F0, surfaceInfo.F90);
+    float D = D_GGX(AlphaRoughness * AlphaRoughness, angularInfo.NdotH);
+    //    float G = SmithGGXVisibilityCorrelated(angularInfo.NdotL, angularInfo.NdotV, AlphaRoughness);
+    float G = Vis_SmithJointApprox(AlphaRoughness * AlphaRoughness, angularInfo.NdotV, angularInfo.NdotL);
 
     diffuseContrib = (1.0 - F) * LambertianDiffuse(surfaceInfo.DiffuseColor);
-    specContrib = F * Vis * D;
+    specContrib = D * G * F;
 }
 
 float3 ApplyDirectionalLight(float3 lightDir, float3 lightColor, SurfaceInfo surfaceInfo, float3 normal, float3 view)

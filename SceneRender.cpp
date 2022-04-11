@@ -3,7 +3,7 @@
 
 SceneRender::~SceneRender()
 {
-	
+
 }
 
 void SceneRender::AddTexture(std::string TexName, std::shared_ptr<Texture> t)
@@ -19,6 +19,9 @@ void SceneRender::AddMaterial(std::string MatName, std::shared_ptr<Material> m)
 void SceneRender::AddMesh(std::string MeshName, std::shared_ptr<Mesh> m)
 {
 	mMeshPool.insert({ MeshName,m });
+	/*OutputDebugStringA("----------------------------");
+	OutputDebugStringA(MeshName.c_str());
+	OutputDebugStringA("\n");*/
 }
 
 void SceneRender::AddPipeline(std::string PipelineName, std::shared_ptr<Pipeline> p)

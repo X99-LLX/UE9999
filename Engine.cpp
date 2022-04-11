@@ -50,6 +50,7 @@ bool Engine::Run()
 		{
 			mTimer.Tick();
 			mWindow->GetInput()->Update();
+			//mScene.mLight->UpdatePos();
 			TestRender.TestDraw();
 		}
 	}

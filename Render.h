@@ -8,9 +8,6 @@ public:
 	~Render();
 	RHI* GetRHI();
 	void BuildResource();
-	
-
-	
 	//test
 	void TestDraw();
 

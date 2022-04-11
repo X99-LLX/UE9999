@@ -8,7 +8,6 @@ public:
 	{
 		ShaderName = s->GetShaderName();
 		FilePath = s->GetShaderFilePath();
-
 	}
 	virtual ~Shader();
 

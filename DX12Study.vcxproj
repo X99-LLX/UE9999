@@ -114,6 +114,7 @@
   <ItemGroup>
     <None Include="BRDF.hlsli" />
     <None Include="CommonH.hlsli" />
+    <None Include="BlinnPhong.hlsli" />
     <None Include="ShadowH.hlsli" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

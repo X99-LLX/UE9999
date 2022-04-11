@@ -1,5 +1,6 @@
 #include "CommonH.hlsli"
 #include "BRDF.hlsli"
+#include "BlinnPhong.hlsli"
 
 Texture2D	gDiffuseMap	:	register(t0);
 
@@ -111,6 +112,7 @@ float4 PS(VertexOut pin) : SV_Target
 	float4 Output = 0.0f;
 
 	float4 BaseColor = gDiffuseMap.Sample(gSamLinear  , pin.TexCoord);
+	/*float4 BaseColor = float4(pin.Normal, 1.0f);*/
 	BaseColor.rgb *= gBaseColor.rgb;
 
 	float Shadow = CalcShadowFactor(pin.ShadowPos);
@@ -123,11 +125,19 @@ float4 PS(VertexOut pin) : SV_Target
 
 	float Roughness = gRoughness;
 	float Metallic = gMetallic;
-	float F0 = 0.04f;
+	float F0 = 0.74f;
 	float AO = 20.0f;
 	F0 = lerp(F0.rrr, BaseColor.rgb, Metallic);
 
-	{
+	float3 Ambient = 0.5f * gLightColor;
+
+	SurfaceInfo surfaceInfo = GetSurfaceInfo(BaseColor, Metallic, Roughness);
+
+	Output.rgb += ComputeDirectionalLight(gLightPosition - pin.WorldPos, bumpedNormalW, 1.f, CameraLoc.xyz - pin.WorldPos, Roughness, BaseColor, surfaceInfo.F0, surfaceInfo.F90) * Shadow;
+	Output.rgb += Ambient * BaseColor.rgb;
+	Output.rgb = pow(Output.rgb, 1 / 2.2);
+	return Output;
+	/*{
 		float3 PointLightPos = gLightPosition;
 		float LightRadius = gLightRadius;
 		float LightStrenth = gLightIntensity;
@@ -158,9 +168,8 @@ float4 PS(VertexOut pin) : SV_Target
 	}
 
 	Output.rgb += 0.03f * BaseColor.rgb * AO;
-	//return Output;
 
-    return pow(Output, 1 / 1.2f);
+    return pow(Output, 1 / 1.2f);*/
 }
 
 

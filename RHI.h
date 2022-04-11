@@ -24,7 +24,7 @@ public:
 	virtual void SetPSO(Pipeline* pl) = 0;
 	virtual std::shared_ptr<Texture> CreateTexture(Texture* t) = 0;
 	virtual std::shared_ptr<Material> CreateMaterial(Material* m) = 0;
-	virtual std::shared_ptr<Mesh> CreateMesh(Mesh* m) = 0;
+	virtual std::shared_ptr<Mesh> CreateMesh(std::shared_ptr<Mesh> m) = 0;
 	virtual std::shared_ptr<Pipeline> CreatePipeline(Pipeline* p) = 0;
 	virtual std::shared_ptr<Shader> CreateShader(Shader* s) = 0;
 	virtual std::shared_ptr<Primitive> CreatePrimitive(Primitive* p) = 0;

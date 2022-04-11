@@ -342,9 +342,9 @@ std::shared_ptr<Texture> DX12RHI::CreateTexture(Texture* t)
 
 }
 
-std::shared_ptr<Mesh> DX12RHI::CreateMesh(Mesh* m)
+std::shared_ptr<Mesh> DX12RHI::CreateMesh(std::shared_ptr<Mesh> m)
 {
-	auto mesh = std::make_shared<DX12Mesh>(m);
+	auto mesh = std::make_shared<DX12Mesh>(m.get());
 	std::vector<int> indices;
 	std::vector<Vertex> vertices;
 	MeshVertexInfo Vectexs = mesh->GetVertexinfo();
@@ -431,6 +431,7 @@ std::shared_ptr<Pipeline> DX12RHI::CreatePipeline(Pipeline* p)
 std::shared_ptr<Shader> DX12RHI::CreateShader(Shader* s)
 {
 	auto shader = std::make_shared<DX12Shader>(s);
+
 	auto a = s->GetShaderFilePath();
 	auto vs = d3dUtil::CompileShader(s->GetShaderFilePath(), nullptr, "VS", "vs_5_0");
 	auto ps = d3dUtil::CompileShader(s->GetShaderFilePath(), nullptr, "PS", "ps_5_0");

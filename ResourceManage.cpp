@@ -6,7 +6,7 @@
 
 ResourceManage::~ResourceManage()
 {
-
+	
 }
 
 bool ResourceManage::Init()
@@ -16,10 +16,10 @@ bool ResourceManage::Init()
 }
 
 
-void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Primitive>>& Actors)
+void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Primitive>>* Actors)
 {
-	LoadTexture("jacket_diff");
-	LoadTexture("jacket_norm");
+	LoadTexture("tile");
+	LoadTexture("tile_nmap");
 	std::string FilePath = "Data/" + MapName + ".dat";
 	std::ifstream fin(FilePath, std::ios::binary);
 
@@ -42,11 +42,13 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 		name.resize(TempNum);
 		fin.read((char*)name.data(), TempNum);
 		actorinfo->SetMeshName(name);
-		Actors.push_back(actorinfo);
+		Actors->push_back(actorinfo);
 		LoadMeshAsset(actorinfo->GetMeshName());
 
 	}
 	fin.close();
+
+	
 
 	CreateShader("BaseShader", L"Shaders\\color.hlsl");
 	CreateShader("ShadowShader", L"Shaders\\Shadows.hlsl");
@@ -70,6 +72,7 @@ void ResourceManage::LoadMeshAsset(std::string filename)
 	{
 		int test;
 		auto meshinfo = std::make_shared<Mesh>();
+
 		INT32 Num;
 		fin.read((char*)&Num, sizeof(int));
 		std::string name;
@@ -101,6 +104,7 @@ void ResourceManage::LoadMeshAsset(std::string filename)
 		meshinfo->SetMaterialName("BaseMaterial");
 		MeshAsset.insert({ filename ,meshinfo });
 	}
+
 }
 
 void ResourceManage::ClearAsset()
@@ -123,8 +127,8 @@ void ResourceManage::CreateMaterial(std::string materialname, std::string pipeli
 	auto material = std::make_shared<Material>();
 	material->SetName(materialname);
 	material->SetPipeline(pipelinename);
-	material->AddTexture("jacket_diff");
-	material->AddTexture("jacket_norm");
+	material->AddTexture("tile");
+	material->AddTexture("tile_nmap");
 	MaterialAsset.insert({ materialname,material });
 }
 

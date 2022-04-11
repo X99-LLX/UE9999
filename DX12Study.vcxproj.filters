@@ -260,5 +260,8 @@
     <None Include="BRDF.hlsli">
       <Filter>Other</Filter>
     </None>
+    <None Include="BlinnPhong.hlsli">
+      <Filter>Other</Filter>
+    </None>
   </ItemGroup>
 </Project>

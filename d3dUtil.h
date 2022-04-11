@@ -197,9 +197,9 @@ struct MatData
 {
 	glm::vec4 BaseColor = glm::vec4(1.0f);
 	glm::vec3 FresnelR0 = glm::vec3(1.0f);
-	float Metallic = 0.05;
-	float Specular = 0;
-	float Roughness = 0.2;
+	float Metallic = 0.05f;
+	float Specular = 0.0f;
+	float Roughness = 0.2f;
 };
 
 struct LightData

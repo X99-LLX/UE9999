@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Light.h"
 
+//test must fix
+#include "Engine.h"
+
 Light::Light()
 {
 	UpdateView();
@@ -15,7 +18,9 @@ void Light::Init()
 
 void Light::UpdatePos()
 {
-
+	auto gt = Engine::GetEngine()->GetTimer();
+	auto offset = glm::sin(gt->TotalTime()) * 1000;
+	mPosition.x += offset;
 }
 
 void Light::UpdateView()

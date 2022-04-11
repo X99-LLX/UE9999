@@ -9,7 +9,7 @@ class ResourceManage : public Singleton<ResourceManage>
 public:
 	~ResourceManage();
 	bool Init();
-	void LoadMap(std::string MapName, std::vector<std::shared_ptr<Primitive>>& Actors);
+	void LoadMap(std::string MapName, std::vector<std::shared_ptr<Primitive>>* Actors);
 	Texture* GetTexture(std::string name);
 
 private:

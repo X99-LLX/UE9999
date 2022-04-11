@@ -32,6 +32,7 @@ void Render::BuildResource()
 	auto resmng = ResourceManage::Get();
 	for (auto shader : resmng->ShaderAsset)
 	{
+		auto a = shader.second.use_count();
 		auto s = mRHI->CreateShader(shader.second.get());
 		mSceneRender.AddShader(s->GetShaderName(),s);
 	}
@@ -52,7 +53,7 @@ void Render::BuildResource()
 	}
 	for (auto mesh : resmng->MeshAsset)
 	{
-		auto m = mRHI->CreateMesh(mesh.second.get());
+		auto m = mRHI->CreateMesh(mesh.second);
 		mSceneRender.AddMesh(m->GetName(), m);
 	}
 	auto scene = Engine::GetEngine()->GetScene();
@@ -122,10 +123,22 @@ void Render::BasePass()
 	for (auto actor : actors)
 	{
 		auto Mesh = mSceneRender.GetMesh(actor->GetMeshName());
+		if (Mesh == nullptr)
+		{
+			continue;
+		}
 		auto Material = mSceneRender.GetMaterial(Mesh->GetMaterialName());
 		auto Pipeline = mSceneRender.GetPipeline(Material->GetPipelineName());
 		auto Shader = mSceneRender.GetShader(Pipeline->GetShaderName());
+		if (Shader == nullptr)
+		{
+			continue;
+		}
 		auto Texture = mSceneRender.GetTexture(Material->GetTextures().at(0));
+		if (Texture == nullptr)
+		{
+			continue;
+		}
 		auto NorTex = mSceneRender.GetTexture(Material->GetTextures().at(1));
 		mRHI->SetRootSignature(Shader.get());
 		mRHI->SetPSO(Pipeline.get());
@@ -168,8 +181,16 @@ void Render::ShadowPass()
 	for (auto actor : actors)
 	{
 		auto Mesh = mSceneRender.GetMesh(actor->GetMeshName());
+		if (Mesh == nullptr)
+		{
+			continue;
+		}
 		auto Pipeline = mSceneRender.GetPipeline("ShadowPSO");
 		auto Shader = mSceneRender.GetShader("ShadowShader");
+		if (Shader == nullptr)
+		{
+			continue;
+		}
 		mRHI->SetRootSignature(Shader.get());
 		mRHI->SetPSO(Pipeline.get());
 		mRHI->InputAssetInfo(Mesh.get());
@@ -177,7 +198,7 @@ void Render::ShadowPass()
 		auto dp = dynamic_cast<DX12Primitive*>(actor.get());
 		auto address = dp->GetCB()->Resource()->GetGPUVirtualAddress();
 		mRHI->BindDataConstantBuffer(1, address);
-#endif 
+#endif
 		auto indexCount = Mesh->IndexCount;
 		mRHI->DrawMesh(indexCount);
 	}
