@@ -208,7 +208,7 @@ void DX12RHI::SetRTVAndDSV(RtType rt)
 {
 	if (rt == RtType::BaseRt)
 	{
-		float BackColor[4] = { 1.000000000f, 0.713725507f, 0.756862819f, 1.000000000f };
+		float BackColor[4] = { 0.000000000f, 0.000000000f, 0.000000000f, 0.000000000f };
 		mCommandList->ClearRenderTargetView(CurrentBackBufferView(), BackColor, 0, nullptr);
 		mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 		mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
@@ -362,7 +362,7 @@ std::shared_ptr<Mesh> DX12RHI::CreateMesh(std::shared_ptr<Mesh> m)
 	mesh->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
 		mCommandList.Get(), vertices.data(), vbByteSize, mesh->BufferUploader);
 	mesh->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), indices.data(), ibByteSize, mesh->BufferUploader);
+		mCommandList.Get(), indices.data(), ibByteSize, mesh->indexUploader);
 
 	mesh->IndexCount = (UINT32)indices.size();
 
@@ -415,13 +415,14 @@ std::shared_ptr<Pipeline> DX12RHI::CreatePipeline(Pipeline* p)
 
 	if (Pso->mType == PsoType::ShadowPSO)
 	{
-		psoDesc.RasterizerState.DepthBias = 5000000000;
+		psoDesc.RasterizerState.DepthBias = 10000.0f;
 		psoDesc.RasterizerState.DepthBiasClamp = 0.0f;
-		psoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
+		psoDesc.RasterizerState.SlopeScaledDepthBias = 0.5f;
 		psoDesc.pRootSignature = mShadowRS.Get();
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 		psoDesc.NumRenderTargets = 0;
 	}
+
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> TempPso;
 	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&TempPso)));
 	Pso->SetPipeline(TempPso);

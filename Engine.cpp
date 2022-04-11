@@ -20,11 +20,11 @@ bool Engine::Init()
 	{
 		return false;
 	}
-	if (!mScene.Init()) 
+	if (!mScene.Init())
 	{
 		return false;
 	}
-	if (!mAssetMgr.Init()) 
+	if (!mAssetMgr.Init())
 	{
 		return false;
 	}
@@ -50,7 +50,7 @@ bool Engine::Run()
 		{
 			mTimer.Tick();
 			mWindow->GetInput()->Update();
-			//mScene.mLight->UpdatePos();
+			mScene.mLight->UpdatePos();
 			TestRender.TestDraw();
 		}
 	}

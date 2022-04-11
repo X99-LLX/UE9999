@@ -19,8 +19,13 @@ void Light::Init()
 void Light::UpdatePos()
 {
 	auto gt = Engine::GetEngine()->GetTimer();
-	auto offset = glm::sin(gt->TotalTime()) * 1000;
-	mPosition.x += offset;
+
+	mPosition = glm::rotate(mPosition, gt->DeltaTime(), glm::vec3{ 0.0f,0.0f,1.0f });
+
+	mLightData.LightDirection = mPosition;
+	CB->CopyData(0, mLightData);
+	UpdateView();
+	UpdateProj();
 }
 
 void Light::UpdateView()

@@ -73,7 +73,7 @@ void Render::UpdateRenderData()
 	{
 		UpdatePrimitiveMVP(pri.get());
 	}
-
+	
 }
 
 void Render::UpdatePrimitiveMVP(Primitive* p)
@@ -106,7 +106,6 @@ void Render::UpdatePrimitiveMVP(Primitive* p)
 
 void Render::TestDraw()
 {
-	//³¢ÊÔ»æÖÆ
 	mRHI->BeginFrame();
 	UpdateRenderData();
 	ShadowPass();

@@ -205,9 +205,9 @@ struct MatData
 struct LightData
 {
 	glm::vec3 LightDirection;
-	float LightIntensity = 10.0f;
+	float LightIntensity = 1.0f;
 	glm::vec3 LightColor = glm::vec3(1.0f);
-	float LightRadius = 3000.0f;
+	float LightRadius = 200.0f;
 };
 
 enum class HeapType
