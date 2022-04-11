@@ -20,7 +20,7 @@ void Light::UpdatePos()
 {
 	auto gt = Engine::GetEngine()->GetTimer();
 
-	mPosition = glm::rotate(mPosition, gt->DeltaTime(), glm::vec3{ 0.0f,0.0f,1.0f });
+	mPosition = glm::rotate(mPosition, gt->DeltaTime() * 0.2f, glm::vec3{ 0.0f,0.0f,1.0f });
 
 	mLightData.LightDirection = mPosition;
 	CB->CopyData(0, mLightData);
@@ -30,7 +30,7 @@ void Light::UpdatePos()
 
 void Light::UpdateView()
 {
-	mView = glm::lookAtLH(mPosition, mPosition + mTarget, glm::vec3(0.0f, 0.0f, 1.0f));
+	mView = glm::lookAtLH(mPosition, mTarget, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
 void Light::UpdateProj()

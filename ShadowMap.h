@@ -1,5 +1,5 @@
 #pragma once
-#define VIEW_SIZE 2048
+#define VIEW_SIZE 4096
 
 class ShadowMap
 {

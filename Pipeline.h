@@ -15,6 +15,7 @@ public:
 	{
 		ShaderName = p->GetShaderName();
 		PsoName = p->GetPsoName();
+		mType = p->mType;
 	}
 	virtual ~Pipeline();
 	void SetPsoName(std::string n) { PsoName = n; }

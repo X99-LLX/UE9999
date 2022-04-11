@@ -413,6 +413,8 @@ std::shared_ptr<Pipeline> DX12RHI::CreatePipeline(Pipeline* p)
 	psoDesc.SampleDesc.Quality = false ? (0 - 1) : 0;
 	psoDesc.DSVFormat = mDepthStencilFormat;
 
+	auto test = Pso->mType;
+
 	if (Pso->mType == PsoType::ShadowPSO)
 	{
 		psoDesc.RasterizerState.DepthBias = 10000.0f;

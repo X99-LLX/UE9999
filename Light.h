@@ -25,7 +25,7 @@ public:
 
 private:
 	glm::vec3 mPosition = { 1000.0f,0.0f,1000.0f };
-	glm::vec3 mTarget = { 1.0f,0.0f,-0.7f };
+	glm::vec3 mTarget = { 0.0f,0.0f,-0.0f };
 	glm::vec3 mUp = glm::vec3(0.0f, 0.0f, 1.0f);
 	float Radius = 2500;
 
