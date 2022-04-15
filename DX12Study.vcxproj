@@ -25,6 +25,7 @@
     <ClInclude Include="DX12Mesh.h" />
     <ClInclude Include="DX12Pipeline.h" />
     <ClInclude Include="DX12Primitive.h" />
+    <ClInclude Include="DX12RenderTarget.h" />
     <ClInclude Include="DX12Shader.h" />
     <ClInclude Include="DX12Texture.h" />
     <ClInclude Include="Camera.h" />
@@ -43,6 +44,7 @@
     <ClInclude Include="Pipeline.h" />
     <ClInclude Include="Primitive.h" />
     <ClInclude Include="Render.h" />
+    <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="ResourceManage.h" />
     <ClInclude Include="RHI.h" />
     <ClInclude Include="Scene.h" />
@@ -65,6 +67,7 @@
     <ClCompile Include="DX12Mesh.cpp" />
     <ClCompile Include="DX12Pipeline.cpp" />
     <ClCompile Include="DX12Primitive.cpp" />
+    <ClCompile Include="DX12RenderTarget.cpp" />
     <ClCompile Include="DX12Shader.cpp" />
     <ClCompile Include="DX12Texture.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -88,6 +91,7 @@
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="Primitive.cpp" />
     <ClCompile Include="Render.cpp" />
+    <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="ResourceManage.cpp" />
     <ClCompile Include="RHI.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -112,10 +116,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="BloomDown.hlsli" />
+    <None Include="BloomMergeps.hlsli" />
+    <None Include="BloomSetUp.hlsli" />
+    <None Include="BloomUp.hlsli" />
     <None Include="BRDF.hlsli" />
     <None Include="CommonH.hlsli" />
     <None Include="BlinnPhong.hlsli" />
+    <None Include="Cyberpunk.hlsli" />
     <None Include="ShadowH.hlsli" />
+    <None Include="BloomToneMap.hlsli" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

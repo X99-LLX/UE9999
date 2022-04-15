@@ -7,6 +7,7 @@
 #include "ShadowMap.h"
 #include "UpLoadBuffer.h"
 #include "DescHeapManager.h"
+#include "RenderTarget.h"
 
 class DX12RHI : public RHI
 {
@@ -27,24 +28,23 @@ public:
 	void OpenCmdList();
 	void CloseCmdList();
 
-	void ResetViewportsAndScissorRects(RtType rt);
-	void SetRTVAndDSV(RtType rt);
+	void ResetViewportsAndScissorRects(RenderTarget* rt);
+	void SetRTVAndDSV(RenderTarget* rt);
 
 
 	void SetRootSignature(Shader* s);
 
 	void ChangeResState();
-	void CloseRtv();
+	void ChangeResState(BufferState CurrnetState, BufferState ChangeState, RenderTarget* rt, RTBufferType type);
 
-	void BeginDrawShadow();
-
+	void ClearRenderTarget(RenderTarget* rt);
+	void ClearDepthStencil(RenderTarget* rt);
 	//some test
 	void InputAssetInfo(Mesh* mesh);
 	void SetDescHeap(HeapType ht);
 	void BeginFrame();
 	void EndFrame();
 	void BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht);
-	//void BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht);
 	void BindDataConstantBuffer(UINT32 Slot, UINT32 Address);
 	void Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset);
 	void DrawMesh(UINT32 IndexCount);
@@ -56,13 +56,15 @@ public:
 	std::shared_ptr<Primitive> CreatePrimitive(Primitive* p);
 	std::shared_ptr<Material> CreateMaterial(Material* m);
 	std::shared_ptr<Light> CreateLight();
+	std::shared_ptr<RenderTarget> CreateRenderTarget(std::string name, UINT32 width, UINT32 height, int num, RtType type);
+	void UpdateRenderTarget(std::shared_ptr<RenderTarget> rt, ColorFormat format);
+
 	void SetPSO(Pipeline* pl);
 
 	void ReSetCmdAlloc();
 protected:
 	
 	void BuildInputLayout();
-	void BuildPSO();
 	void CreateSwapChain();
 	void CreateCommandObjects();
 	void FlushCommandQueue();
@@ -74,6 +76,8 @@ protected:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 	
 	Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
+	UINT32 mOffsetMap[SwapChainBufferCount];
+
 	Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
 	Microsoft::WRL::ComPtr<IDXGIFactory4> mdxgiFactory;
@@ -85,34 +89,14 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mDirectCmdListAlloc;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mCommandList;
 	
+
 	DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
-	
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;
-
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> mCommonPSO = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> mShadowPSO = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3DBlob> mCommonVS = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> mCommonPS = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> mShadowVS = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> mShadowPS = nullptr;
-
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> mCommonRS = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> mShadowRS = nullptr;
-
-
-	std::unique_ptr<ShadowMap> mShadowMap = std::make_unique<ShadowMap>();
-
-
-	glm::mat4 mLightView = glm::mat4(1.0f);
-	glm::mat4 mLightProj = glm::mat4(1.0f);
-
+	//std::unique_ptr<ShadowMap> mShadowMap = std::make_unique<ShadowMap>();
 	DescHeapManager mHeapMng;
-
 	int TEST_dsvoffset = 0;
 };
 

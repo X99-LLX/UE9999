@@ -150,7 +150,11 @@
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClInclude>
     <ClInclude Include="Light.h" />
-    <ClInclude Include="DX12Material.h" />
+    <ClInclude Include="RenderTarget.h" />
+    <ClInclude Include="DX12RenderTarget.h" />
+    <ClInclude Include="DX12Material.h">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Win32Window.cpp">
@@ -248,7 +252,11 @@
       <Filter>Engine\Resource\GPUResource</Filter>
     </ClCompile>
     <ClCompile Include="Light.cpp" />
-    <ClCompile Include="DX12Material.cpp" />
+    <ClCompile Include="RenderTarget.cpp" />
+    <ClCompile Include="DX12RenderTarget.cpp" />
+    <ClCompile Include="DX12Material.cpp">
+      <Filter>Engine\Resource\DX12Resource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="CommonH.hlsli">
@@ -261,6 +269,24 @@
       <Filter>Other</Filter>
     </None>
     <None Include="BlinnPhong.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="BloomSetUp.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="BloomDown.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="BloomUp.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="BloomMergeps.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="BloomToneMap.hlsli">
+      <Filter>Other</Filter>
+    </None>
+    <None Include="Cyberpunk.hlsli">
       <Filter>Other</Filter>
     </None>
   </ItemGroup>

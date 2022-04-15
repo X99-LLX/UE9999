@@ -19,9 +19,6 @@ void SceneRender::AddMaterial(std::string MatName, std::shared_ptr<Material> m)
 void SceneRender::AddMesh(std::string MeshName, std::shared_ptr<Mesh> m)
 {
 	mMeshPool.insert({ MeshName,m });
-	/*OutputDebugStringA("----------------------------");
-	OutputDebugStringA(MeshName.c_str());
-	OutputDebugStringA("\n");*/
 }
 
 void SceneRender::AddPipeline(std::string PipelineName, std::shared_ptr<Pipeline> p)
@@ -37,6 +34,11 @@ void SceneRender::AddShader(std::string ShaderName, std::shared_ptr<Shader> s)
 void SceneRender::AddPrimitive(std::shared_ptr<Primitive> p)
 {
 	mPrimitivePool.push_back(p);
+}
+
+void SceneRender::AddRenderTarget(std::string RTname, std::shared_ptr<RenderTarget> rt)
+{
+	mRenderTargetPool.insert({ RTname,rt });
 }
 
 std::shared_ptr<Material> SceneRender::GetMaterial(std::string MaterialName)
@@ -80,6 +82,15 @@ std::shared_ptr<Texture> SceneRender::GetTexture(std::string TextureName)
 	if (mTexturePool.find(TextureName) != mTexturePool.end())
 	{
 		return mTexturePool.at(TextureName);
+	}
+	return nullptr;
+}
+
+std::shared_ptr<RenderTarget> SceneRender::GetRenderTarget(std::string RtName)
+{
+	if (mRenderTargetPool.find(RtName) != mRenderTargetPool.end())
+	{
+		return mRenderTargetPool.at(RtName);
 	}
 	return nullptr;
 }

@@ -7,6 +7,7 @@
 #include "DX12Primitive.h"
 #include "DX12Texture.h"
 #include "DX12Material.h"
+#include "DX12RenderTarget.h"
 #endif 
 
 
@@ -29,6 +30,9 @@ RHI* Render::GetRHI()
 void Render::BuildResource()
 {
 	mRHI->OpenCmdList();
+
+	TestTriangle();
+
 	auto resmng = ResourceManage::Get();
 	for (auto shader : resmng->ShaderAsset)
 	{
@@ -64,6 +68,49 @@ void Render::BuildResource()
 	}
 	scene->mLight = mRHI->CreateLight();
 	scene->mLight->CB->CopyData(0, scene->mLight->mLightData);
+
+	auto shadowRT = mRHI->CreateRenderTarget("Shadow", 4096, 4096, 0, RtType::ShadowRt);
+	mRHI->UpdateRenderTarget(shadowRT,ColorFormat::DXGI_FORMAT_A8_UNORM);
+	mSceneRender.AddRenderTarget(shadowRT->GetRenderTargetName(), shadowRT);
+
+	auto ColorRT = mRHI->CreateRenderTarget("Color", 1920, 1080, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(ColorRT, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(ColorRT->GetRenderTargetName(), ColorRT);
+
+	auto SetUpRT = mRHI->CreateRenderTarget("BloomSetUp", 480, 270, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(SetUpRT, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(SetUpRT->GetRenderTargetName(), SetUpRT);
+
+	auto DownRT = mRHI->CreateRenderTarget("BloomDown", 240, 135, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(DownRT, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(DownRT->GetRenderTargetName(), DownRT);
+
+	auto DownRT1 = mRHI->CreateRenderTarget("BloomDown1", 120, 67, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(DownRT1, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(DownRT1->GetRenderTargetName(), DownRT1);
+
+	auto DownRT2 = mRHI->CreateRenderTarget("BloomDown2", 60, 33, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(DownRT2, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(DownRT2->GetRenderTargetName(), DownRT2);
+
+	auto UpRT = mRHI->CreateRenderTarget("BloomUp", 120, 67, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(UpRT, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(UpRT->GetRenderTargetName(), UpRT);
+
+	auto UpRT1 = mRHI->CreateRenderTarget("BloomUp1", 240, 135, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(UpRT1, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(UpRT1->GetRenderTargetName(), UpRT1);
+
+	auto Mergeps = mRHI->CreateRenderTarget("BloomMergeps", 480, 270, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(Mergeps, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(Mergeps->GetRenderTargetName(), Mergeps);
+
+	auto Cyberpunk = mRHI->CreateRenderTarget("Cyberpunk", 1920, 1080, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(Cyberpunk, ColorFormat::DXGI_FORMAT_R8G8B8A8_UNORM);
+	mSceneRender.AddRenderTarget(Cyberpunk->GetRenderTargetName(), Cyberpunk);
+
+
+	auto a = DescHeapManager::Get();
 	mRHI->CloseCmdList();
 }
 
@@ -73,7 +120,6 @@ void Render::UpdateRenderData()
 	{
 		UpdatePrimitiveMVP(pri.get());
 	}
-	
 }
 
 void Render::UpdatePrimitiveMVP(Primitive* p)
@@ -109,15 +155,23 @@ void Render::TestDraw()
 	mRHI->BeginFrame();
 	UpdateRenderData();
 	ShadowPass();
-	BasePass();
+	//BasePass();
+	BloomPass();
+	CyberpunkPass();
 	mRHI->EndFrame();
 }
 
-void Render::BasePass()
+void Render::BloomBasePass()
 {
-	mRHI->ResetViewportsAndScissorRects(RtType::BaseRt);
-	mRHI->ChangeResState();
-	mRHI->SetRTVAndDSV(RtType::BaseRt);
+	auto brt = mSceneRender.GetRenderTarget("Color");
+	mRHI->ResetViewportsAndScissorRects(brt.get());
+	auto srt = mSceneRender.GetRenderTarget("Shadow");
+	
+	//mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PRESENT, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, nullptr, RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, srt.get(), RTBufferType::DepthBuffer);
+	mRHI->ClearRenderTarget(brt.get());
+	mRHI->ClearDepthStencil(brt.get());
+	mRHI->SetRTVAndDSV(brt.get());
 	auto actors = mSceneRender.GetPrimitive();
 	for (auto actor : actors)
 	{
@@ -162,20 +216,263 @@ void Render::BasePass()
 		auto dt = dynamic_cast<DX12Texture*>(Texture.get());
 		auto dnt = dynamic_cast<DX12Texture*>(NorTex.get());
 		mRHI->BindDataTable(4, dt->GetViewOffset(), HeapType::CBV_SRV_UAV);
-		mRHI->BindDataTable(6, dnt->GetViewOffset(), HeapType::CBV_SRV_UAV);
-		//must fix ,write first
-		mRHI->BindDataTable(0, 0, HeapType::SAMPLER);
 
+		auto dxsrt = dynamic_cast<DX12RenderTarget*>(srt.get());
+		mRHI->BindDataTable(5, dxsrt->GetOffset("DSSRV"), HeapType::CBV_SRV_UAV);
+
+		mRHI->BindDataTable(6, dnt->GetViewOffset(), HeapType::CBV_SRV_UAV);
 #endif 
 		auto indexCount = Mesh->IndexCount;
 		mRHI->DrawMesh(indexCount);
 	}
+	//mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PRESENT, nullptr, RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, srt.get(), RTBufferType::DepthBuffer);
+}
+
+void Render::BloomPass()
+{
+	BloomBasePass();
+	SetUpPass();
+	BloomDown("BloomDown", "BloomSetUp");
+	BloomDown("BloomDown1", "BloomDown");
+	BloomDown("BloomDown2", "BloomDown1");
+	BloomUp("BloomDown2", "BloomDown1", "BloomUp");
+	BloomUp("BloomUp", "BloomDown", "BloomUp1");
+	BloomMergeps();
+	BloomToneMap();
+}
+
+void Render::CyberpunkPass()
+{
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PRESENT, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, nullptr, RTBufferType::ColorBuffer);
+	mRHI->ResetViewportsAndScissorRects(nullptr);
+	mRHI->ClearRenderTarget(nullptr);
+	mRHI->ClearDepthStencil(nullptr);
+	mRHI->SetRTVAndDSV(nullptr);
+#ifdef _RHI_DX12 
+	auto Shader = mSceneRender.GetShader("CyberpunkShader");
+	auto Pipeline = mSceneRender.GetPipeline("CyberpunkPSO");
+	auto Mesh = mTriangle;
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto otherrt = mSceneRender.GetRenderTarget("Cyberpunk");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, otherrt.get(), RTBufferType::ColorBuffer);
+	auto dxotherrt = dynamic_cast<DX12RenderTarget*>(otherrt.get());
+	mRHI->BindDataTable(0, dxotherrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	auto size = dxotherrt->mSize;
+	mRHI->Bind32BitConstants(2, 2, &size, 0);
+
+#endif
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, otherrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PRESENT, nullptr, RTBufferType::ColorBuffer);
+
+
+}
+
+void Render::SetUpPass()
+{
+	auto bsurt = mSceneRender.GetRenderTarget("BloomSetUp");
+	mRHI->ResetViewportsAndScissorRects(bsurt.get());
+	mRHI->ClearRenderTarget(bsurt.get());
+	mRHI->ClearDepthStencil(bsurt.get());
+	mRHI->SetRTVAndDSV(bsurt.get());
+
+#ifdef _RHI_DX12   //bind res
+	auto Shader = mSceneRender.GetShader("BloomSetUpShader");
+	auto Pipeline = mSceneRender.GetPipeline("SetUpPSO");
+	auto Mesh = mTriangle;
+
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto colorrt = mSceneRender.GetRenderTarget("Color");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, colorrt.get(), RTBufferType::ColorBuffer);
+	auto dxcolorrt = dynamic_cast<DX12RenderTarget*>(colorrt.get());
+	mRHI->BindDataTable(0, dxcolorrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	auto size = dxcolorrt->mSize;
+	mRHI->Bind32BitConstants(1, 2, &size, 0);
+
+#endif 
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, colorrt.get(), RTBufferType::ColorBuffer);
+	//mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, bsurt.get(), RTBufferType::ColorBuffer);
+
+}
+
+void Render::BloomDown(std::string rtname, std::string srname)
+{
+	auto bdrt = mSceneRender.GetRenderTarget(rtname);
+	mRHI->ResetViewportsAndScissorRects(bdrt.get());
+	mRHI->ClearRenderTarget(bdrt.get());
+	mRHI->ClearDepthStencil(bdrt.get());
+	mRHI->SetRTVAndDSV(bdrt.get());
+
+#ifdef _RHI_DX12   //bind res
+	auto Shader = mSceneRender.GetShader("BloomDown");
+	auto Pipeline = mSceneRender.GetPipeline("DownPSO");
+	auto Mesh = mTriangle;
+
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto colorrt = mSceneRender.GetRenderTarget(srname);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, colorrt.get(), RTBufferType::ColorBuffer);
+	auto dxcolorrt = dynamic_cast<DX12RenderTarget*>(colorrt.get());
+	mRHI->BindDataTable(0, dxcolorrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	auto size = dxcolorrt->mSize;
+	mRHI->Bind32BitConstants(1, 2, &size, 0);
+
+#endif 
+
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, colorrt.get(), RTBufferType::ColorBuffer);
+}
+
+void Render::BloomUp(std::string minRt, std::string OtherRt, std::string UpRT)
+{
+	auto rt = mSceneRender.GetRenderTarget(UpRT);
+	mRHI->ResetViewportsAndScissorRects(rt.get());
+	mRHI->ClearRenderTarget(rt.get());
+	mRHI->ClearDepthStencil(rt.get());
+	mRHI->SetRTVAndDSV(rt.get());
+#ifdef _RHI_DX12 
+	auto Shader = mSceneRender.GetShader("BloomUp");
+	auto Pipeline = mSceneRender.GetPipeline("UpPSO");
+	auto Mesh = mTriangle;
+
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto otherrt = mSceneRender.GetRenderTarget(OtherRt);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, otherrt.get(), RTBufferType::ColorBuffer);
+	auto dxotherrt = dynamic_cast<DX12RenderTarget*>(otherrt.get());
+	mRHI->BindDataTable(0, dxotherrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	glm::vec2 size = dxotherrt->mSize;
+	mRHI->Bind32BitConstants(2, 2, &size, 0);
+
+	auto minrt = mSceneRender.GetRenderTarget(minRt);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, minrt.get(), RTBufferType::ColorBuffer);
+	auto dxminrt = dynamic_cast<DX12RenderTarget*>(minrt.get());
+	mRHI->BindDataTable(1, dxminrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	size = dxminrt->mSize;
+	/*size.x = 20;
+	size.y = 20;*/
+	mRHI->Bind32BitConstants(2, 2, &size, 2);
+#endif
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, otherrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, minrt.get(), RTBufferType::ColorBuffer);
+
+}
+
+void Render::BloomMergeps()
+{
+	auto rt = mSceneRender.GetRenderTarget("BloomMergeps");
+	mRHI->ResetViewportsAndScissorRects(rt.get());
+	mRHI->ClearRenderTarget(rt.get());
+	mRHI->ClearDepthStencil(rt.get());
+	mRHI->SetRTVAndDSV(rt.get());
+#ifdef _RHI_DX12 
+	auto Shader = mSceneRender.GetShader("BloomMergeps");
+	auto Pipeline = mSceneRender.GetPipeline("MergepsPSO");
+	auto Mesh = mTriangle;
+
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto otherrt = mSceneRender.GetRenderTarget("BloomUp1");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, otherrt.get(), RTBufferType::ColorBuffer);
+	auto dxotherrt = dynamic_cast<DX12RenderTarget*>(otherrt.get());
+	mRHI->BindDataTable(0, dxotherrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	auto size = dxotherrt->mSize;
+	size.x = 4;
+	size.y = 80;
+	mRHI->Bind32BitConstants(2, 2, &size, 2);
+
+	auto minrt = mSceneRender.GetRenderTarget("BloomSetUp");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, minrt.get(), RTBufferType::ColorBuffer);
+	auto dxminrt = dynamic_cast<DX12RenderTarget*>(minrt.get());
+	mRHI->BindDataTable(1, dxminrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	size = dxminrt->mSize;
+	mRHI->Bind32BitConstants(2, 2, &size, 0);
+#endif
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, otherrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, minrt.get(), RTBufferType::ColorBuffer);
+
+}
+
+void Render::BloomToneMap()
+{
+	//mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PRESENT, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, nullptr, RTBufferType::ColorBuffer);
+	auto rt = mSceneRender.GetRenderTarget("Cyberpunk");
+	mRHI->ResetViewportsAndScissorRects(rt.get());
+	mRHI->ClearRenderTarget(rt.get());
+	mRHI->ClearDepthStencil(rt.get());
+	mRHI->SetRTVAndDSV(rt.get());
+#ifdef _RHI_DX12 
+	auto Shader = mSceneRender.GetShader("BloomToneMap");
+	auto Pipeline = mSceneRender.GetPipeline("ToneMapPSO");
+	auto Mesh = mTriangle;
+
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto otherrt = mSceneRender.GetRenderTarget("Color");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, otherrt.get(), RTBufferType::ColorBuffer);
+	auto dxotherrt = dynamic_cast<DX12RenderTarget*>(otherrt.get());
+	mRHI->BindDataTable(0, dxotherrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	auto size = dxotherrt->mSize;
+	mRHI->Bind32BitConstants(2, 2, &size, 0);
+
+	auto minrt = mSceneRender.GetRenderTarget("BloomMergeps");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, minrt.get(), RTBufferType::ColorBuffer);
+	auto dxminrt = dynamic_cast<DX12RenderTarget*>(minrt.get());
+	mRHI->BindDataTable(1, dxminrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+#endif
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, otherrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, minrt.get(), RTBufferType::ColorBuffer);
+	//mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PRESENT, nullptr, RTBufferType::ColorBuffer);
+
+}
+
+void Render::TestTriangle()
+{
+	MeshVertexInfo info;
+	info.mIndex = { 0,1,2 };
+	info.mVertex = { glm::vec3{-1,1,0},glm::vec3{-1,-3,0},glm::vec3{3,1,0} };
+	info.mTangent = { glm::vec4(0.0f), glm::vec4(0.0f), glm::vec4(0.0f) };
+	info.mNormal = { glm::vec4(0.0f), glm::vec4(0.0f), glm::vec4(0.0f) };
+	info.mTexCoord = { glm::vec2(0.0f), glm::vec2(0.0f), glm::vec2(0.0f) };
+
+	auto test = std::make_shared<Mesh>();
+	test->SetMeshInfo(info);
+
+	mTriangle = mRHI->CreateMesh(test);
+	mTriangle->IndexCount = 3;
 }
 
 void Render::ShadowPass()
 {
-	mRHI->ResetViewportsAndScissorRects(RtType::ShadowRt);
-	mRHI->SetRTVAndDSV(RtType::ShadowRt);
+	auto srt = mSceneRender.GetRenderTarget("Shadow");
+	mRHI->ResetViewportsAndScissorRects(srt.get());
+	mRHI->ClearDepthStencil(srt.get());
+	mRHI->SetRTVAndDSV(srt.get());
 	auto actors = mSceneRender.GetPrimitive();
 	for (auto actor : actors)
 	{
@@ -201,6 +498,75 @@ void Render::ShadowPass()
 		auto indexCount = Mesh->IndexCount;
 		mRHI->DrawMesh(indexCount);
 	}
+	
+}
+
+void Render::BasePass()
+{
+	auto brt = mSceneRender.GetRenderTarget("Color");
+	mRHI->ResetViewportsAndScissorRects(nullptr);
+	auto srt = mSceneRender.GetRenderTarget("Shadow");
+
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PRESENT, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, nullptr, RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, srt.get(), RTBufferType::DepthBuffer);
+	mRHI->ClearRenderTarget(nullptr);
+	mRHI->ClearDepthStencil(nullptr);
+	mRHI->SetRTVAndDSV(nullptr);
+	auto actors = mSceneRender.GetPrimitive();
+	for (auto actor : actors)
+	{
+		auto Mesh = mSceneRender.GetMesh(actor->GetMeshName());
+		if (Mesh == nullptr)
+		{
+			continue;
+		}
+		auto Material = mSceneRender.GetMaterial(Mesh->GetMaterialName());
+		auto Pipeline = mSceneRender.GetPipeline("BasePSO");
+		auto Shader = mSceneRender.GetShader(Pipeline->GetShaderName());
+		if (Shader == nullptr)
+		{
+			continue;
+		}
+		auto Texture = mSceneRender.GetTexture(Material->GetTextures().at(0));
+		if (Texture == nullptr)
+		{
+			continue;
+		}
+		auto NorTex = mSceneRender.GetTexture(Material->GetTextures().at(1));
+		mRHI->SetRootSignature(Shader.get());
+		mRHI->SetPSO(Pipeline.get());
+		mRHI->InputAssetInfo(Mesh.get());
+#ifdef _RHI_DX12   //bind res
+		auto camera = Engine::GetEngine()->GetScene()->mCamera.GetCameraPos();
+		mRHI->Bind32BitConstants(0, 3, &camera, 0);
+		auto dp = dynamic_cast<DX12Primitive*>(actor.get());
+		auto address = dp->GetCB()->Resource()->GetGPUVirtualAddress();
+		mRHI->BindDataConstantBuffer(1, address);
+
+		auto dm = dynamic_cast<DX12Material*>(Material.get());
+		auto& test = dm->GetMatData();
+		dm->GetCB()->CopyData(0, test);
+		auto address1 = dm->GetCB()->Resource()->GetGPUVirtualAddress();
+		mRHI->BindDataConstantBuffer(2, address1);
+
+		auto light = Engine::GetEngine()->GetScene()->mLight;
+		auto address2 = light->CB->Resource()->GetGPUVirtualAddress();
+		mRHI->BindDataConstantBuffer(3, address2);
+
+		auto dt = dynamic_cast<DX12Texture*>(Texture.get());
+		auto dnt = dynamic_cast<DX12Texture*>(NorTex.get());
+		mRHI->BindDataTable(4, dt->GetViewOffset(), HeapType::CBV_SRV_UAV);
+
+		auto dxsrt = dynamic_cast<DX12RenderTarget*>(srt.get());
+		mRHI->BindDataTable(5, dxsrt->GetOffset("DSSRV"), HeapType::CBV_SRV_UAV);
+
+		mRHI->BindDataTable(6, dnt->GetViewOffset(), HeapType::CBV_SRV_UAV);
+#endif 
+		auto indexCount = Mesh->IndexCount;
+		mRHI->DrawMesh(indexCount);
+	}
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_PRESENT, nullptr, RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, srt.get(), RTBufferType::DepthBuffer);
 }
 
 RHI* Render::CreateRHI()

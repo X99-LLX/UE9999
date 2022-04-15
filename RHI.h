@@ -5,22 +5,15 @@
 #include "SceneRender.h"
 
 
-/// <summary>  TEST
-enum class RtType
-{
-	BaseRt,
-	ShadowRt,
-};
-/// </summary>
+
 
 class RHI 
 {
 public:
 	virtual ~RHI();
 	virtual bool Init() = 0;
-	virtual void ChangeResState() = 0;
-	virtual void CloseRtv() = 0;
-	virtual void BeginDrawShadow() = 0;
+	//virtual void ChangeResState() = 0;
+	virtual void ChangeResState(BufferState CurrnetState, BufferState ChangeState, RenderTarget* rt, RTBufferType type) = 0;
 	virtual void SetPSO(Pipeline* pl) = 0;
 	virtual std::shared_ptr<Texture> CreateTexture(Texture* t) = 0;
 	virtual std::shared_ptr<Material> CreateMaterial(Material* m) = 0;
@@ -28,9 +21,15 @@ public:
 	virtual std::shared_ptr<Pipeline> CreatePipeline(Pipeline* p) = 0;
 	virtual std::shared_ptr<Shader> CreateShader(Shader* s) = 0;
 	virtual std::shared_ptr<Primitive> CreatePrimitive(Primitive* p) = 0;
-
+	virtual std::shared_ptr<RenderTarget> CreateRenderTarget(std::string name, UINT32 width, UINT32 height, int num, RtType type) = 0;
 	virtual std::shared_ptr<Light> CreateLight() = 0;
+
+	virtual void UpdateRenderTarget(std::shared_ptr<RenderTarget> rt, ColorFormat format) = 0;
+
+	virtual void ClearRenderTarget(RenderTarget* rt) = 0;
+	virtual void ClearDepthStencil(RenderTarget* rt) = 0;
 	//some test
+
 	virtual void BeginFrame() = 0;
 	virtual void EndFrame() = 0;
 	virtual void InputAssetInfo(Mesh* mesh) = 0;
@@ -39,8 +38,8 @@ public:
 	virtual void CloseCmdList() = 0;
 
 	//±ØÐë¸ÄµÄ
-	virtual void SetRTVAndDSV(RtType rt) = 0;
-	virtual void ResetViewportsAndScissorRects(RtType rt) = 0;
+	virtual void SetRTVAndDSV(RenderTarget* rt) = 0;
+	virtual void ResetViewportsAndScissorRects(RenderTarget* rt) = 0;
 
 	virtual void BindDataTable(UINT32 Slot, UINT32 HandleOffset, HeapType ht) = 0;
 	virtual void BindDataConstantBuffer(UINT32 Slot, UINT32 Address) = 0;

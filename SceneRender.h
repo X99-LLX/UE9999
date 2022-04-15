@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include "Primitive.h"
 #include "Singleton.h"
+#include "RenderTarget.h"
 
 class SceneRender : public Singleton<SceneRender>
 {
@@ -18,6 +19,7 @@ public:
 	void AddPipeline(std::string PipelineName, std::shared_ptr<Pipeline> p);
 	void AddShader(std::string ShaderName, std::shared_ptr<Shader> s);
 	void AddPrimitive(std::shared_ptr<Primitive> p);
+	void AddRenderTarget(std::string RTname, std::shared_ptr<RenderTarget> rt);
 
 	std::vector<std::shared_ptr<Primitive>> GetPrimitive() { return mPrimitivePool; }
 	std::shared_ptr<Material> GetMaterial(std::string MaterialName);
@@ -25,12 +27,14 @@ public:
 	std::shared_ptr<Shader> GetShader(std::string ShaderName);
 	std::shared_ptr<Pipeline> GetPipeline(std::string Pipelinename);
 	std::shared_ptr<Texture> GetTexture(std::string TextureName);
+	std::shared_ptr<RenderTarget> GetRenderTarget(std::string RtName);
 protected:
 	std::unordered_map<std::string, std::shared_ptr<Texture>> mTexturePool;
 	std::unordered_map<std::string, std::shared_ptr<Material>> mMaterialPool;
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> mMeshPool;
 	std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelinePool;
 	std::unordered_map<std::string, std::shared_ptr<Shader>> mShaderPool;
+	std::unordered_map<std::string, std::shared_ptr<RenderTarget>> mRenderTargetPool;
 	std::vector<std::shared_ptr<Primitive>> mPrimitivePool;
 };
 

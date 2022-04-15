@@ -52,9 +52,33 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 
 	CreateShader("BaseShader", L"Shaders\\color.hlsl");
 	CreateShader("ShadowShader", L"Shaders\\Shadows.hlsl");
+	CreateShader("BloomShader", L"Shaders\\color.hlsl");
+
+	CreateShader("BloomSetUpShader", L"Shaders\\BloomSetUp.hlsl");
+	CreateShader("BloomDown", L"Shaders\\BloomDown.hlsl");
+	CreateShader("BloomUp", L"Shaders\\BloomUp.hlsl");
+	CreateShader("BloomMergeps", L"Shaders\\BloomMergeps.hlsl");
+	CreateShader("BloomToneMap", L"Shaders\\BloomToneMap.hlsl");
+
+	//cyberpunk
+	CreateShader("CyberpunkShader", L"Shaders\\Cyberpunk.hlsl");
+	CreatePipeline("CyberpunkShader", "CyberpunkPSO", PsoType::BasePSO);
+
+
+
+
 	CreatePipeline("BaseShader", "BasePSO", PsoType::BasePSO);
+
 	CreatePipeline("ShadowShader", "ShadowPSO", PsoType::ShadowPSO);
-	CreateMaterial("BaseMaterial", "BasePSO");
+	CreatePipeline("BloomShader", "BloomPSO", PsoType::HDRPso);
+	CreatePipeline("BloomSetUpShader", "SetUpPSO", PsoType::HDRPso);
+	CreatePipeline("BloomDown", "DownPSO", PsoType::HDRPso);
+	CreatePipeline("BloomUp", "UpPSO", PsoType::HDRPso);
+	CreatePipeline("BloomMergeps", "MergepsPSO", PsoType::HDRPso);
+	CreatePipeline("BloomToneMap", "ToneMapPSO", PsoType::BasePSO);
+
+	//CreateMaterial("BaseMaterial", "BasePSO");
+	CreateMaterial("BaseMaterial", "BloomPSO");
 }
 
 Texture* ResourceManage::GetTexture(std::string name)
@@ -138,6 +162,10 @@ void ResourceManage::CreatePipeline(std::string shadername, std::string PsoName,
 	pipeline->SetShaderName(shadername);
 	pipeline->SetPsoName(PsoName);
 	pipeline->mType = pt;
+	if (pt == PsoType::HDRPso) 
+	{
+		pipeline->mFormat = ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT;
+	}
 	PipelineAsset.insert({ PsoName,pipeline });
 }
 

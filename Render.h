@@ -1,6 +1,8 @@
 #pragma once
 #include "RHI.h"
 
+
+
 class Render
 {
 public:
@@ -19,6 +21,17 @@ private:
 	void UpdatePrimitiveMVP(Primitive* p);
 	void ShadowPass();
 	void BasePass();
+	void BloomPass();
+	void CyberpunkPass();
+
+	void BloomBasePass();
+	void SetUpPass();
+	void BloomDown(std::string rtname, std::string srname);
+	void BloomUp(std::string minRt, std::string OtherRt ,std::string UpRT);
+	void BloomMergeps();
+	void BloomToneMap();
+
+	void TestTriangle();
 private:
 	RHI* mRHI;
 	SceneRender mSceneRender;
@@ -28,5 +41,7 @@ private:
 		0.0f, -0.5f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.0f, 1.0f);
+
+	std::shared_ptr<Mesh> mTriangle;
 };
 

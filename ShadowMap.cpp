@@ -19,9 +19,9 @@ void ShadowMap::Init(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE Hsrv, D3D
 	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-	D3D12_CLEAR_VALUE optClear;                 //清除操作最优化的值
+	D3D12_CLEAR_VALUE optClear;                 
 	optClear.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	optClear.DepthStencil.Depth = 1.0f;         //距离设置为最远
+	optClear.DepthStencil.Depth = 1.0f;         
 	optClear.DepthStencil.Stencil = 0;
 
 	ThrowIfFailed(device->CreateCommittedResource(          //同时创建一个资源和一个隐式堆，使得堆足够大以包含整个资源，并且资源被映射到堆。
