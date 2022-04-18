@@ -537,7 +537,7 @@ void DX12RHI::UpdateRenderTarget(std::shared_ptr<RenderTarget> rt, ColorFormat f
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
 			&RTdesc,
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_COMMON,
 			&optClear,
 			IID_PPV_ARGS(dxrt->GetRTBuffer().GetAddressOf())));
 
@@ -588,7 +588,7 @@ void DX12RHI::UpdateRenderTarget(std::shared_ptr<RenderTarget> rt, ColorFormat f
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
 		&depthStencilDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
 		&optClear,
 		IID_PPV_ARGS(dxrt->GetDSBuffer().GetAddressOf())));
 

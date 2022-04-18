@@ -289,5 +289,8 @@
     <None Include="Cyberpunk.hlsli">
       <Filter>Other</Filter>
     </None>
+    <None Include="BloomMix.hlsli">
+      <Filter>Other</Filter>
+    </None>
   </ItemGroup>
 </Project>

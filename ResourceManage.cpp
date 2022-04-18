@@ -59,6 +59,7 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 	CreateShader("BloomUp", L"Shaders\\BloomUp.hlsl");
 	CreateShader("BloomMergeps", L"Shaders\\BloomMergeps.hlsl");
 	CreateShader("BloomToneMap", L"Shaders\\BloomToneMap.hlsl");
+	CreateShader("BloomMix", L"Shaders\\BloomMix.hlsl");
 
 	//cyberpunk
 	CreateShader("CyberpunkShader", L"Shaders\\Cyberpunk.hlsl");
@@ -75,6 +76,7 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 	CreatePipeline("BloomDown", "DownPSO", PsoType::HDRPso);
 	CreatePipeline("BloomUp", "UpPSO", PsoType::HDRPso);
 	CreatePipeline("BloomMergeps", "MergepsPSO", PsoType::HDRPso);
+	CreatePipeline("BloomMix", "MixPSO", PsoType::HDRPso);
 	CreatePipeline("BloomToneMap", "ToneMapPSO", PsoType::BasePSO);
 
 	//CreateMaterial("BaseMaterial", "BasePSO");

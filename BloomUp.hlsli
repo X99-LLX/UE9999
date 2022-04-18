@@ -1,8 +1,8 @@
 #define BloomUp_RootSig \
 	"RootFlags( ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT ), " \
-	"DescriptorTable(SRV(t0, numDescriptors = 1),visibility = SHADER_VISIBILITY_PIXEL)," \
-	"DescriptorTable(SRV(t1, numDescriptors = 1),visibility = SHADER_VISIBILITY_PIXEL)," \
-	"RootConstants(b0, num32BitConstants = 4, visibility = SHADER_VISIBILITY_PIXEL), " \
+	"DescriptorTable(SRV(t0, numDescriptors = 1),visibility = SHADER_VISIBILITY_ALL)," \
+	"DescriptorTable(SRV(t1, numDescriptors = 1),visibility = SHADER_VISIBILITY_ALL)," \
+	"RootConstants(b0, num32BitConstants = 4, visibility = SHADER_VISIBILITY_ALL), " \
 	"StaticSampler(s0," \
 	"addressU = TEXTURE_ADDRESS_CLAMP," \
 	"addressV = TEXTURE_ADDRESS_CLAMP," \

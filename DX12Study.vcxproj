@@ -118,6 +118,7 @@
   <ItemGroup>
     <None Include="BloomDown.hlsli" />
     <None Include="BloomMergeps.hlsli" />
+    <None Include="BloomMix.hlsli" />
     <None Include="BloomSetUp.hlsli" />
     <None Include="BloomUp.hlsli" />
     <None Include="BRDF.hlsli" />
