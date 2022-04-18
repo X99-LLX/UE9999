@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "DX12RHI.h"
 #include "Engine.h"
+#include <pix.h>
 
 #include "DX12Pipeline.h"
 #include "DX12Texture.h"
@@ -332,6 +333,16 @@ void DX12RHI::Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT
 void DX12RHI::DrawMesh(UINT32 IndexCount)
 {
 	mCommandList->DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
+}
+
+void DX12RHI::EventBegin(std::string EventName)
+{
+	PIXBeginEvent(mCommandList.Get(), 0, EventName.c_str());
+}
+
+void DX12RHI::EventEnd()
+{
+	PIXEndEvent(mCommandList.Get());
 }
 
 std::shared_ptr<Texture> DX12RHI::CreateTexture(Texture* t)

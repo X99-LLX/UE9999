@@ -28,6 +28,9 @@ public:
 
 	virtual void ClearRenderTarget(RenderTarget* rt) = 0;
 	virtual void ClearDepthStencil(RenderTarget* rt) = 0;
+	virtual void EventBegin(std::string EventName) = 0;
+	virtual void EventEnd() = 0;
+
 	//some test
 
 	virtual void BeginFrame() = 0;

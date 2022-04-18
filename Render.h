@@ -20,18 +20,20 @@ private:
 	void UpdateRenderData();
 	void UpdatePrimitiveMVP(Primitive* p);
 	void ShadowPass();
-	void BasePass();
 	void BloomPass();
 	void CyberpunkPass();
 
-	void BloomBasePass();
+	void BasePass();
 	void SetUpPass();
 	void BloomDown(std::string rtname, std::string srname);
 	void BloomUp(std::string minRt, std::string OtherRt ,std::string UpRT);
-	void BloomMergeps();
+	void BloomMergeps(std::string OtherRt, std::string UpRT);
 	void BloomToneMap();
 
+
+	void ShowColorBufferPass();
 	void TestTriangle();
+
 private:
 	RHI* mRHI;
 	SceneRender mSceneRender;
@@ -43,5 +45,6 @@ private:
 		0.5f, 0.5f, 0.0f, 1.0f);
 
 	std::shared_ptr<Mesh> mTriangle;
+	std::string mCurrentColorBuffer = "Color";
 };
 

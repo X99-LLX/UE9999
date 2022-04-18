@@ -52,9 +52,8 @@ float4 PS(VertexOut pin) : SV_TARGET
 	Tex.y = 1.0f * Y / RenderTargetSize[1];
 
 	float4 SceneColor = gSceneColor.Sample(gSceneColorSampler, Tex);
-	float4 BloomColor = gSunMergeColor.Sample(gSceneColorSampler, Tex);
 
-	half3 LinearColor = SceneColor.rgb + BloomColor.rgb;
+	half3 LinearColor = SceneColor.rgb;
 
 	float4 OutColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	OutColor.rgb = ACESToneMapping(LinearColor, 1.0f);

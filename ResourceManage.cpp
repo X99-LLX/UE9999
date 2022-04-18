@@ -62,7 +62,7 @@ void ResourceManage::LoadMap(std::string MapName, std::vector<std::shared_ptr<Pr
 
 	//cyberpunk
 	CreateShader("CyberpunkShader", L"Shaders\\Cyberpunk.hlsl");
-	CreatePipeline("CyberpunkShader", "CyberpunkPSO", PsoType::BasePSO);
+	CreatePipeline("CyberpunkShader", "CyberpunkPSO", PsoType::HDRPso);
 
 
 

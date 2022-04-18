@@ -5,6 +5,8 @@ SamplerState gSceneColorSampler : register(s0);
 
 float2 RenderTargetSize : register(b0);
 
+float2 gOffset			: register(b1);
+
 struct VertexIn
 {
 	float3 PosL			: POSITION;
@@ -41,6 +43,19 @@ float4 PS(VertexOut pin) : SV_TARGET
 	Tex.y = 1.0f * Y / Height;
 
 	float2 Offset;
+	/*float temp;
+
+	if (gOffset.x % 2 == 0)
+	{
+		temp = 20.0f * sin(gOffset.x);
+	}
+
+	else
+	{
+		temp = 0.0f;
+	}*/
+	
+	
 	Offset.x = 5.0f / Width;
 	Offset.y = 5.0f / Height;
 

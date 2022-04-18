@@ -133,9 +133,9 @@ float4 PS(VertexOut pin) : SV_Target
 
 	SurfaceInfo surfaceInfo = GetSurfaceInfo(BaseColor, Metallic, Roughness);
 
-	Output.rgb += ComputeDirectionalLight(gLightPosition - pin.WorldPos, bumpedNormalW, 1.f, CameraLoc.xyz - pin.WorldPos, Roughness, BaseColor, surfaceInfo.F0, surfaceInfo.F90) * Shadow;
+	Output.rgb += ComputeDirectionalLight(gLightPosition - pin.WorldPos, bumpedNormalW, 1.f, CameraLoc.xyz - pin.WorldPos, Roughness, BaseColor, surfaceInfo.F0, surfaceInfo.F90) * Shadow * 5.0f;
 	Output.rgb += Ambient * BaseColor.rgb;
-	Output.rgb = pow(Output.rgb, 3);
+	Output.rgb = pow(Output.rgb, 1 / 1.2f);
 	return Output;
 	/*{
 		float3 PointLightPos = gLightPosition;

@@ -48,6 +48,8 @@ public:
 	void BindDataConstantBuffer(UINT32 Slot, UINT32 Address);
 	void Bind32BitConstants(UINT32 Slot, UINT32 num, const void* data, UINT32 offset);
 	void DrawMesh(UINT32 IndexCount);
+	void EventBegin(std::string EventName);
+	void EventEnd();
 
 	std::shared_ptr<Texture> CreateTexture(Texture* t);
 	std::shared_ptr<Mesh> CreateMesh(std::shared_ptr<Mesh> m);
