@@ -43,21 +43,13 @@ float4 PS(VertexOut pin) : SV_TARGET
 	Tex.y = 1.0f * Y / Height;
 
 	float2 Offset;
-	/*float temp;
+	float temp;
 
-	if (gOffset.x % 2 == 0)
-	{
-		temp = 20.0f * sin(gOffset.x);
-	}
-
-	else
-	{
-		temp = 0.0f;
-	}*/
+	temp = 5.0f * sin(gOffset.x);
 	
 	
-	Offset.x = 5.0f / Width;
-	Offset.y = 5.0f / Height;
+	Offset.x = temp / Width;
+	Offset.y = temp / Height;
 
 	float R = gSceneColor.Sample(gSceneColorSampler, Tex + float2(-Offset.x, -Offset.y)).x;
 	float G = gSceneColor.Sample(gSceneColorSampler, Tex + float2(+Offset.x, +Offset.y)).y;

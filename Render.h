@@ -28,7 +28,7 @@ private:
 	void BloomDown(std::string rtname, std::string srname);
 	void BloomUp(std::string minRt, std::string OtherRt ,std::string UpRT);
 	void BloomMergeps(std::string OtherRt, std::string UpRT);
-	void BloomToneMap();
+	
 
 
 	void ShowColorBufferPass();
