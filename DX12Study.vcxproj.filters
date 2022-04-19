@@ -292,5 +292,8 @@
     <None Include="BloomMix.hlsli">
       <Filter>Other</Filter>
     </None>
+    <None Include="Water.hlsli">
+      <Filter>Other</Filter>
+    </None>
   </ItemGroup>
 </Project>

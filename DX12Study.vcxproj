@@ -127,6 +127,7 @@
     <None Include="Cyberpunk.hlsli" />
     <None Include="ShadowH.hlsli" />
     <None Include="BloomToneMap.hlsli" />
+    <None Include="Water.hlsli" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

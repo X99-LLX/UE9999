@@ -22,6 +22,8 @@ private:
 	void ShadowPass();
 	void BloomPass();
 	void CyberpunkPass();
+	void WaterPass();
+	void KernelPass();
 
 	void BasePass();
 	void SetUpPass();

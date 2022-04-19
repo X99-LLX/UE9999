@@ -113,6 +113,13 @@ void Render::BuildResource()
 	mRHI->UpdateRenderTarget(Cyberpunk, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
 	mSceneRender.AddRenderTarget(Cyberpunk->GetRenderTargetName(), Cyberpunk);
 
+	auto Water = mRHI->CreateRenderTarget("Water", 1920, 1080, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(Water, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(Water->GetRenderTargetName(), Water);
+
+	auto Kernel = mRHI->CreateRenderTarget("Kernel", 1920, 1080, 0, RtType::BaseRt);
+	mRHI->UpdateRenderTarget(Kernel, ColorFormat::DXGI_FORMAT_R16G16B16A16_FLOAT);
+	mSceneRender.AddRenderTarget(Kernel->GetRenderTargetName(), Kernel);
 
 	auto a = DescHeapManager::Get();
 	mRHI->CloseCmdList();
@@ -164,6 +171,8 @@ void Render::TestDraw()
 	mRHI->EventBegin("PostProcess");
 	BloomPass();
 	CyberpunkPass();
+	WaterPass();
+	KernelPass();
 	mRHI->EventEnd();
 
 	ShowColorBufferPass();
@@ -289,6 +298,87 @@ void Render::CyberpunkPass()
 	mRHI->EventEnd();
 	mCurrentColorBuffer = "Cyberpunk";
 
+}
+
+void Render::WaterPass()
+{
+	mRHI->EventBegin("-----WaterPass-----");
+	auto bdrt = mSceneRender.GetRenderTarget("Water");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_COMMON, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, bdrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_GENERIC_READ, BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, bdrt.get(), RTBufferType::DepthBuffer);
+
+	mRHI->ResetViewportsAndScissorRects(bdrt.get());
+	mRHI->ClearRenderTarget(bdrt.get());
+	mRHI->ClearDepthStencil(bdrt.get());
+	mRHI->SetRTVAndDSV(bdrt.get());
+#ifdef _RHI_DX12 
+	auto Shader = mSceneRender.GetShader("Water");
+	auto Pipeline = mSceneRender.GetPipeline("WaterPSO");
+	auto Mesh = mTriangle;
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto srrt = mSceneRender.GetRenderTarget(mCurrentColorBuffer);
+
+	auto dxsrrt = dynamic_cast<DX12RenderTarget*>(srrt.get());
+	mRHI->BindDataTable(0, dxsrrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	auto size = dxsrrt->mSize;
+	mRHI->Bind32BitConstants(2, 2, &size, 0);
+	glm::vec2 Offset;
+	Offset.x = Engine::GetEngine()->GetTimer()->TotalTime();
+	Offset.y = Engine::GetEngine()->GetTimer()->DeltaTime();
+	mRHI->Bind32BitConstants(2, 2, &Offset, 2);
+#endif
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_COMMON, bdrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, BufferState::D3D12_RESOURCE_STATE_GENERIC_READ, bdrt.get(), RTBufferType::DepthBuffer);
+
+
+	mRHI->EventEnd();
+	mCurrentColorBuffer = "Water";
+}
+
+void Render::KernelPass()
+{
+	mRHI->EventBegin("-----KernelPass-----");
+	auto bdrt = mSceneRender.GetRenderTarget("Kernel");
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_COMMON, BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, bdrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_GENERIC_READ, BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, bdrt.get(), RTBufferType::DepthBuffer);
+
+	mRHI->ResetViewportsAndScissorRects(bdrt.get());
+	mRHI->ClearRenderTarget(bdrt.get());
+	mRHI->ClearDepthStencil(bdrt.get());
+	mRHI->SetRTVAndDSV(bdrt.get());
+#ifdef _RHI_DX12 
+	auto Shader = mSceneRender.GetShader("Kernel");
+	auto Pipeline = mSceneRender.GetPipeline("KernelPSO");
+	auto Mesh = mTriangle;
+	mRHI->SetRootSignature(Shader.get());
+	mRHI->SetPSO(Pipeline.get());
+	mRHI->InputAssetInfo(Mesh.get());
+
+	auto srrt = mSceneRender.GetRenderTarget(mCurrentColorBuffer);
+
+	auto dxsrrt = dynamic_cast<DX12RenderTarget*>(srrt.get());
+	mRHI->BindDataTable(0, dxsrrt->GetOffset("RTSRV"), HeapType::CBV_SRV_UAV);
+	auto size = dxsrrt->mSize;
+	mRHI->Bind32BitConstants(2, 2, &size, 0);
+	glm::vec2 Offset;
+	Offset.x = Engine::GetEngine()->GetTimer()->TotalTime();
+	Offset.y = Engine::GetEngine()->GetTimer()->DeltaTime();
+	mRHI->Bind32BitConstants(2, 2, &Offset, 2);
+#endif
+	auto indexCount = Mesh->IndexCount;
+	mRHI->DrawMesh(indexCount);
+
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_RENDER_TARGET, BufferState::D3D12_RESOURCE_STATE_COMMON, bdrt.get(), RTBufferType::ColorBuffer);
+	mRHI->ChangeResState(BufferState::D3D12_RESOURCE_STATE_DEPTH_WRITE, BufferState::D3D12_RESOURCE_STATE_GENERIC_READ, bdrt.get(), RTBufferType::DepthBuffer);
+
+	mRHI->EventEnd();
+	mCurrentColorBuffer = "Kernel";
 }
 
 void Render::SetUpPass()
