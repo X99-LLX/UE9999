@@ -31,6 +31,5 @@ private:
 
 	glm::mat4x4 mView = glm::mat4(1.0f);
 	glm::mat4x4 mProj = glm::mat4(1.0f);
-
 };
 

@@ -4,9 +4,6 @@
 
 #include "Singleton.h"
 
-
-
-
 class DescHeapManager :public Singleton<DescHeapManager>
 {
 public:

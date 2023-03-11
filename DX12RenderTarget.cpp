@@ -18,21 +18,12 @@ void DX12RenderTarget::AddOffset(std::string name, int offset)
 
 UINT32 DX12RenderTarget::GetOffset(std::string name)
 {
-	if (OffsetMap.find(name) != OffsetMap.end())
-	{
-		return OffsetMap.at(name);
-	}
-	return NULL;
+	auto it = OffsetMap.find(name);
+	return it != OffsetMap.end() ? it->second : NULL;
+
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource>& DX12RenderTarget::GetBuffer(RTBufferType type)
 {
-	if (type == RTBufferType::ColorBuffer)
-	{
-		return mRTBuffers;
-	}
-	else
-	{
-		return mDSBuffer;
-	}
+	return type == RTBufferType::ColorBuffer ? mRTBuffers : mDSBuffer;
 }
